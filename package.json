@@ -1,0 +1,20 @@
+{
+  "name": "omnivox-tools",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Outil personnel: horaire et MIO Omnivox (cegeptr).",
+  "scripts": {
+    "login": "tsx src/cli.ts login",
+    "check": "tsx src/cli.ts check",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "playwright": "^1.56.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}
