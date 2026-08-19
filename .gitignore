@@ -1,0 +1,32 @@
+# ─── Secrets — rien de ce qui suit ne doit JAMAIS être commité ───
+.env
+.env.*
+!.env.example
+
+# Sessions Playwright (contiennent des cookies d'authentification valides)
+storage-state.json
+*storage-state*.json
+data/
+playwright/.auth/
+
+# Artefacts de debug d'une page CONNECTÉE : screenshots, dumps HTML, traces
+# et HAR contiennent ton DA, ton nom et parfois un jeton de session.
+runs/
+screenshots/
+*.har
+trace.zip
+test-results/
+playwright-report/
+
+# Outillage local qui dépose des jetons dans le dossier du projet
+.gstack/
+
+# Fixtures de test : à ne commiter QUE si scrubbées à la main
+tests/fixtures/raw/
+
+# ─── Standard ───
+node_modules/
+dist/
+*.log
+npm-debug.log*
+.DS_Store

@@ -1,0 +1,582 @@
+<title>Agenda Cégep</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+/* ── Tokens ───────────────────────────────────────────────────────────
+   Concept: an institutional printed timetable — cool paper, ink hairlines,
+   the hours set in the gutter of the grid itself. Colour is spent on course
+   blocks and the "maintenant" marker; everything else stays quiet.        */
+:root {
+  --paper:       #F1F4F2;
+  --surface:     #FFFFFF;
+  --ink:         #14201C;
+  --muted:       #62726D;
+  --faint:       #93A49E;
+  --rule:        #DCE3DF;
+  --rule-hi:     #C0CCC7;
+  --accent:      #0E6B57;
+  --accent-soft: #DDEDE7;
+  --signal:      #C4502A;
+  --weekend:     #E8EDEA;
+  --hover:       #E5ECE8;
+  --shadow:      0 1px 2px rgb(20 32 28 / .05), 0 10px 28px -16px rgb(20 32 28 / .30);
+
+  /* Course tints: hue comes from the block's own --h, these set the theme's S/L */
+  --evt-bg-sl: 58% 91%;
+  --evt-bd-sl: 47% 65%;
+  --evt-fg-sl: 58% 27%;
+
+  --gutter: 3.5rem;
+  --row-h:  3.25rem;
+  --font-ui:   system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-data: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:       #0E1312;
+    --surface:     #161D1B;
+    --ink:         #E6EDEA;
+    --muted:       #8A9A94;
+    --faint:       #64746E;
+    --rule:        #263230;
+    --rule-hi:     #384743;
+    --accent:      #4ECFAC;
+    --accent-soft: #14332C;
+    --signal:      #EE7A50;
+    --weekend:     #121816;
+    --hover:       #1D2523;
+    --shadow:      0 1px 2px rgb(0 0 0 / .4), 0 10px 28px -16px rgb(0 0 0 / .7);
+    --evt-bg-sl: 30% 18%;
+    --evt-bd-sl: 34% 38%;
+    --evt-fg-sl: 62% 78%;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper:       #0E1312;
+  --surface:     #161D1B;
+  --ink:         #E6EDEA;
+  --muted:       #8A9A94;
+  --faint:       #64746E;
+  --rule:        #263230;
+  --rule-hi:     #384743;
+  --accent:      #4ECFAC;
+  --accent-soft: #14332C;
+  --signal:      #EE7A50;
+  --weekend:     #121816;
+  --hover:       #1D2523;
+  --shadow:      0 1px 2px rgb(0 0 0 / .4), 0 10px 28px -16px rgb(0 0 0 / .7);
+  --evt-bg-sl: 30% 18%;
+  --evt-bd-sl: 34% 38%;
+  --evt-fg-sl: 62% 78%;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Masthead ─────────────────────────────────────────────────────── */
+.masthead {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap;
+  padding: .85rem clamp(.75rem, 3vw, 2rem);
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+}
+.wordmark {
+  margin: 0; font-size: 1.0625rem; font-weight: 650;
+  letter-spacing: -.015em;
+}
+.wordmark span { color: var(--accent); }
+.today-stamp {
+  font-family: var(--font-data); font-size: .75rem;
+  color: var(--muted); letter-spacing: .02em;
+}
+.masthead .spacer { flex: 1 1 auto; }
+.tools { display: flex; gap: .4rem; align-items: center; }
+
+button {
+  font: inherit; color: inherit; cursor: pointer;
+  border-radius: 6px; border: 1px solid var(--rule-hi);
+  background: var(--surface);
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+button:hover { background: var(--hover); border-color: var(--faint); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn-quiet {
+  font-family: var(--font-data); font-size: .7rem;
+  text-transform: uppercase; letter-spacing: .08em;
+  padding: .38rem .6rem; color: var(--muted);
+}
+
+/* ── Sheet & weeks ────────────────────────────────────────────────── */
+.sheet {
+  max-width: 76rem; margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2rem) clamp(.5rem, 3vw, 2rem) 5rem;
+  display: flex; flex-direction: column; gap: 2.25rem;
+}
+.week {
+  scroll-margin-top: 4.25rem;   /* clear the sticky masthead on scrollIntoView */
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.week-bar {
+  display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap;
+  padding: .7rem .9rem .6rem;
+  border-bottom: 1px solid var(--rule);
+}
+.week-no {
+  font-family: var(--font-data); font-size: .68rem; letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 4px; padding: .18rem .42rem;
+}
+.week-range { font-size: .9375rem; font-weight: 600; letter-spacing: -.01em; }
+.week-bar .spacer { flex: 1 1 auto; }
+.week-tally { font-family: var(--font-data); font-size: .7rem; color: var(--faint); }
+
+/* ── Grid ─────────────────────────────────────────────────────────── */
+.grid-wrap { overflow-x: auto; }
+.grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--gutter) repeat(7, 1fr);
+}
+.corner { position: sticky; left: 0; z-index: 3; background: var(--surface); }
+
+.dayhead {
+  padding: .5rem .2rem .45rem;
+  text-align: center;
+  border-left: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule-hi);
+}
+.dayhead .dow {
+  display: block;
+  font-family: var(--font-data); font-size: .66rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--faint);
+}
+.dayhead .dnum {
+  display: block; margin-top: .1rem;
+  font-size: 1.0625rem; font-weight: 620; letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+}
+.dayhead.is-weekend { background: var(--weekend); }
+.dayhead.is-today .dow  { color: var(--signal); }
+.dayhead.is-today .dnum { color: var(--signal); }
+
+.hour {
+  position: sticky; left: 0; z-index: 2;
+  grid-column: 1;
+  border-right: 1px solid var(--rule-hi);
+  background: var(--surface);
+}
+.hour b {
+  position: absolute; top: 0; right: .45rem;
+  transform: translateY(-.45em);
+  font-family: var(--font-data); font-weight: 400;
+  font-size: .6875rem; color: var(--faint);
+  font-variant-numeric: tabular-nums;
+  background: var(--surface); padding: 0 .1rem;
+}
+.hour.first b { transform: translateY(0); }
+
+.cell {
+  position: relative;
+  height: var(--row-h);
+  border-top: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
+  padding: 2px;
+  cursor: cell;
+}
+.cell.is-weekend { background: var(--weekend); }
+.cell.is-today   { background: color-mix(in srgb, var(--signal) 4%, transparent); }
+.cell.is-today.is-weekend { background: color-mix(in srgb, var(--signal) 4%, var(--weekend)); }
+.cell:hover::after {
+  content: "+";
+  position: absolute; inset: 2px;
+  display: grid; place-items: center;
+  color: var(--faint); font-size: .9rem;
+  background: var(--hover); border-radius: 5px;
+}
+.cell.has-event:hover::after { content: none; }
+.cell:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; z-index: 5; }
+
+.event {
+  position: absolute; inset: 2px;
+  border-radius: 5px;
+  background: hsl(var(--h) var(--evt-bg-sl));
+  border: 1px solid hsl(var(--h) var(--evt-bd-sl));
+  border-left-width: 3px;
+  color: hsl(var(--h) var(--evt-fg-sl));
+  padding: .18rem .34rem;
+  font-size: .75rem; font-weight: 560; line-height: 1.2;
+  overflow: hidden;
+  display: flex; align-items: flex-start;
+}
+.event .title {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cell.is-cont .event {
+  top: -1px;
+  border-top: 0; border-top-left-radius: 0; border-top-right-radius: 0;
+}
+.cell.is-cont .event .title { visibility: hidden; }
+.cell.is-head-of-run .event {
+  bottom: -1px;
+  border-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+}
+
+.cell input {
+  position: absolute; inset: 2px;
+  width: auto; border: 1px solid var(--accent); border-radius: 5px;
+  background: var(--surface); color: var(--ink);
+  font: 560 .75rem/1.2 var(--font-ui);
+  padding: .18rem .34rem;
+}
+.cell input:focus { outline: none; }
+
+/* Now marker */
+.now {
+  position: absolute; z-index: 6; height: 0;
+  border-top: 2px solid var(--signal);
+  pointer-events: none;
+}
+.now::before {
+  content: ""; position: absolute; left: -4px; top: -5px;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--signal);
+}
+.now-label {
+  position: absolute; z-index: 7; left: 0; width: var(--gutter);
+  transform: translateY(-50%);
+  text-align: right; padding-right: .45rem;
+  font-family: var(--font-data); font-size: .625rem;
+  color: var(--signal); background: var(--surface);
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Add-week control ─────────────────────────────────────────────── */
+.rail { display: flex; gap: .6rem; align-items: stretch; }
+.add-week {
+  flex: 1 1 auto;
+  display: flex; align-items: center; justify-content: center; gap: .55rem;
+  padding: .95rem;
+  border: 1px dashed var(--rule-hi);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-size: .875rem; font-weight: 560;
+}
+.add-week:hover { background: var(--surface); border-color: var(--accent); color: var(--accent); }
+.add-week .plus {
+  display: grid; place-items: center;
+  width: 1.35rem; height: 1.35rem; border-radius: 50%;
+  background: var(--accent); color: var(--surface);
+  font-size: 1rem; line-height: 1; font-weight: 400;
+}
+.add-week:hover .plus { transform: rotate(90deg); }
+.add-week .plus { transition: transform .2s ease; }
+.drop-week { padding: .95rem 1.1rem; border-radius: 10px; border-style: dashed; color: var(--muted); }
+
+.hint {
+  text-align: center; color: var(--faint);
+  font-family: var(--font-data); font-size: .6875rem; letter-spacing: .04em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+  .add-week:hover .plus { transform: none; }
+}
+@media (max-width: 700px) {
+  :root { --gutter: 2.6rem; --row-h: 2.75rem; }
+  .grid { min-width: 44rem; }
+  .sheet { padding-left: .5rem; padding-right: .5rem; }
+}
+@media print {
+  .masthead, .rail, .hint { display: none; }
+  body { background: #fff; }
+  .week { break-inside: avoid; box-shadow: none; margin-bottom: 1rem; }
+}
+</style>
+
+<header class="masthead">
+  <h1 class="wordmark">Agenda <span>·</span> semaine par semaine</h1>
+  <span class="today-stamp" id="stamp"></span>
+  <span class="spacer"></span>
+  <div class="tools">
+    <button class="btn-quiet" id="jump">Aujourd'hui</button>
+    <button class="btn-quiet" id="wipe">Tout effacer</button>
+  </div>
+</header>
+
+<main class="sheet">
+  <div id="weeks" style="display:flex;flex-direction:column;gap:2.25rem"></div>
+  <div class="rail">
+    <button class="add-week" id="add"><span class="plus">+</span> Ajouter la semaine suivante</button>
+    <button class="drop-week btn-quiet" id="drop" hidden>Retirer</button>
+  </div>
+  <p class="hint">Clique une case pour inscrire un cours · Entrée pour enregistrer · Échap pour annuler · vide la case pour supprimer</p>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  const START_HOUR = 7, END_HOUR = 22;          // 7:00 → 22:00
+  const HUES = [150, 190, 222, 264, 312, 344, 22, 48];  // course palette
+  const KEY = "agenda.v1";
+
+  const DOW  = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"];
+  const MONTH = ["janvier","février","mars","avril","mai","juin","juillet",
+                 "août","septembre","octobre","novembre","décembre"];
+
+  /* ── State ─────────────────────────────────────────────────────── */
+  const load = () => {
+    try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; }
+  };
+  const saved = load();
+  const state = {
+    weeks:  Math.max(1, saved.weeks || 1),
+    events: saved.events || {}                  // "YYYY-MM-DD|H" → title
+  };
+  const save = () => {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
+  };
+
+  /* ── Dates ─────────────────────────────────────────────────────── */
+  const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  const addDays = (d, n) => { const c = new Date(d); c.setDate(c.getDate()+n); return c; };
+  const monday = d => {
+    const c = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    return addDays(c, -((c.getDay() + 6) % 7));
+  };
+  const weekNo = d => {
+    const t = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    t.setDate(t.getDate() + 4 - ((t.getDay() + 6) % 7));
+    const jan1 = new Date(t.getFullYear(), 0, 1);
+    return Math.ceil(((t - jan1) / 86400000 + 1) / 7);
+  };
+  const range = (a, b) => {
+    const d1 = a.getDate(), d2 = b.getDate();
+    if (a.getFullYear() !== b.getFullYear())
+      return `${d1} ${MONTH[a.getMonth()]} ${a.getFullYear()} – ${d2} ${MONTH[b.getMonth()]} ${b.getFullYear()}`;
+    if (a.getMonth() !== b.getMonth())
+      return `${d1} ${MONTH[a.getMonth()]} – ${d2} ${MONTH[b.getMonth()]} ${b.getFullYear()}`;
+    return `${d1} – ${d2} ${MONTH[a.getMonth()]} ${a.getFullYear()}`;
+  };
+
+  const anchor = monday(new Date());
+  const todayISO = iso(new Date());
+
+  /* One hue per distinct course, assigned alphabetically so no two of the
+     first eight courses collide. Rebuilt on every render. */
+  let hues = new Map();
+  const rebuildHues = () => {
+    hues = new Map([...new Set(Object.values(state.events))]
+      .sort((a, b) => a.localeCompare(b, "fr"))
+      .map((t, i) => [t, HUES[i % HUES.length]]));
+  };
+  const hueOf = t => hues.get(t) ?? HUES[0];
+
+  /* ── Render ────────────────────────────────────────────────────── */
+  const host = document.getElementById("weeks");
+
+  function render() {
+    rebuildHues();
+    host.textContent = "";
+    for (let w = 0; w < state.weeks; w++) host.append(buildWeek(addDays(anchor, w * 7)));
+    document.getElementById("drop").hidden = state.weeks < 2;
+    placeNow();
+    save();
+  }
+
+  function buildWeek(start) {
+    const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
+    const sec = document.createElement("section");
+    sec.className = "week";
+    sec.dataset.start = iso(start);
+
+    const bar = document.createElement("div");
+    bar.className = "week-bar";
+    const no = document.createElement("span");
+    no.className = "week-no"; no.textContent = `S${weekNo(start)}`;
+    const rg = document.createElement("span");
+    rg.className = "week-range"; rg.textContent = range(days[0], days[6]);
+    const sp = document.createElement("span"); sp.className = "spacer";
+    const tally = document.createElement("span");
+    tally.className = "week-tally";
+    const count = days.reduce((n, d) =>
+      n + Object.keys(state.events).filter(k => k.startsWith(iso(d) + "|")).length, 0);
+    tally.textContent = count ? `${count} h inscrites` : "libre";
+    bar.append(no, rg, sp, tally);
+
+    const grid = document.createElement("div");
+    grid.className = "grid";
+    const corner = document.createElement("div");
+    corner.className = "corner"; corner.style.gridColumn = "1";
+    grid.append(corner);
+
+    days.forEach(d => {
+      const h = document.createElement("div");
+      h.className = "dayhead";
+      if (d.getDay() === 0 || d.getDay() === 6) h.classList.add("is-weekend");
+      if (iso(d) === todayISO) h.classList.add("is-today");
+      const dow = document.createElement("span");
+      dow.className = "dow"; dow.textContent = DOW[(d.getDay() + 6) % 7];
+      const num = document.createElement("span");
+      num.className = "dnum"; num.textContent = d.getDate();
+      h.append(dow, num);
+      grid.append(h);
+    });
+
+    for (let hr = START_HOUR; hr <= END_HOUR; hr++) {
+      const g = document.createElement("div");
+      g.className = hr === START_HOUR ? "hour first" : "hour";
+      const b = document.createElement("b");
+      b.textContent = `${String(hr).padStart(2, "0")}:00`;
+      g.append(b);
+      grid.append(g);
+
+      days.forEach(d => grid.append(buildCell(iso(d), hr, d)));
+    }
+    const wrap = document.createElement("div");
+    wrap.className = "grid-wrap";
+    wrap.append(grid);
+    sec.append(bar, wrap);
+    return sec;
+  }
+
+  function buildCell(dISO, hr, dateObj) {
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    cell.tabIndex = 0;
+    cell.dataset.k = `${dISO}|${hr}`;
+    if (dateObj.getDay() === 0 || dateObj.getDay() === 6) cell.classList.add("is-weekend");
+    if (dISO === todayISO) cell.classList.add("is-today");
+
+    const title = state.events[cell.dataset.k];
+    if (title) {
+      cell.classList.add("has-event");
+      const above = state.events[`${dISO}|${hr - 1}`];
+      const below = state.events[`${dISO}|${hr + 1}`];
+      if (above === title) cell.classList.add("is-cont");
+      if (below === title) cell.classList.add("is-head-of-run");
+
+      const ev = document.createElement("div");
+      ev.className = "event";
+      ev.style.setProperty("--h", hueOf(title));
+      const t = document.createElement("span");
+      t.className = "title"; t.textContent = title;
+      ev.append(t);
+      cell.append(ev);
+    }
+
+    cell.addEventListener("click", () => edit(cell));
+    cell.addEventListener("keydown", e => {
+      if (e.key === "Enter") { e.preventDefault(); edit(cell); }
+    });
+    return cell;
+  }
+
+  /* ── Editing ───────────────────────────────────────────────────── */
+  let open = null;
+
+  function edit(cell) {
+    if (open) open.blur();
+    const key = cell.dataset.k;
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = state.events[key] || "";
+    input.placeholder = "Cours, examen, travail…";
+    input.maxLength = 60;
+    cell.append(input);
+    open = input;
+    input.focus(); input.select();
+
+    let cancelled = false;
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+      if (e.key === "Escape") { cancelled = true; input.blur(); }
+    });
+    input.addEventListener("blur", () => {
+      open = null;
+      if (!cancelled) {
+        const v = input.value.trim();
+        if (v) state.events[key] = v; else delete state.events[key];
+      }
+      render();
+    }, { once: true });
+  }
+
+  /* ── "Maintenant" marker ───────────────────────────────────────── */
+  function placeNow() {
+    document.querySelectorAll(".now, .now-label").forEach(n => n.remove());
+    const now = new Date();
+    const h = now.getHours() + now.getMinutes() / 60;
+    if (h < START_HOUR || h > END_HOUR + 1) return;
+
+    const idx = (now.getDay() + 6) % 7;
+    const week = document.querySelector(`.week[data-start="${iso(monday(now))}"]`);
+    if (!week) return;
+    const grid = week.querySelector(".grid");
+    const head = grid.querySelector(".dayhead");
+    const offset = `${head.offsetTop + head.offsetHeight}px`;
+    const top = `calc(${offset} + var(--row-h) * ${h - START_HOUR})`;
+
+    const line = document.createElement("div");
+    line.className = "now";
+    line.style.top = top;
+    line.style.left = `calc(var(--gutter) + (100% - var(--gutter)) / 7 * ${idx})`;
+    line.style.width = `calc((100% - var(--gutter)) / 7)`;
+
+    const label = document.createElement("div");
+    label.className = "now-label";
+    label.style.top = top;
+    label.textContent = `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+
+    grid.querySelectorAll(".hour b").forEach(b => { b.style.visibility = ""; });
+    const near = Math.round(h);
+    if (Math.abs(h - near) < 0.3) {
+      const g = grid.querySelectorAll(".hour")[near - START_HOUR];
+      if (g) g.querySelector("b").style.visibility = "hidden";
+    }
+    grid.append(line, label);
+  }
+  setInterval(placeNow, 60000);
+
+  /* ── Controls ──────────────────────────────────────────────────── */
+  document.getElementById("add").addEventListener("click", () => {
+    state.weeks++;
+    render();
+    host.lastElementChild.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  document.getElementById("drop").addEventListener("click", () => {
+    if (state.weeks > 1) { state.weeks--; render(); }
+  });
+  document.getElementById("jump").addEventListener("click", () => {
+    host.firstElementChild.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  document.getElementById("wipe").addEventListener("click", () => {
+    if (confirm("Effacer toutes les entrées de l'agenda ?")) { state.events = {}; render(); }
+  });
+
+  const t = new Date();
+  document.getElementById("stamp").textContent =
+    `${DOW[(t.getDay()+6)%7]}. ${t.getDate()} ${MONTH[t.getMonth()]} ${t.getFullYear()}`;
+
+  render();
+})();
+</script>
