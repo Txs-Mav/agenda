@@ -30,3 +30,8 @@ dist/
 *.log
 npm-debug.log*
 .DS_Store
+
+# Sortie de build et lien de projet Vercel
+/public/index.html
+.vercel/
+.vercel

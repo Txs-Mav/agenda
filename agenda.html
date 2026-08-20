@@ -1,364 +1,370 @@
 <title>Agenda Cégep</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-/* ── Tokens ───────────────────────────────────────────────────────────
-   Concept: an institutional printed timetable — cool paper, ink hairlines,
-   the hours set in the gutter of the grid itself. Colour is spent on course
-   blocks and the "maintenant" marker; everything else stays quiet.        */
-:root {
-  --paper:       #F1F4F2;
-  --surface:     #FFFFFF;
-  --ink:         #14201C;
-  --muted:       #62726D;
-  --faint:       #93A49E;
-  --rule:        #DCE3DF;
-  --rule-hi:     #C0CCC7;
-  --accent:      #0E6B57;
-  --accent-soft: #DDEDE7;
-  --signal:      #C4502A;
-  --weekend:     #E8EDEA;
-  --hover:       #E5ECE8;
-  --shadow:      0 1px 2px rgb(20 32 28 / .05), 0 10px 28px -16px rgb(20 32 28 / .30);
+/* Design sombre « glass », d'après la maquette de tableau de bord fournie:
+   fond gris doux en dégradé radial, cartes translucides à bord clair,
+   accent bleu vif, et une échelle rouge→vert pour l'urgence. */
+:root{
+  --bg-1:#4d5053; --bg-2:#313335; --bg-3:#1f2123;
+  --glass:rgba(255,255,255,.068);
+  --glass-hi:rgba(255,255,255,.115);
+  --glass-lo:rgba(255,255,255,.038);
+  --stroke:rgba(255,255,255,.09);
+  --stroke-hi:rgba(255,255,255,.18);
+  --text:#F3F5F6;
+  --dim:rgba(243,245,246,.60);
+  --faint:rgba(243,245,246,.33);
+  --accent:#18A0FB;
+  --p3:#FF453A; --p2:#FF9F0A; --p1:#FFD60A; --p0:#32D74B;
+  --gutter:3.6rem; --row-h:3.85rem;
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+h1,h2,h3,p,ul,ol{margin:0}
+html,body{height:100%}
+body{
+  margin:0; color:var(--text); font-family:var(--font); font-size:15px; line-height:1.45;
+  background:var(--bg-3);
+  background-image:radial-gradient(135% 105% at 14% -12%, var(--bg-1) 0%, var(--bg-2) 44%, var(--bg-3) 100%);
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-  /* Course tints: hue comes from the block's own --h, these set the theme's S/L */
-  --evt-bg-sl: 58% 91%;
-  --evt-bd-sl: 47% 65%;
-  --evt-fg-sl: 58% 27%;
+/* ── Coquille ───────────────────────────────────────────────────── */
+.app{display:grid;grid-template-columns:4.75rem minmax(0,1fr);min-height:100vh}
+.rail{position:sticky;top:0;height:100vh;padding:1rem .6rem;display:flex;justify-content:center}
+.rail-inner{
+  background:var(--glass);border:1px solid var(--stroke);border-radius:26px;
+  padding:.6rem .45rem;display:flex;flex-direction:column;gap:.3rem;align-items:center;
+}
+.rail button{width:2.7rem;height:2.7rem;border-radius:16px;display:grid;place-items:center;color:var(--faint);transition:background .15s,color .15s}
+.rail button:hover{background:var(--glass-hi);color:var(--text)}
+.rail button.on{background:var(--glass-hi);color:var(--text)}
+.rail svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.rail .sep{width:1.6rem;height:1px;background:var(--stroke);margin:.3rem 0}
 
-  --gutter: 3.5rem;
-  --row-h:  3.25rem;
-  --font-ui:   system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-data: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
-  color-scheme: light;
+.main{padding:1.15rem 1.4rem 3rem;min-width:0}
+.topbar{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1.05rem}
+.brand h1{margin:0;font-size:1.45rem;font-weight:600;letter-spacing:-.025em}
+.brand p{margin:.1rem 0 0;color:var(--dim);font-size:.78rem;font-family:var(--mono)}
+.topbar .grow{flex:1 1 auto}
+.chip{
+  display:inline-flex;align-items:center;gap:.45rem;
+  background:var(--glass);border:1px solid var(--stroke);border-radius:999px;
+  padding:.5rem .9rem;font-size:.82rem;color:var(--dim);transition:background .15s,color .15s,border-color .15s;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper:       #0E1312;
-    --surface:     #161D1B;
-    --ink:         #E6EDEA;
-    --muted:       #8A9A94;
-    --faint:       #64746E;
-    --rule:        #263230;
-    --rule-hi:     #384743;
-    --accent:      #4ECFAC;
-    --accent-soft: #14332C;
-    --signal:      #EE7A50;
-    --weekend:     #121816;
-    --hover:       #1D2523;
-    --shadow:      0 1px 2px rgb(0 0 0 / .4), 0 10px 28px -16px rgb(0 0 0 / .7);
-    --evt-bg-sl: 30% 18%;
-    --evt-bd-sl: 34% 38%;
-    --evt-fg-sl: 62% 78%;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --paper:       #0E1312;
-  --surface:     #161D1B;
-  --ink:         #E6EDEA;
-  --muted:       #8A9A94;
-  --faint:       #64746E;
-  --rule:        #263230;
-  --rule-hi:     #384743;
-  --accent:      #4ECFAC;
-  --accent-soft: #14332C;
-  --signal:      #EE7A50;
-  --weekend:     #121816;
-  --hover:       #1D2523;
-  --shadow:      0 1px 2px rgb(0 0 0 / .4), 0 10px 28px -16px rgb(0 0 0 / .7);
-  --evt-bg-sl: 30% 18%;
-  --evt-bd-sl: 34% 38%;
-  --evt-fg-sl: 62% 78%;
-  color-scheme: dark;
-}
+.chip:hover{background:var(--glass-hi);color:var(--text);border-color:var(--stroke-hi)}
+.chip.primary{background:var(--accent);border-color:transparent;color:#04121d;font-weight:600}
+.chip.primary:hover{background:#37B0FF;color:#04121d}
 
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--font-ui);
-  font-size: 15px;
-  line-height: 1.45;
-  -webkit-font-smoothing: antialiased;
+/* ── Colonnes ───────────────────────────────────────────────────── */
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 21.5rem;gap:1.05rem;align-items:start}
+.stack{display:flex;flex-direction:column;gap:1.05rem;min-width:0}
+.card{background:var(--glass);border:1px solid var(--stroke);border-radius:22px;overflow:hidden}
+.card-head{display:flex;align-items:center;gap:.6rem;padding:.85rem 1.05rem}
+.card-head h2{margin:0;font-size:1rem;font-weight:600;letter-spacing:-.01em}
+.card-head .grow{flex:1 1 auto}
+.tag{
+  font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;
+  background:var(--glass-hi);border:1px solid var(--stroke);border-radius:8px;
+  padding:.16rem .42rem;color:var(--dim);
 }
+.count{font-family:var(--mono);font-size:.72rem;color:var(--faint)}
 
-/* ── Masthead ─────────────────────────────────────────────────────── */
-.masthead {
-  position: sticky; top: 0; z-index: 40;
-  display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap;
-  padding: .85rem clamp(.75rem, 3vw, 2rem);
-  background: var(--paper);
-  border-bottom: 1px solid var(--rule);
-}
-.wordmark {
-  margin: 0; font-size: 1.0625rem; font-weight: 650;
-  letter-spacing: -.015em;
-}
-.wordmark span { color: var(--accent); }
-.today-stamp {
-  font-family: var(--font-data); font-size: .75rem;
-  color: var(--muted); letter-spacing: .02em;
-}
-.masthead .spacer { flex: 1 1 auto; }
-.tools { display: flex; gap: .4rem; align-items: center; }
+/* ── Grille horaire ─────────────────────────────────────────────── */
+.grid-wrap{overflow-x:auto}
+.grid{position:relative;display:grid;grid-template-columns:var(--gutter) repeat(7,minmax(5.4rem,1fr))}
+.corner{grid-column:1;position:sticky;left:0;z-index:3;background:transparent}
+.dayhead{padding:.45rem .25rem .5rem;text-align:center;border-left:1px solid var(--stroke);border-bottom:1px solid var(--stroke-hi)}
+.dayhead .dow{display:block;font-family:var(--mono);font-size:.63rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.dayhead .dnum{display:block;margin-top:.05rem;font-size:1.05rem;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.dayhead.wknd{background:rgba(0,0,0,.14)}
+.dayhead.today .dow{color:var(--accent)}
+.dayhead.today .dnum{color:var(--accent)}
 
-button {
-  font: inherit; color: inherit; cursor: pointer;
-  border-radius: 6px; border: 1px solid var(--rule-hi);
-  background: var(--surface);
-  transition: background .15s ease, border-color .15s ease, color .15s ease;
+.hour{position:sticky;left:0;z-index:2;grid-column:1;border-right:1px solid var(--stroke-hi)}
+.hour b{
+  position:absolute;top:0;right:.4rem;transform:translateY(-.45em);
+  font-family:var(--mono);font-weight:400;font-size:.66rem;color:var(--faint);
+  font-variant-numeric:tabular-nums;padding:0 .12rem;
 }
-button:hover { background: var(--hover); border-color: var(--faint); }
-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.btn-quiet {
-  font-family: var(--font-data); font-size: .7rem;
-  text-transform: uppercase; letter-spacing: .08em;
-  padding: .38rem .6rem; color: var(--muted);
+.hour.first b{transform:translateY(.1em)}
+
+.cell{position:relative;height:var(--row-h);border-top:1px solid var(--stroke);border-left:1px solid var(--stroke);padding:3px}
+.cell.wknd{background:rgba(0,0,0,.14)}
+.cell.today{background:rgba(24,160,251,.055)}
+.cell.free{cursor:cell}
+.cell.free:hover::after{
+  content:"+";position:absolute;inset:3px;display:grid;place-items:center;
+  color:var(--faint);font-size:.95rem;background:var(--glass-hi);border-radius:10px;
 }
 
-/* ── Sheet & weeks ────────────────────────────────────────────────── */
-.sheet {
-  max-width: 76rem; margin: 0 auto;
-  padding: clamp(1rem, 3vw, 2rem) clamp(.5rem, 3vw, 2rem) 5rem;
-  display: flex; flex-direction: column; gap: 2.25rem;
+.ev{
+  position:absolute;inset:3px;border-radius:11px;padding:.32rem .45rem;overflow:hidden;
+  background:linear-gradient(170deg,hsl(var(--h) 74% 63% / .32),hsl(var(--h) 70% 52% / .17));
+  border:1px solid hsl(var(--h) 62% 62% / .34);
+  border-left:3px solid hsl(var(--h) 85% 64% / .95);
 }
-.week {
-  scroll-margin-top: 4.25rem;   /* clear the sticky masthead on scrollIntoView */
-  background: var(--surface);
-  border: 1px solid var(--rule);
-  border-radius: 10px;
-  box-shadow: var(--shadow);
-  overflow: hidden;
-}
-.week-bar {
-  display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap;
-  padding: .7rem .9rem .6rem;
-  border-bottom: 1px solid var(--rule);
-}
-.week-no {
-  font-family: var(--font-data); font-size: .68rem; letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--accent);
-  background: var(--accent-soft);
-  border-radius: 4px; padding: .18rem .42rem;
-}
-.week-range { font-size: .9375rem; font-weight: 600; letter-spacing: -.01em; }
-.week-bar .spacer { flex: 1 1 auto; }
-.week-tally { font-family: var(--font-data); font-size: .7rem; color: var(--faint); }
+.ev .t{font-size:.715rem;font-weight:600;line-height:1.16;color:#fff;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ev .m{margin-top:.08rem;font-size:.625rem;line-height:1.2;color:rgba(255,255,255,.66)}
+.ev .h{margin-top:.05rem;font-size:.6rem;font-family:var(--mono);color:rgba(255,255,255,.44)}
+.cell.run .ev{top:3px;bottom:auto;height:calc(var(--row-h) * var(--span) - 6px);z-index:3}
+.cell.under{border-top-color:transparent}
+.ev .p{margin-top:.1rem;font-size:.62rem;line-height:1.2;color:rgba(255,255,255,.52)}
+.cell.cont .ev{top:-1px;border-top:0;border-top-left-radius:0;border-top-right-radius:0}
+.cell.cont .ev>*{display:none}
+.cell.head .ev{bottom:-1px;border-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0}
+.cell.r1 .ev .h{display:none}
 
-/* ── Grid ─────────────────────────────────────────────────────────── */
-.grid-wrap { overflow-x: auto; }
-.grid {
-  position: relative;
-  display: grid;
-  grid-template-columns: var(--gutter) repeat(7, 1fr);
+.cell input{
+  position:absolute;inset:3px;border:1px solid var(--accent);border-radius:10px;
+  background:rgba(0,0,0,.45);color:var(--text);font:600 .72rem/1.2 var(--font);padding:.3rem .45rem;
 }
-.corner { position: sticky; left: 0; z-index: 3; background: var(--surface); }
+.cell input:focus{outline:none}
 
-.dayhead {
-  padding: .5rem .2rem .45rem;
-  text-align: center;
-  border-left: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule-hi);
-}
-.dayhead .dow {
-  display: block;
-  font-family: var(--font-data); font-size: .66rem; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--faint);
-}
-.dayhead .dnum {
-  display: block; margin-top: .1rem;
-  font-size: 1.0625rem; font-weight: 620; letter-spacing: -.02em;
-  font-variant-numeric: tabular-nums;
-}
-.dayhead.is-weekend { background: var(--weekend); }
-.dayhead.is-today .dow  { color: var(--signal); }
-.dayhead.is-today .dnum { color: var(--signal); }
-
-.hour {
-  position: sticky; left: 0; z-index: 2;
-  grid-column: 1;
-  border-right: 1px solid var(--rule-hi);
-  background: var(--surface);
-}
-.hour b {
-  position: absolute; top: 0; right: .45rem;
-  transform: translateY(-.45em);
-  font-family: var(--font-data); font-weight: 400;
-  font-size: .6875rem; color: var(--faint);
-  font-variant-numeric: tabular-nums;
-  background: var(--surface); padding: 0 .1rem;
-}
-.hour.first b { transform: translateY(0); }
-
-.cell {
-  position: relative;
-  height: var(--row-h);
-  border-top: 1px solid var(--rule);
-  border-left: 1px solid var(--rule);
-  padding: 2px;
-  cursor: cell;
-}
-.cell.is-weekend { background: var(--weekend); }
-.cell.is-today   { background: color-mix(in srgb, var(--signal) 4%, transparent); }
-.cell.is-today.is-weekend { background: color-mix(in srgb, var(--signal) 4%, var(--weekend)); }
-.cell:hover::after {
-  content: "+";
-  position: absolute; inset: 2px;
-  display: grid; place-items: center;
-  color: var(--faint); font-size: .9rem;
-  background: var(--hover); border-radius: 5px;
-}
-.cell.has-event:hover::after { content: none; }
-.cell:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; z-index: 5; }
-
-.event {
-  position: absolute; inset: 2px;
-  border-radius: 5px;
-  background: hsl(var(--h) var(--evt-bg-sl));
-  border: 1px solid hsl(var(--h) var(--evt-bd-sl));
-  border-left-width: 3px;
-  color: hsl(var(--h) var(--evt-fg-sl));
-  padding: .18rem .34rem;
-  font-size: .75rem; font-weight: 560; line-height: 1.2;
-  overflow: hidden;
-  display: flex; align-items: flex-start;
-}
-.event .title {
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.cell.is-cont .event {
-  top: -1px;
-  border-top: 0; border-top-left-radius: 0; border-top-right-radius: 0;
-}
-.cell.is-cont .event .title { visibility: hidden; }
-.cell.is-head-of-run .event {
-  bottom: -1px;
-  border-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+.now{position:absolute;z-index:6;height:0;border-top:2px solid var(--accent);pointer-events:none;box-shadow:0 0 12px rgba(24,160,251,.7)}
+.now::before{content:"";position:absolute;left:-4px;top:-5px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.now-label{
+  position:absolute;z-index:7;left:0;width:var(--gutter);transform:translateY(-50%);
+  text-align:right;padding-right:.4rem;font-family:var(--mono);font-size:.62rem;
+  color:var(--accent);pointer-events:none;font-variant-numeric:tabular-nums;
 }
 
-.cell input {
-  position: absolute; inset: 2px;
-  width: auto; border: 1px solid var(--accent); border-radius: 5px;
-  background: var(--surface); color: var(--ink);
-  font: 560 .75rem/1.2 var(--font-ui);
-  padding: .18rem .34rem;
+.addweek{
+  display:flex;align-items:center;justify-content:center;gap:.6rem;width:100%;
+  padding:.95rem;border:1px dashed var(--stroke-hi);border-radius:20px;color:var(--dim);
+  font-size:.87rem;font-weight:500;transition:background .15s,color .15s,border-color .15s;
 }
-.cell input:focus { outline: none; }
+.addweek:hover{background:var(--glass);color:var(--text);border-color:var(--accent)}
+.addweek .plus{
+  display:grid;place-items:center;width:1.45rem;height:1.45rem;border-radius:50%;
+  background:var(--accent);color:#04121d;font-size:1rem;line-height:1;transition:transform .2s;
+}
+.addweek:hover .plus{transform:rotate(90deg)}
 
-/* Now marker */
-.now {
-  position: absolute; z-index: 6; height: 0;
-  border-top: 2px solid var(--signal);
-  pointer-events: none;
+/* ── À faire ────────────────────────────────────────────────────── */
+.list{list-style:none;margin:0;padding:0 1.05rem}
+.list li{display:flex;gap:.65rem;align-items:flex-start;padding:.55rem 0;border-top:1px solid var(--stroke)}
+.list li:first-child{border-top:0}
+.tick{
+  flex:0 0 auto;width:1.15rem;height:1.15rem;margin-top:.1rem;border-radius:50%;
+  border:1.5px solid var(--stroke-hi);display:grid;place-items:center;color:transparent;transition:.15s;
 }
-.now::before {
-  content: ""; position: absolute; left: -4px; top: -5px;
-  width: 8px; height: 8px; border-radius: 50%; background: var(--signal);
-}
-.now-label {
-  position: absolute; z-index: 7; left: 0; width: var(--gutter);
-  transform: translateY(-50%);
-  text-align: right; padding-right: .45rem;
-  font-family: var(--font-data); font-size: .625rem;
-  color: var(--signal); background: var(--surface);
-  pointer-events: none;
-  font-variant-numeric: tabular-nums;
-}
+.tick:hover{border-color:var(--accent)}
+.tick svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+li.done .tick{background:var(--accent);border-color:var(--accent);color:#04121d}
+.todo-t{flex:1 1 auto;font-size:.855rem;line-height:1.3;min-width:0;overflow-wrap:anywhere}
+li.done .todo-t{color:var(--faint);text-decoration:line-through}
+.kill{flex:0 0 auto;color:var(--faint);font-size:1.05rem;line-height:1;padding:0 .15rem;opacity:0;transition:opacity .15s,color .15s}
+.list li:hover .kill{opacity:1}
+.kill:hover{color:var(--p3)}
 
-/* ── Add-week control ─────────────────────────────────────────────── */
-.rail { display: flex; gap: .6rem; align-items: stretch; }
-.add-week {
-  flex: 1 1 auto;
-  display: flex; align-items: center; justify-content: center; gap: .55rem;
-  padding: .95rem;
-  border: 1px dashed var(--rule-hi);
-  border-radius: 10px;
-  background: transparent;
-  color: var(--muted);
-  font-size: .875rem; font-weight: 560;
+.newrow{display:flex;gap:.5rem;align-items:center;padding:.7rem 1.05rem 1rem}
+.newrow input[type=text]{
+  flex:1 1 auto;min-width:0;background:var(--glass-lo);border:1px solid var(--stroke);
+  border-radius:12px;padding:.5rem .7rem;color:var(--text);font:inherit;font-size:.82rem;
 }
-.add-week:hover { background: var(--surface); border-color: var(--accent); color: var(--accent); }
-.add-week .plus {
-  display: grid; place-items: center;
-  width: 1.35rem; height: 1.35rem; border-radius: 50%;
-  background: var(--accent); color: var(--surface);
-  font-size: 1rem; line-height: 1; font-weight: 400;
-}
-.add-week:hover .plus { transform: rotate(90deg); }
-.add-week .plus { transition: transform .2s ease; }
-.drop-week { padding: .95rem 1.1rem; border-radius: 10px; border-style: dashed; color: var(--muted); }
+.newrow input[type=text]::placeholder{color:var(--faint)}
+.newrow input[type=text]:focus{outline:none;border-color:var(--accent)}
 
-.hint {
-  text-align: center; color: var(--faint);
-  font-family: var(--font-data); font-size: .6875rem; letter-spacing: .04em;
-}
+/* ── Alertes ────────────────────────────────────────────────────── */
+.scale{margin:0 1.05rem .2rem;height:5px;border-radius:99px;background:linear-gradient(90deg,var(--p0),var(--p1),var(--p2),var(--p3))}
+.scale-lab{display:flex;justify-content:space-between;margin:.28rem 1.05rem .5rem;font-family:var(--mono);font-size:.6rem;color:var(--faint);letter-spacing:.04em}
+.alerts li{align-items:stretch;gap:.7rem}
+.bar{flex:0 0 4px;border-radius:99px;background:var(--p);box-shadow:0 0 11px -1px var(--p)}
+.al-body{flex:1 1 auto;min-width:0}
+.al-t{font-size:.855rem;line-height:1.3;overflow-wrap:anywhere}
+.al-w{margin-top:.1rem;font-family:var(--mono);font-size:.655rem;color:var(--faint)}
+.al-p{margin-left:.35rem;color:var(--p)}
+.dots{display:flex;gap:.3rem}
+.dot{width:1.15rem;height:1.15rem;border-radius:50%;border:1.5px solid transparent;background:var(--p);opacity:.35;transition:.15s}
+.dot:hover{opacity:.7}
+.dot.on{opacity:1;box-shadow:0 0 0 2px rgba(255,255,255,.22)}
 
-@media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; }
-  .add-week:hover .plus { transform: none; }
+.empty{padding:.2rem 1.05rem 1rem;color:var(--faint);font-size:.79rem}
+
+@media (max-width:1120px){ .cols{grid-template-columns:minmax(0,1fr)} }
+@media (max-width:760px){
+  :root{--gutter:2.7rem;--row-h:3rem}
+  .app{grid-template-columns:1fr}
+  .rail{position:static;height:auto;padding:.7rem}
+  .rail-inner{flex-direction:row;border-radius:20px}
+  .rail .sep{width:1px;height:1.6rem;margin:0 .3rem}
+  .main{padding:.4rem .7rem 3rem}
+  .grid{min-width:46rem}
 }
-@media (max-width: 700px) {
-  :root { --gutter: 2.6rem; --row-h: 2.75rem; }
-  .grid { min-width: 44rem; }
-  .sheet { padding-left: .5rem; padding-right: .5rem; }
-}
-@media print {
-  .masthead, .rail, .hint { display: none; }
-  body { background: #fff; }
-  .week { break-inside: avoid; box-shadow: none; margin-bottom: 1rem; }
+@media (prefers-reduced-motion:reduce){*{transition:none!important}.addweek:hover .plus{transform:none}}
+@media print{
+  body{background:#fff;color:#000}
+  .rail,.topbar,.addweek,.newrow,.kill,.scale,.scale-lab{display:none}
+  .card{border:1px solid #999;background:#fff}
+  .cols{grid-template-columns:1fr}
+  .ev{background:#eee;border:1px solid #666;color:#000}
+  .ev .t,.ev .m,.ev .h{color:#000}
 }
 </style>
 
-<header class="masthead">
-  <h1 class="wordmark">Agenda <span>·</span> semaine par semaine</h1>
-  <span class="today-stamp" id="stamp"></span>
-  <span class="spacer"></span>
-  <div class="tools">
-    <button class="btn-quiet" id="jump">Aujourd'hui</button>
-    <button class="btn-quiet" id="wipe">Tout effacer</button>
-  </div>
-</header>
+<div class="app">
+  <nav class="rail" aria-label="Actions">
+    <div class="rail-inner">
+      <button id="r-today" class="on" title="Revenir à cette semaine" aria-label="Cette semaine">
+        <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg>
+      </button>
+      <button id="r-add" title="Ajouter la semaine suivante" aria-label="Ajouter une semaine">
+        <svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4M12 12.5v5M9.5 15h5"/></svg>
+      </button>
+      <div class="sep"></div>
+      <button id="r-print" title="Imprimer l'agenda" aria-label="Imprimer">
+        <svg viewBox="0 0 24 24"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="7.5" rx="2"/><path d="M7 14h10v6.5H7z"/></svg>
+      </button>
+      <button id="r-reset" title="Effacer mes ajouts" aria-label="Effacer">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/></svg>
+      </button>
+    </div>
+  </nav>
 
-<main class="sheet">
-  <div id="weeks" style="display:flex;flex-direction:column;gap:2.25rem"></div>
-  <div class="rail">
-    <button class="add-week" id="add"><span class="plus">+</span> Ajouter la semaine suivante</button>
-    <button class="drop-week btn-quiet" id="drop" hidden>Retirer</button>
+  <div class="main">
+    <header class="topbar">
+      <div class="brand">
+        <h1>Agenda</h1>
+        <p id="stamp"></p>
+      </div>
+      <span class="grow"></span>
+      <button class="chip" id="today">Aujourd'hui</button>
+      <button class="chip primary" id="add">+ Semaine</button>
+    </header>
+
+    <div class="cols">
+      <div class="stack">
+        <div id="weeks" style="display:flex;flex-direction:column;gap:1.05rem"></div>
+        <button class="addweek" id="add2"><span class="plus">+</span> Ajouter la semaine suivante</button>
+      </div>
+
+      <div class="stack">
+        <section class="card">
+          <div class="card-head">
+            <h2>À faire</h2>
+            <span class="tag" id="todo-date"></span>
+            <span class="grow"></span>
+            <span class="count" id="todo-count"></span>
+          </div>
+          <ul class="list" id="todo-list"></ul>
+          <p class="empty" id="todo-empty" hidden>Rien pour aujourd'hui.</p>
+          <div class="newrow">
+            <input type="text" id="todo-input" placeholder="Ajouter une tâche…" maxlength="120">
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>Alertes</h2>
+            <span class="grow"></span>
+            <span class="count" id="alert-count"></span>
+          </div>
+          <div class="scale" aria-hidden="true"></div>
+          <div class="scale-lab"><span>MOINS PRESSANT</span><span>PLUS PRESSANT</span></div>
+          <ul class="list alerts" id="alert-list"></ul>
+          <p class="empty" id="alert-empty" hidden>Aucune alerte.</p>
+          <div class="newrow">
+            <input type="text" id="alert-input" placeholder="Nouvelle alerte…" maxlength="120">
+            <div class="dots" id="alert-dots" role="group" aria-label="Urgence"></div>
+          </div>
+        </section>
+      </div>
+    </div>
   </div>
-  <p class="hint">Clique une case pour inscrire un cours · Entrée pour enregistrer · Échap pour annuler · vide la case pour supprimer</p>
-</main>
+</div>
 
 <script>
 (() => {
   "use strict";
 
-  const START_HOUR = 7, END_HOUR = 22;          // 7:00 → 22:00
-  const HUES = [150, 190, 222, 264, 312, 344, 22, 48];  // course palette
-  const KEY = "agenda.v1";
-
-  const DOW  = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"];
+  const START_HOUR = 8, END_HOUR = 18;
+  const KEY = "agenda.v2";
+  const DOW = ["lun","mar","mer","jeu","ven","sam","dim"];
   const MONTH = ["janvier","février","mars","avril","mai","juin","juillet",
                  "août","septembre","octobre","novembre","décembre"];
+  const HUES = [150,190,222,264,312,344,22,48];
 
-  /* ── State ─────────────────────────────────────────────────────── */
-  const load = () => {
-    try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; }
-  };
-  const saved = load();
-  const state = {
-    weeks:  Math.max(1, saved.weeks || 1),
-    events: saved.events || {}                  // "YYYY-MM-DD|H" → title
-  };
-  const save = () => {
-    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
+  /* Horaire relevé sur le relevé Omnivox (session A26).
+     d = 0 lundi … 4 vendredi ; h = [début, fin[ en heures pleines pour la grille ;
+     time = les vraies heures affichées dans le bloc. */
+  const TIMETABLE = [
+    {d:0,h:[12,14],time:"12:00 – 13:50",t:"Philo. rationnelle",k:"TH",code:"340-113-RI",room:"HA3325",prof:"Cinq-Mars, L"},
+    {d:0,h:[14,15],time:"14:00 – 14:50",t:"Philo. rationnelle",k:"LA",code:"340-113-RI",room:"HA3325",prof:"Cinq-Mars, L"},
+    {d:0,h:[16,18],time:"16:00 – 17:45",t:"Calcul différentiel",k:"TH",code:"201-124-RI",room:"HC1165",prof:"Gagnon, F"},
+
+    {d:1,h:[8,10], time:"08:00 – 09:50",t:"Écriture et litt.",k:"TH",code:"601-114-RI",room:"HA3370",prof:"Morissette, J"},
+    {d:1,h:[10,11],time:"10:00 – 10:50",t:"Cond. physique",k:"TH",code:"109-511-10",room:"HE1040",prof:"Lesage-Moussa"},
+    {d:1,h:[11,12],time:"11:00 – 11:50",t:"Cond. physique",k:"LA",code:"109-511-10",room:"HE1040",prof:"Lesage-Moussa"},
+    {d:1,h:[14,15],time:"14:00 – 14:50",t:"Bio. molécu. écosys.",k:"TH",code:"101-115-RI",room:"SA3075",prof:"Alexander, E"},
+    {d:1,h:[16,18],time:"16:00 – 17:45",t:"Sociologie",k:"TH",code:"387-114-RI",room:"SD2335",prof:"Letarte, J"},
+
+    {d:2,h:[8,10], time:"08:00 – 09:50",t:"Calcul différentiel",k:"LA",code:"201-124-RI",room:"HC2020",prof:"Gagnon, F"},
+    {d:2,h:[10,11],time:"10:00 – 10:50",t:"Calcul différentiel",k:"AP",code:"201-124-RI",room:"HC2020",prof:"Gagnon, F"},
+    {d:2,h:[15,18],time:"15:00 – 17:45",t:"Conférences",k:"",code:"",room:"",prof:""},
+
+    {d:3,h:[10,12],time:"10:00 – 11:50",t:"Bio. molécu. écosys.",k:"TH",code:"101-115-RI",room:"SA3105 / SA3140",prof:"Alexander, E · Colbert, M"},
+    {d:3,h:[13,15],time:"13:00 – 14:50",t:"Écriture et litt.",k:"LA",code:"601-114-RI",room:"HA3370",prof:"Morissette, J"},
+    {d:3,h:[16,18],time:"16:00 – 17:45",t:"Sociologie",k:"LA",code:"387-114-RI",room:"HA3230",prof:"Letarte, J"},
+
+    {d:4,h:[8,10], time:"08:00 – 09:50",t:"Bio. molécu. écosys.",k:"LA",code:"101-115-RI",room:"SA3035",prof:"Alexander, E · Colbert, M"},
+    {d:4,h:[12,14],time:"12:00 – 13:50",t:"Enj. géogr. aujourd'hui",k:"TH",code:"320-123-RI",room:"HA3380",prof:"Mathis, M"},
+    {d:4,h:[14,15],time:"14:00 – 14:50",t:"Enj. géogr. aujourd'hui",k:"LA",code:"320-123-RI",room:"HA3380",prof:"Mathis, M"},
+    {d:4,h:[15,17],time:"15:00 – 16:50",t:"Bio. molécu. écosys.",k:"AP",code:"101-115-RI",room:"",prof:"Alexander, E · Colbert, M"},
+  ];
+
+  /* jour → heure → { entrée, tête? } */
+  const byDay = new Map();
+  for (const e of TIMETABLE) {
+    let m = byDay.get(e.d);
+    if (!m) { m = new Map(); byDay.set(e.d, m); }
+    for (let h = e.h[0]; h < e.h[1]; h++) m.set(h, { e, head: h === e.h[0] });
+  }
+
+  const hues = new Map(
+    [...new Set(TIMETABLE.map(e => e.t))]
+      .sort((a, b) => a.localeCompare(b, "fr"))
+      .map((t, i) => [t, HUES[i % HUES.length]])
+  );
+  const hueOf = t => {
+    if (hues.has(t)) return hues.get(t);
+    let n = 0;
+    for (const c of t.toLowerCase()) n = (n * 31 + c.charCodeAt(0)) >>> 0;
+    return HUES[n % HUES.length];
   };
 
-  /* ── Dates ─────────────────────────────────────────────────────── */
-  const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-  const addDays = (d, n) => { const c = new Date(d); c.setDate(c.getDate()+n); return c; };
+  /* ── État ─────────────────────────────────────────────────────── */
+  const seed = () => ({
+    weeks: 1,
+    events: {},
+    todos: [
+      { id: "t1", text: "Réviser le labo de Calcul différentiel", done: false },
+      { id: "t2", text: "Lire le chapitre de Sociologie", done: true },
+      { id: "t3", text: "Repérer le local HA3370", done: false },
+    ],
+    alerts: [
+      { id: "a1", text: "Examen — Calcul différentiel", when: "exemple, à modifier", p: 3 },
+      { id: "a2", text: "Remise — Écriture et litt.",   when: "exemple, à modifier", p: 2 },
+      { id: "a3", text: "Lecture — Sociologie",          when: "exemple, à modifier", p: 0 },
+    ],
+  });
+
+  let state;
+  try { state = { ...seed(), ...(JSON.parse(localStorage.getItem(KEY)) || {}) }; }
+  catch { state = seed(); }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} };
+  const uid = () => "x" + Math.random().toString(36).slice(2, 9);
+
+  /* ── Dates ────────────────────────────────────────────────────── */
+  const pad = n => String(n).padStart(2, "0");
+  const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const addDays = (d, n) => { const c = new Date(d); c.setDate(c.getDate() + n); return c; };
   const monday = d => {
     const c = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     return addDays(c, -((c.getDay() + 6) % 7));
@@ -366,150 +372,151 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   const weekNo = d => {
     const t = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     t.setDate(t.getDate() + 4 - ((t.getDay() + 6) % 7));
-    const jan1 = new Date(t.getFullYear(), 0, 1);
-    return Math.ceil(((t - jan1) / 86400000 + 1) / 7);
+    return Math.ceil(((t - new Date(t.getFullYear(), 0, 1)) / 864e5 + 1) / 7);
   };
   const range = (a, b) => {
-    const d1 = a.getDate(), d2 = b.getDate();
-    if (a.getFullYear() !== b.getFullYear())
-      return `${d1} ${MONTH[a.getMonth()]} ${a.getFullYear()} – ${d2} ${MONTH[b.getMonth()]} ${b.getFullYear()}`;
     if (a.getMonth() !== b.getMonth())
-      return `${d1} ${MONTH[a.getMonth()]} – ${d2} ${MONTH[b.getMonth()]} ${b.getFullYear()}`;
-    return `${d1} – ${d2} ${MONTH[a.getMonth()]} ${a.getFullYear()}`;
+      return `${a.getDate()} ${MONTH[a.getMonth()]} – ${b.getDate()} ${MONTH[b.getMonth()]} ${b.getFullYear()}`;
+    return `${a.getDate()} – ${b.getDate()} ${MONTH[a.getMonth()]} ${a.getFullYear()}`;
   };
 
-  const anchor = monday(new Date());
-  const todayISO = iso(new Date());
+  const now0 = new Date();
+  /* Première semaine de la session A26. Avant cette date, aucun cours n'a lieu,
+     et l'agenda s'ouvre directement sur la semaine de la rentrée. */
+  const SEMESTER_START = new Date(2026, 7, 24);
+  const anchor = monday(now0) < SEMESTER_START ? monday(SEMESTER_START) : monday(now0);
+  const todayISO = iso(now0);
+  const inSemester = d => d >= SEMESTER_START;
 
-  /* One hue per distinct course, assigned alphabetically so no two of the
-     first eight courses collide. Rebuilt on every render. */
-  let hues = new Map();
-  const rebuildHues = () => {
-    hues = new Map([...new Set(Object.values(state.events))]
-      .sort((a, b) => a.localeCompare(b, "fr"))
-      .map((t, i) => [t, HUES[i % HUES.length]]));
+  const el = id => document.getElementById(id);
+  const make = (tag, cls, text) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
   };
-  const hueOf = t => hues.get(t) ?? HUES[0];
 
-  /* ── Render ────────────────────────────────────────────────────── */
-  const host = document.getElementById("weeks");
-
-  function render() {
-    rebuildHues();
-    host.textContent = "";
-    for (let w = 0; w < state.weeks; w++) host.append(buildWeek(addDays(anchor, w * 7)));
-    document.getElementById("drop").hidden = state.weeks < 2;
-    placeNow();
-    save();
-  }
+  /* ── Grille ───────────────────────────────────────────────────── */
+  const host = el("weeks");
 
   function buildWeek(start) {
     const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
-    const sec = document.createElement("section");
-    sec.className = "week";
-    sec.dataset.start = iso(start);
+    const card = make("section", "card");
+    card.dataset.start = iso(start);
+    card.style.scrollMarginTop = "1rem";
 
-    const bar = document.createElement("div");
-    bar.className = "week-bar";
-    const no = document.createElement("span");
-    no.className = "week-no"; no.textContent = `S${weekNo(start)}`;
-    const rg = document.createElement("span");
-    rg.className = "week-range"; rg.textContent = range(days[0], days[6]);
-    const sp = document.createElement("span"); sp.className = "spacer";
-    const tally = document.createElement("span");
-    tally.className = "week-tally";
-    const count = days.reduce((n, d) =>
-      n + Object.keys(state.events).filter(k => k.startsWith(iso(d) + "|")).length, 0);
-    tally.textContent = count ? `${count} h inscrites` : "libre";
-    bar.append(no, rg, sp, tally);
+    const head = make("div", "card-head");
+    head.append(make("span", "tag", `S${weekNo(start)}`), make("h2", null, range(days[0], days[6])), make("span", "grow"));
+    let n = 0;
+    for (const d of days) {
+      const wd = (d.getDay() + 6) % 7;
+      if (inSemester(d)) n += byDay.get(wd)?.size ?? 0;
+      n += Object.keys(state.events).filter(k => k.startsWith(iso(d) + "|")).length;
+    }
+    head.append(make("span", "count", `${n} h`));
 
-    const grid = document.createElement("div");
-    grid.className = "grid";
-    const corner = document.createElement("div");
-    corner.className = "corner"; corner.style.gridColumn = "1";
-    grid.append(corner);
-
-    days.forEach(d => {
-      const h = document.createElement("div");
-      h.className = "dayhead";
-      if (d.getDay() === 0 || d.getDay() === 6) h.classList.add("is-weekend");
-      if (iso(d) === todayISO) h.classList.add("is-today");
-      const dow = document.createElement("span");
-      dow.className = "dow"; dow.textContent = DOW[(d.getDay() + 6) % 7];
-      const num = document.createElement("span");
-      num.className = "dnum"; num.textContent = d.getDate();
-      h.append(dow, num);
+    const grid = make("div", "grid");
+    grid.append(make("div", "corner"));
+    for (const d of days) {
+      const h = make("div", "dayhead");
+      if (d.getDay() === 0 || d.getDay() === 6) h.classList.add("wknd");
+      if (iso(d) === todayISO) h.classList.add("today");
+      h.append(make("span", "dow", DOW[(d.getDay() + 6) % 7]), make("span", "dnum", d.getDate()));
       grid.append(h);
-    });
+    }
 
     for (let hr = START_HOUR; hr <= END_HOUR; hr++) {
-      const g = document.createElement("div");
-      g.className = hr === START_HOUR ? "hour first" : "hour";
-      const b = document.createElement("b");
-      b.textContent = `${String(hr).padStart(2, "0")}:00`;
-      g.append(b);
+      const g = make("div", hr === START_HOUR ? "hour first" : "hour");
+      g.append(make("b", null, `${pad(hr)}:00`));
       grid.append(g);
-
-      days.forEach(d => grid.append(buildCell(iso(d), hr, d)));
+      for (const d of days) grid.append(buildCell(d, hr));
     }
-    const wrap = document.createElement("div");
-    wrap.className = "grid-wrap";
+
+    const wrap = make("div", "grid-wrap");
     wrap.append(grid);
-    sec.append(bar, wrap);
-    return sec;
+    card.append(head, wrap);
+    return card;
   }
 
-  function buildCell(dISO, hr, dateObj) {
-    const cell = document.createElement("div");
-    cell.className = "cell";
-    cell.tabIndex = 0;
+  function buildCell(date, hr) {
+    const dISO = iso(date);
+    const wd = (date.getDay() + 6) % 7;
+    const cell = make("div", "cell");
     cell.dataset.k = `${dISO}|${hr}`;
-    if (dateObj.getDay() === 0 || dateObj.getDay() === 6) cell.classList.add("is-weekend");
-    if (dISO === todayISO) cell.classList.add("is-today");
+    if (date.getDay() === 0 || date.getDay() === 6) cell.classList.add("wknd");
+    if (dISO === todayISO) cell.classList.add("today");
 
-    const title = state.events[cell.dataset.k];
-    if (title) {
-      cell.classList.add("has-event");
+    const user = state.events[cell.dataset.k];
+    const slot = inSemester(date) ? byDay.get(wd)?.get(hr) : undefined;
+
+    if (user) {
       const above = state.events[`${dISO}|${hr - 1}`];
       const below = state.events[`${dISO}|${hr + 1}`];
-      if (above === title) cell.classList.add("is-cont");
-      if (below === title) cell.classList.add("is-head-of-run");
-
-      const ev = document.createElement("div");
-      ev.className = "event";
-      ev.style.setProperty("--h", hueOf(title));
-      const t = document.createElement("span");
-      t.className = "title"; t.textContent = title;
-      ev.append(t);
-      cell.append(ev);
+      paint(cell, { t: user, k: "", room: "", prof: "", time: `${pad(hr)}:00` },
+            above === user, below === user);
+      cell.tabIndex = 0;
+      cell.addEventListener("click", () => edit(cell));
+    } else if (slot) {
+      const { e } = slot;
+      const span = e.h[1] - e.h[0];
+      if (slot.head) {
+        cell.classList.add("run");
+        if (span === 1) cell.classList.add("r1");
+        const box = make("div", "ev");
+        box.style.setProperty("--h", hueOf(e.t));
+        box.style.setProperty("--span", span);
+        box.append(make("p", "t", e.t));
+        const meta = [e.k, e.room].filter(Boolean).join(" · ");
+        if (meta) box.append(make("p", "m", meta));
+        if (e.time) box.append(make("p", "h", e.time));
+        if (span >= 2 && e.prof) box.append(make("p", "p", e.prof));
+        cell.append(box);
+      } else {
+        cell.classList.add("under");
+      }
+      cell.title = [e.t, e.code && `${e.code} (${e.k})`, e.room, e.prof, e.time]
+        .filter(Boolean).join("\n");
+    } else {
+      cell.classList.add("free");
+      cell.tabIndex = 0;
+      cell.addEventListener("click", () => edit(cell));
+      cell.addEventListener("keydown", ev => {
+        if (ev.key === "Enter") { ev.preventDefault(); edit(cell); }
+      });
     }
-
-    cell.addEventListener("click", () => edit(cell));
-    cell.addEventListener("keydown", e => {
-      if (e.key === "Enter") { e.preventDefault(); edit(cell); }
-    });
     return cell;
   }
 
-  /* ── Editing ───────────────────────────────────────────────────── */
-  let open = null;
+  function paint(cell, e, isCont, isHead) {
+    if (isCont) cell.classList.add("cont");
+    if (isHead) cell.classList.add("head");
+    if (!isCont && !isHead) cell.classList.add("r1");
+    const box = make("div", "ev");
+    box.style.setProperty("--h", hueOf(e.t));
+    box.append(make("p", "t", e.t));
+    const meta = [e.k, e.room].filter(Boolean).join(" · ");
+    if (meta) box.append(make("p", "m", meta));
+    if (e.time) box.append(make("p", "h", e.time));
 
+    cell.append(box);
+  }
+
+  let open = null;
   function edit(cell) {
     if (open) open.blur();
     const key = cell.dataset.k;
-    const input = document.createElement("input");
+    const input = make("input");
     input.type = "text";
     input.value = state.events[key] || "";
-    input.placeholder = "Cours, examen, travail…";
+    input.placeholder = "Ajouter…";
     input.maxLength = 60;
     cell.append(input);
     open = input;
     input.focus(); input.select();
-
     let cancelled = false;
-    input.addEventListener("keydown", e => {
-      if (e.key === "Enter") { e.preventDefault(); input.blur(); }
-      if (e.key === "Escape") { cancelled = true; input.blur(); }
+    input.addEventListener("keydown", ev => {
+      if (ev.key === "Enter") { ev.preventDefault(); input.blur(); }
+      if (ev.key === "Escape") { cancelled = true; input.blur(); }
     });
     input.addEventListener("blur", () => {
       open = null;
@@ -517,35 +524,36 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         const v = input.value.trim();
         if (v) state.events[key] = v; else delete state.events[key];
       }
-      render();
+      renderWeeks();
     }, { once: true });
   }
 
-  /* ── "Maintenant" marker ───────────────────────────────────────── */
+  function renderWeeks() {
+    host.textContent = "";
+    for (let w = 0; w < state.weeks; w++) host.append(buildWeek(addDays(anchor, w * 7)));
+    placeNow();
+    save();
+  }
+
   function placeNow() {
-    document.querySelectorAll(".now, .now-label").forEach(n => n.remove());
-    const now = new Date();
-    const h = now.getHours() + now.getMinutes() / 60;
+    document.querySelectorAll(".now,.now-label").forEach(n => n.remove());
+    const t = new Date();
+    const h = t.getHours() + t.getMinutes() / 60;
     if (h < START_HOUR || h > END_HOUR + 1) return;
+    const card = document.querySelector(`.card[data-start="${iso(monday(t))}"]`);
+    if (!card) return;
+    const grid = card.querySelector(".grid");
+    const dh = grid.querySelector(".dayhead");
+    const top = `calc(${dh.offsetTop + dh.offsetHeight}px + var(--row-h) * ${h - START_HOUR})`;
+    const idx = (t.getDay() + 6) % 7;
 
-    const idx = (now.getDay() + 6) % 7;
-    const week = document.querySelector(`.week[data-start="${iso(monday(now))}"]`);
-    if (!week) return;
-    const grid = week.querySelector(".grid");
-    const head = grid.querySelector(".dayhead");
-    const offset = `${head.offsetTop + head.offsetHeight}px`;
-    const top = `calc(${offset} + var(--row-h) * ${h - START_HOUR})`;
-
-    const line = document.createElement("div");
-    line.className = "now";
+    const line = make("div", "now");
     line.style.top = top;
     line.style.left = `calc(var(--gutter) + (100% - var(--gutter)) / 7 * ${idx})`;
-    line.style.width = `calc((100% - var(--gutter)) / 7)`;
+    line.style.width = "calc((100% - var(--gutter)) / 7)";
 
-    const label = document.createElement("div");
-    label.className = "now-label";
-    label.style.top = top;
-    label.textContent = `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+    const lab = make("div", "now-label", `${pad(t.getHours())}:${pad(t.getMinutes())}`);
+    lab.style.top = top;
 
     grid.querySelectorAll(".hour b").forEach(b => { b.style.visibility = ""; });
     const near = Math.round(h);
@@ -553,30 +561,133 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       const g = grid.querySelectorAll(".hour")[near - START_HOUR];
       if (g) g.querySelector("b").style.visibility = "hidden";
     }
-    grid.append(line, label);
+    grid.append(line, lab);
   }
   setInterval(placeNow, 60000);
 
-  /* ── Controls ──────────────────────────────────────────────────── */
-  document.getElementById("add").addEventListener("click", () => {
+  /* ── À faire ──────────────────────────────────────────────────── */
+  const CHECK = '<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"/></svg>';
+
+  function renderTodos() {
+    const ul = el("todo-list");
+    ul.textContent = "";
+    for (const it of state.todos) {
+      const li = make("li", it.done ? "done" : "");
+      const tick = make("button", "tick");
+      tick.innerHTML = CHECK;
+      tick.setAttribute("aria-label", it.done ? "Décocher" : "Cocher");
+      tick.addEventListener("click", () => {
+        it.done = !it.done;
+        renderTodos();
+      });
+      const kill = make("button", "kill", "×");
+      kill.setAttribute("aria-label", "Supprimer");
+      kill.addEventListener("click", () => {
+        state.todos = state.todos.filter(x => x.id !== it.id);
+        renderTodos();
+      });
+      li.append(tick, make("span", "todo-t", it.text), kill);
+      ul.append(li);
+    }
+    const left = state.todos.filter(t => !t.done).length;
+    el("todo-count").textContent = state.todos.length ? `${left} restante${left > 1 ? "s" : ""}` : "";
+    el("todo-empty").hidden = state.todos.length > 0;
+    save();
+  }
+
+  el("todo-input").addEventListener("keydown", ev => {
+    if (ev.key !== "Enter") return;
+    const v = ev.currentTarget.value.trim();
+    if (!v) return;
+    state.todos.push({ id: uid(), text: v, done: false });
+    ev.currentTarget.value = "";
+    renderTodos();
+  });
+
+  /* ── Alertes ──────────────────────────────────────────────────── */
+  const P_LABEL = ["Faible", "Moyen", "Élevé", "Urgent"];
+  let draftP = 2;
+
+  function renderDots() {
+    const box = el("alert-dots");
+    box.textContent = "";
+    for (let p = 0; p <= 3; p++) {
+      const b = make("button", "dot" + (p === draftP ? " on" : ""));
+      b.style.setProperty("--p", `var(--p${p})`);
+      b.title = P_LABEL[p];
+      b.setAttribute("aria-label", `Urgence : ${P_LABEL[p]}`);
+      b.setAttribute("aria-pressed", String(p === draftP));
+      b.addEventListener("click", () => { draftP = p; renderDots(); });
+      box.append(b);
+    }
+  }
+
+  function renderAlerts() {
+    const ul = el("alert-list");
+    ul.textContent = "";
+    const sorted = [...state.alerts].sort((a, b) => b.p - a.p);
+    for (const a of sorted) {
+      const li = make("li");
+      li.style.setProperty("--p", `var(--p${a.p})`);
+      const body = make("div", "al-body");
+      body.append(make("p", "al-t", a.text));
+      const w = make("p", "al-w");
+      w.append(document.createTextNode(a.when || ""));
+      const badge = make("span", "al-p", (a.when ? " · " : "") + P_LABEL[a.p].toUpperCase());
+      w.append(badge);
+      body.append(w);
+      const kill = make("button", "kill", "×");
+      kill.setAttribute("aria-label", "Supprimer");
+      kill.addEventListener("click", () => {
+        state.alerts = state.alerts.filter(x => x.id !== a.id);
+        renderAlerts();
+      });
+      li.append(make("span", "bar"), body, kill);
+      ul.append(li);
+    }
+    const urgent = state.alerts.filter(a => a.p === 3).length;
+    el("alert-count").textContent = urgent ? `${urgent} urgente${urgent > 1 ? "s" : ""}` : `${state.alerts.length}`;
+    el("alert-empty").hidden = state.alerts.length > 0;
+    save();
+  }
+
+  el("alert-input").addEventListener("keydown", ev => {
+    if (ev.key !== "Enter") return;
+    const v = ev.currentTarget.value.trim();
+    if (!v) return;
+    state.alerts.push({ id: uid(), text: v, when: "", p: draftP });
+    ev.currentTarget.value = "";
+    renderAlerts();
+  });
+
+  /* ── Commandes ────────────────────────────────────────────────── */
+  const addWeek = () => {
     state.weeks++;
-    render();
+    renderWeeks();
     host.lastElementChild.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
-  document.getElementById("drop").addEventListener("click", () => {
-    if (state.weeks > 1) { state.weeks--; render(); }
-  });
-  document.getElementById("jump").addEventListener("click", () => {
-    host.firstElementChild.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
-  document.getElementById("wipe").addEventListener("click", () => {
-    if (confirm("Effacer toutes les entrées de l'agenda ?")) { state.events = {}; render(); }
+  };
+  const goToday = () => host.firstElementChild.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  el("add").addEventListener("click", addWeek);
+  el("add2").addEventListener("click", addWeek);
+  el("r-add").addEventListener("click", addWeek);
+  el("today").addEventListener("click", goToday);
+  el("r-today").addEventListener("click", goToday);
+  el("r-print").addEventListener("click", () => window.print());
+  el("r-reset").addEventListener("click", () => {
+    if (!confirm("Effacer tes ajouts (tâches, alertes, entrées manuelles) ?\nTon horaire de cours reste.")) return;
+    state = { ...seed(), weeks: state.weeks, todos: [], alerts: [], events: {} };
+    renderWeeks(); renderTodos(); renderAlerts();
   });
 
-  const t = new Date();
-  document.getElementById("stamp").textContent =
-    `${DOW[(t.getDay()+6)%7]}. ${t.getDate()} ${MONTH[t.getMonth()]} ${t.getFullYear()}`;
+  el("stamp").textContent =
+    `${DOW[(now0.getDay() + 6) % 7]}. ${now0.getDate()} ${MONTH[now0.getMonth()]} ${now0.getFullYear()} · session A26`;
+  el("todo-date").textContent =
+    `${DOW[(now0.getDay() + 6) % 7].toUpperCase()} ${now0.getDate()}`;
 
-  render();
+  renderWeeks();
+  renderTodos();
+  renderDots();
+  renderAlerts();
 })();
 </script>
