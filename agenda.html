@@ -1,279 +1,372 @@
 <title>Agenda Cégep</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-/* Design sombre « glass », d'après la maquette de tableau de bord fournie:
-   fond gris doux en dégradé radial, cartes translucides à bord clair,
-   accent bleu vif, et une échelle rouge→vert pour l'urgence. */
+/* Tableau de bord sombre d'après la maquette fournie : cadre arrondi englobant,
+   rail d'icônes flottant, cartes translucides, accent bleu vif, jauge à graduations,
+   histogramme à bulle de valeur, interrupteurs à pastille. */
 :root{
-  --bg-1:#4d5053; --bg-2:#313335; --bg-3:#1f2123;
-  --glass:rgba(255,255,255,.068);
-  --glass-hi:rgba(255,255,255,.115);
-  --glass-lo:rgba(255,255,255,.038);
-  --stroke:rgba(255,255,255,.09);
-  --stroke-hi:rgba(255,255,255,.18);
-  --text:#F3F5F6;
-  --dim:rgba(243,245,246,.60);
-  --faint:rgba(243,245,246,.33);
-  --accent:#18A0FB;
+  --page:#212325;
+  --frame-1:#54585B; --frame-2:#35383A; --frame-3:#282A2C;
+  --card:rgba(255,255,255,.075);
+  --card-hi:rgba(255,255,255,.125);
+  --card-lo:rgba(255,255,255,.045);
+  --line:rgba(255,255,255,.09);
+  --line-hi:rgba(255,255,255,.20);
+  --ink:#F4F6F7;
+  --dim:rgba(244,246,247,.62);
+  --faint:rgba(244,246,247,.34);
+  --accent:#17A2F5;
+  --accent-ink:#04141F;
   --p3:#FF453A; --p2:#FF9F0A; --p1:#FFD60A; --p0:#32D74B;
-  --gutter:3.6rem; --row-h:3.85rem;
+  --gutter:3.4rem; --row-h:3.5rem;
   --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-h1,h2,h3,p,ul,ol{margin:0}
+h1,h2,h3,p,ul,ol,figure{margin:0}
 html,body{height:100%}
 body{
-  margin:0; color:var(--text); font-family:var(--font); font-size:15px; line-height:1.45;
-  background:var(--bg-3);
-  background-image:radial-gradient(135% 105% at 14% -12%, var(--bg-1) 0%, var(--bg-2) 44%, var(--bg-3) 100%);
-  background-attachment:fixed;
+  margin:0;padding:clamp(.5rem,1.4vw,1.35rem);
+  background:var(--page);color:var(--ink);
+  font-family:var(--font);font-size:15px;line-height:1.45;
   -webkit-font-smoothing:antialiased;
 }
-button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-/* ── Coquille ───────────────────────────────────────────────────── */
-.app{display:grid;grid-template-columns:4.75rem minmax(0,1fr);min-height:100vh}
-.rail{position:sticky;top:0;height:100vh;padding:1rem .6rem;display:flex;justify-content:center}
-.rail-inner{
-  background:var(--glass);border:1px solid var(--stroke);border-radius:26px;
-  padding:.6rem .45rem;display:flex;flex-direction:column;gap:.3rem;align-items:center;
+/* ── Cadre + rail ─────────────────────────────────────────────── */
+.frame{
+  min-height:calc(100vh - 2.7rem);
+  border-radius:34px;
+  background:radial-gradient(120% 110% at 8% -10%, var(--frame-1) 0%, var(--frame-2) 46%, var(--frame-3) 100%);
+  padding:clamp(.6rem,1vw,1rem);
+  display:grid;grid-template-columns:5rem minmax(0,1fr);gap:.4rem;
 }
-.rail button{width:2.7rem;height:2.7rem;border-radius:16px;display:grid;place-items:center;color:var(--faint);transition:background .15s,color .15s}
-.rail button:hover{background:var(--glass-hi);color:var(--text)}
-.rail button.on{background:var(--glass-hi);color:var(--text)}
-.rail svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.rail .sep{width:1.6rem;height:1px;background:var(--stroke);margin:.3rem 0}
-
-.main{padding:1.15rem 1.4rem 3rem;min-width:0}
-.topbar{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1.05rem}
-.brand h1{margin:0;font-size:1.45rem;font-weight:600;letter-spacing:-.025em}
-.brand p{margin:.1rem 0 0;color:var(--dim);font-size:.78rem;font-family:var(--mono)}
-.topbar .grow{flex:1 1 auto}
-.chip{
-  display:inline-flex;align-items:center;gap:.45rem;
-  background:var(--glass);border:1px solid var(--stroke);border-radius:999px;
-  padding:.5rem .9rem;font-size:.82rem;color:var(--dim);transition:background .15s,color .15s,border-color .15s;
+.rail{display:flex;justify-content:center;padding:.3rem 0}
+.rail-in{
+  background:var(--card);border:1px solid var(--line);border-radius:28px;
+  padding:.55rem .4rem;display:flex;flex-direction:column;align-items:center;gap:.25rem;
+  height:100%;
 }
-.chip:hover{background:var(--glass-hi);color:var(--text);border-color:var(--stroke-hi)}
-.chip.primary{background:var(--accent);border-color:transparent;color:#04121d;font-weight:600}
-.chip.primary:hover{background:#37B0FF;color:#04121d}
+.rail button{width:2.8rem;height:2.8rem;border-radius:17px;display:grid;place-items:center;color:var(--faint);transition:background .16s,color .16s}
+.rail button:hover{background:var(--card-hi);color:var(--ink)}
+.rail button.on{background:var(--card-hi);color:var(--ink)}
+.rail .grow{flex:1 1 auto}
+svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 
-/* ── Colonnes ───────────────────────────────────────────────────── */
-.cols{display:grid;grid-template-columns:minmax(0,1fr) 21.5rem;gap:1.05rem;align-items:start}
-.stack{display:flex;flex-direction:column;gap:1.05rem;min-width:0}
-.card{background:var(--glass);border:1px solid var(--stroke);border-radius:22px;overflow:hidden}
-.card-head{display:flex;align-items:center;gap:.6rem;padding:.85rem 1.05rem}
-.card-head h2{margin:0;font-size:1rem;font-weight:600;letter-spacing:-.01em}
-.card-head .grow{flex:1 1 auto}
-.tag{
-  font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;
-  background:var(--glass-hi);border:1px solid var(--stroke);border-radius:8px;
-  padding:.16rem .42rem;color:var(--dim);
+.main{padding:.3rem .4rem 1rem 0;min-width:0}
+
+/* ── Barre du haut ────────────────────────────────────────────── */
+.top{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;margin-bottom:1rem;padding:.35rem .1rem}
+.tabs{display:flex;align-items:baseline;gap:1.5rem;min-width:0;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{font-size:1.32rem;font-weight:600;letter-spacing:-.02em;color:var(--faint);white-space:nowrap;transition:color .16s}
+.tab:hover{color:var(--dim)}
+.tab.on{color:var(--ink)}
+.tab small{display:block;font-size:.62rem;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-top:-.1rem}
+.top .grow{flex:1 1 auto}
+.addcircle{
+  width:2.8rem;height:2.8rem;border-radius:50%;display:grid;place-items:center;
+  border:1.5px dashed var(--line-hi);color:var(--dim);font-size:1.2rem;line-height:1;
+  transition:border-color .16s,color .16s,transform .2s;
 }
-.count{font-family:var(--mono);font-size:.72rem;color:var(--faint)}
-
-/* ── Grille horaire ─────────────────────────────────────────────── */
-.grid-wrap{overflow-x:auto}
-.grid{position:relative;display:grid;grid-template-columns:var(--gutter) repeat(7,minmax(5.4rem,1fr))}
-.corner{grid-column:1;position:sticky;left:0;z-index:3;background:transparent}
-.dayhead{padding:.45rem .25rem .5rem;text-align:center;border-left:1px solid var(--stroke);border-bottom:1px solid var(--stroke-hi)}
-.dayhead .dow{display:block;font-family:var(--mono);font-size:.63rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
-.dayhead .dnum{display:block;margin-top:.05rem;font-size:1.05rem;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.dayhead.wknd{background:rgba(0,0,0,.14)}
-.dayhead.today .dow{color:var(--accent)}
-.dayhead.today .dnum{color:var(--accent)}
-
-.hour{position:sticky;left:0;z-index:2;grid-column:1;border-right:1px solid var(--stroke-hi)}
-.hour b{
-  position:absolute;top:0;right:.4rem;transform:translateY(-.45em);
-  font-family:var(--mono);font-weight:400;font-size:.66rem;color:var(--faint);
-  font-variant-numeric:tabular-nums;padding:0 .12rem;
+.addcircle:hover{border-color:var(--accent);color:var(--accent);transform:rotate(90deg)}
+.divider{width:1px;height:1.7rem;background:var(--line-hi);margin:0 .35rem}
+.round{
+  width:2.8rem;height:2.8rem;border-radius:50%;display:grid;place-items:center;
+  background:var(--card);border:1px solid var(--line);color:var(--dim);transition:background .16s,color .16s;
 }
-.hour.first b{transform:translateY(.1em)}
+.round:hover{background:var(--card-hi);color:var(--ink)}
+.avatar{
+  width:2.9rem;height:2.9rem;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(150deg,#3d7fa8,#1d5b7d);color:#fff;
+  font-size:.82rem;font-weight:650;letter-spacing:.02em;border:2px solid rgba(255,255,255,.18);
+}
 
-.cell{position:relative;height:var(--row-h);border-top:1px solid var(--stroke);border-left:1px solid var(--stroke);padding:3px}
-.cell.wknd{background:rgba(0,0,0,.14)}
-.cell.today{background:rgba(24,160,251,.055)}
+/* ── Plateau ──────────────────────────────────────────────────── */
+.board{
+  display:grid;gap:.9rem;align-items:start;
+  grid-template-columns:20rem minmax(0,1fr) 19.5rem;
+  grid-template-areas:"next week panel" "grid grid side";
+}
+.a-next{grid-area:next}
+.a-week{grid-area:week;align-self:stretch;display:flex;flex-direction:column}
+.a-panel{grid-area:panel}
+.a-grid{grid-area:grid}.a-side{grid-area:side}
+.stack{display:flex;flex-direction:column;gap:.9rem;min-width:0}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:26px;overflow:hidden}
+.chead{display:flex;align-items:center;gap:.55rem;padding:1rem 1.15rem .5rem}
+.chead h2{font-size:1.02rem;font-weight:600;letter-spacing:-.012em}
+.chead p{font-size:.74rem;color:var(--faint);margin-top:.06rem}
+.chead .grow{flex:1 1 auto}
+.badge{font-family:var(--mono);font-size:.66rem;letter-spacing:.07em;background:var(--card-hi);border:1px solid var(--line);border-radius:9px;padding:.18rem .45rem;color:var(--dim)}
+.meta{font-family:var(--mono);font-size:.72rem;color:var(--faint)}
+
+/* Segmented pill */
+.seg{display:inline-flex;background:var(--card-lo);border:1px solid var(--line);border-radius:999px;padding:.2rem}
+.seg button{padding:.34rem .78rem;border-radius:999px;font-size:.76rem;color:var(--faint);transition:background .16s,color .16s}
+.seg button.on{background:var(--card-hi);color:var(--ink)}
+
+/* ── Jauge « prochain cours » ─────────────────────────────────── */
+.gauge{position:relative;display:grid;place-items:center;padding:.4rem 1.15rem .2rem}
+.gauge svg{width:min(100%,15.5rem);height:auto;display:block}
+.gauge .mid{position:absolute;text-align:center;pointer-events:none;padding:0 2.6rem}
+.gauge .big{font-size:2.5rem;font-weight:600;letter-spacing:-.035em;line-height:1;font-variant-numeric:tabular-nums}
+.gauge .cap{margin-top:.42rem;font-size:.78rem;color:var(--dim);line-height:1.25}
+.gauge .sub{margin-top:.12rem;font-family:var(--mono);font-size:.62rem;color:var(--faint)}
+.stepper{display:flex;justify-content:center;gap:.7rem;padding:.5rem 0 .1rem}
+.step{width:2.55rem;height:2.55rem;border-radius:50%;background:var(--card-lo);border:1px solid var(--line);display:grid;place-items:center;color:var(--dim);transition:background .16s,color .16s}
+.step:hover{background:var(--card-hi);color:var(--ink)}
+.acts-label{padding:.7rem 1.15rem .1rem;font-size:.76rem;color:var(--faint)}
+.acts{display:flex;gap:.55rem;justify-content:space-between;padding:.35rem 1.15rem 1.15rem}
+.act{flex:1 1 0;display:flex;flex-direction:column;align-items:center;gap:.4rem;color:var(--dim);transition:color .16s}
+.act .bub{width:3rem;height:3rem;border-radius:50%;background:var(--card-lo);border:1px solid var(--line);display:grid;place-items:center;transition:background .16s,color .16s,border-color .16s}
+.act:hover .bub{background:var(--card-hi);color:var(--ink)}
+.act.primary .bub{background:#fff;border-color:#fff;color:#16181A}
+.act span{font-size:.7rem}
+
+/* ── Histogramme « cette semaine » ────────────────────────────── */
+.bignum{display:flex;align-items:baseline;gap:.45rem;padding:.15rem 1.15rem .1rem}
+.bignum b{font-size:2.65rem;font-weight:600;letter-spacing:-.035em;line-height:1;font-variant-numeric:tabular-nums}
+.bignum i{font-style:normal;font-size:1.05rem;color:var(--faint)}
+.bignum em{font-style:normal;font-size:.76rem;color:var(--dim);margin-left:.15rem}
+.chart{display:flex;gap:.65rem;padding:1.1rem 1.15rem 1.15rem;align-items:stretch;flex:1 1 auto;min-height:11rem}
+.yax{display:flex;flex-direction:column;justify-content:space-between;font-family:var(--mono);font-size:.62rem;color:var(--faint);height:auto;padding-bottom:1.25rem;text-align:right}
+.bars{flex:1 1 auto;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:.5rem;min-width:0}
+.bar{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:.45rem;min-width:0;position:relative}
+.bar .col{width:100%;max-width:2.1rem;border-radius:8px;background:rgba(255,255,255,.20);transition:background .16s,height .3s ease}
+.bar.on .col{background:var(--accent)}
+.bar .lab{font-size:.68rem;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.bar.on .lab{color:var(--ink)}
+.bubble{
+  position:absolute;top:0;left:50%;transform:translate(-50%,-118%);
+  background:var(--card-hi);border:1px solid var(--line-hi);border-radius:8px;
+  padding:.12rem .42rem;font-family:var(--mono);font-size:.66rem;white-space:nowrap;
+}
+
+/* ── Interrupteurs + profs ────────────────────────────────────── */
+.tog{display:flex;align-items:center;gap:.7rem;padding:.62rem 1.15rem}
+.tog .ic{width:2.1rem;height:2.1rem;border-radius:11px;background:var(--card-lo);display:grid;place-items:center;color:var(--dim);flex:0 0 auto}
+.tog .nm{flex:1 1 auto;font-size:.85rem}
+.sw{width:2.65rem;height:1.52rem;border-radius:99px;background:rgba(255,255,255,.17);position:relative;flex:0 0 auto;transition:background .18s}
+.sw::after{content:"";position:absolute;top:.19rem;left:.19rem;width:1.14rem;height:1.14rem;border-radius:50%;background:#fff;transition:transform .18s}
+.sw.on{background:var(--accent)}
+.sw.on::after{transform:translateX(1.13rem)}
+
+.faces{display:flex;padding:.15rem 1.15rem 1.15rem}
+.face{
+  width:2.35rem;height:2.35rem;border-radius:50%;display:grid;place-items:center;
+  font-size:.68rem;font-weight:650;color:#fff;margin-left:-.55rem;
+  border:2px solid #3a3d3f;
+}
+.face:first-child{margin-left:0}
+.face.more{background:var(--card-hi);color:var(--dim);font-family:var(--mono);font-size:.64rem}
+
+/* ── Grille horaire ───────────────────────────────────────────── */
+.gwrap{overflow-x:auto}
+.grid{position:relative;display:grid;grid-template-columns:var(--gutter) repeat(var(--cols,7),minmax(5.2rem,1fr))}
+.corner{grid-column:1;position:sticky;left:0;z-index:3}
+.dh{padding:.4rem .2rem .48rem;text-align:center;border-left:1px solid var(--line);border-bottom:1px solid var(--line-hi)}
+.dh .dow{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.dh .dn{display:block;font-size:1.02rem;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.dh.we{background:rgba(0,0,0,.15)}
+.dh.td .dow,.dh.td .dn{color:var(--accent)}
+.hr{position:sticky;left:0;z-index:2;grid-column:1;border-right:1px solid var(--line-hi)}
+.hr b{position:absolute;top:0;right:.38rem;transform:translateY(-.45em);font-family:var(--mono);font-weight:400;font-size:.64rem;color:var(--faint);font-variant-numeric:tabular-nums}
+.hr.first b{transform:translateY(.1em)}
+.cell{position:relative;height:var(--row-h);border-top:1px solid var(--line);border-left:1px solid var(--line);padding:3px}
+.cell.we{background:rgba(0,0,0,.15)}
+.cell.td{background:rgba(23,162,245,.055)}
 .cell.free{cursor:cell}
-.cell.free:hover::after{
-  content:"+";position:absolute;inset:3px;display:grid;place-items:center;
-  color:var(--faint);font-size:.95rem;background:var(--glass-hi);border-radius:10px;
-}
-
+.cell.free:hover::after{content:"+";position:absolute;inset:3px;display:grid;place-items:center;color:var(--faint);background:var(--card-hi);border-radius:10px}
 .ev{
-  position:absolute;inset:3px;border-radius:11px;padding:.32rem .45rem;overflow:hidden;
-  background:linear-gradient(170deg,hsl(var(--h) 74% 63% / .32),hsl(var(--h) 70% 52% / .17));
-  border:1px solid hsl(var(--h) 62% 62% / .34);
-  border-left:3px solid hsl(var(--h) 85% 64% / .95);
+  position:absolute;inset:3px;border-radius:11px;padding:.3rem .42rem;overflow:hidden;
+  background:linear-gradient(168deg,hsl(var(--h) 74% 63% / .30),hsl(var(--h) 70% 52% / .16));
+  border:1px solid hsl(var(--h) 62% 62% / .34);border-left:3px solid hsl(var(--h) 86% 64% / .95);
 }
-.ev .t{font-size:.715rem;font-weight:600;line-height:1.16;color:#fff;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.ev .m{margin-top:.08rem;font-size:.625rem;line-height:1.2;color:rgba(255,255,255,.66)}
-.ev .h{margin-top:.05rem;font-size:.6rem;font-family:var(--mono);color:rgba(255,255,255,.44)}
 .cell.run .ev{top:3px;bottom:auto;height:calc(var(--row-h) * var(--span) - 6px);z-index:3}
 .cell.under{border-top-color:transparent}
-.ev .p{margin-top:.1rem;font-size:.62rem;line-height:1.2;color:rgba(255,255,255,.52)}
-.cell.cont .ev{top:-1px;border-top:0;border-top-left-radius:0;border-top-right-radius:0}
-.cell.cont .ev>*{display:none}
-.cell.head .ev{bottom:-1px;border-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0}
-.cell.r1 .ev .h{display:none}
-
-.cell input{
-  position:absolute;inset:3px;border:1px solid var(--accent);border-radius:10px;
-  background:rgba(0,0,0,.45);color:var(--text);font:600 .72rem/1.2 var(--font);padding:.3rem .45rem;
-}
+.ev .t{font-size:.7rem;font-weight:600;line-height:1.15;color:#fff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ev .m,.ev .h,.ev .p{margin-top:.07rem;font-size:.61rem;line-height:1.2;color:rgba(255,255,255,.62)}
+.ev .h{font-family:var(--mono);color:rgba(255,255,255,.44)}
+.ev .p{color:rgba(255,255,255,.5)}
+.cell.r1 .ev .h,.cell.r1 .ev .p{display:none}
+.cell input{position:absolute;inset:3px;border:1px solid var(--accent);border-radius:10px;background:rgba(0,0,0,.5);color:var(--ink);font:600 .7rem/1.2 var(--font);padding:.28rem .42rem}
 .cell input:focus{outline:none}
-
-.now{position:absolute;z-index:6;height:0;border-top:2px solid var(--accent);pointer-events:none;box-shadow:0 0 12px rgba(24,160,251,.7)}
+.now{position:absolute;z-index:6;height:0;border-top:2px solid var(--accent);pointer-events:none;box-shadow:0 0 12px rgba(23,162,245,.75)}
 .now::before{content:"";position:absolute;left:-4px;top:-5px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
-.now-label{
-  position:absolute;z-index:7;left:0;width:var(--gutter);transform:translateY(-50%);
-  text-align:right;padding-right:.4rem;font-family:var(--mono);font-size:.62rem;
-  color:var(--accent);pointer-events:none;font-variant-numeric:tabular-nums;
-}
+.nowlab{position:absolute;z-index:7;left:0;width:var(--gutter);transform:translateY(-50%);text-align:right;padding-right:.38rem;font-family:var(--mono);font-size:.61rem;color:var(--accent);pointer-events:none;font-variant-numeric:tabular-nums}
 
-.addweek{
-  display:flex;align-items:center;justify-content:center;gap:.6rem;width:100%;
-  padding:.95rem;border:1px dashed var(--stroke-hi);border-radius:20px;color:var(--dim);
-  font-size:.87rem;font-weight:500;transition:background .15s,color .15s,border-color .15s;
-}
-.addweek:hover{background:var(--glass);color:var(--text);border-color:var(--accent)}
-.addweek .plus{
-  display:grid;place-items:center;width:1.45rem;height:1.45rem;border-radius:50%;
-  background:var(--accent);color:#04121d;font-size:1rem;line-height:1;transition:transform .2s;
-}
-.addweek:hover .plus{transform:rotate(90deg)}
+.addweek{display:flex;align-items:center;justify-content:center;gap:.6rem;width:100%;padding:.95rem;border:1px dashed var(--line-hi);border-radius:22px;color:var(--dim);font-size:.87rem;font-weight:500;transition:background .16s,color .16s,border-color .16s}
+.addweek:hover{background:var(--card);color:var(--ink);border-color:var(--accent)}
+.addweek .pl{display:grid;place-items:center;width:1.5rem;height:1.5rem;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:1rem;line-height:1;transition:transform .2s}
+.addweek:hover .pl{transform:rotate(90deg)}
 
-/* ── À faire ────────────────────────────────────────────────────── */
-.list{list-style:none;margin:0;padding:0 1.05rem}
-.list li{display:flex;gap:.65rem;align-items:flex-start;padding:.55rem 0;border-top:1px solid var(--stroke)}
+/* ── Listes ───────────────────────────────────────────────────── */
+.list{list-style:none;padding:0 1.15rem}
+.list li{display:flex;gap:.65rem;align-items:flex-start;padding:.55rem 0;border-top:1px solid var(--line)}
 .list li:first-child{border-top:0}
-.tick{
-  flex:0 0 auto;width:1.15rem;height:1.15rem;margin-top:.1rem;border-radius:50%;
-  border:1.5px solid var(--stroke-hi);display:grid;place-items:center;color:transparent;transition:.15s;
-}
+.tick{flex:0 0 auto;width:1.2rem;height:1.2rem;margin-top:.1rem;border-radius:50%;border:1.5px solid var(--line-hi);display:grid;place-items:center;color:transparent;transition:.15s}
 .tick:hover{border-color:var(--accent)}
 .tick svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
-li.done .tick{background:var(--accent);border-color:var(--accent);color:#04121d}
-.todo-t{flex:1 1 auto;font-size:.855rem;line-height:1.3;min-width:0;overflow-wrap:anywhere}
-li.done .todo-t{color:var(--faint);text-decoration:line-through}
+li.done .tick{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tx{flex:1 1 auto;font-size:.85rem;line-height:1.3;min-width:0;overflow-wrap:anywhere}
+li.done .tx{color:var(--faint);text-decoration:line-through}
 .kill{flex:0 0 auto;color:var(--faint);font-size:1.05rem;line-height:1;padding:0 .15rem;opacity:0;transition:opacity .15s,color .15s}
 .list li:hover .kill{opacity:1}
 .kill:hover{color:var(--p3)}
-
-.newrow{display:flex;gap:.5rem;align-items:center;padding:.7rem 1.05rem 1rem}
-.newrow input[type=text]{
-  flex:1 1 auto;min-width:0;background:var(--glass-lo);border:1px solid var(--stroke);
-  border-radius:12px;padding:.5rem .7rem;color:var(--text);font:inherit;font-size:.82rem;
-}
+.newrow{display:flex;gap:.5rem;align-items:center;padding:.7rem 1.15rem 1.1rem}
+.newrow input[type=text]{flex:1 1 auto;min-width:0;background:var(--card-lo);border:1px solid var(--line);border-radius:13px;padding:.5rem .72rem;color:var(--ink);font:inherit;font-size:.82rem}
 .newrow input[type=text]::placeholder{color:var(--faint)}
 .newrow input[type=text]:focus{outline:none;border-color:var(--accent)}
+.empty{padding:.1rem 1.15rem 1rem;color:var(--faint);font-size:.79rem}
 
-/* ── Alertes ────────────────────────────────────────────────────── */
-.scale{margin:0 1.05rem .2rem;height:5px;border-radius:99px;background:linear-gradient(90deg,var(--p0),var(--p1),var(--p2),var(--p3))}
-.scale-lab{display:flex;justify-content:space-between;margin:.28rem 1.05rem .5rem;font-family:var(--mono);font-size:.6rem;color:var(--faint);letter-spacing:.04em}
+.scale{margin:.15rem 1.15rem 0;height:5px;border-radius:99px;background:linear-gradient(90deg,var(--p0),var(--p1),var(--p2),var(--p3))}
+.slab{display:flex;justify-content:space-between;margin:.28rem 1.15rem .45rem;font-family:var(--mono);font-size:.59rem;color:var(--faint);letter-spacing:.04em}
 .alerts li{align-items:stretch;gap:.7rem}
-.bar{flex:0 0 4px;border-radius:99px;background:var(--p);box-shadow:0 0 11px -1px var(--p)}
-.al-body{flex:1 1 auto;min-width:0}
-.al-t{font-size:.855rem;line-height:1.3;overflow-wrap:anywhere}
-.al-w{margin-top:.1rem;font-family:var(--mono);font-size:.655rem;color:var(--faint)}
-.al-p{margin-left:.35rem;color:var(--p)}
+.bar4{flex:0 0 4px;border-radius:99px;background:var(--p);box-shadow:0 0 11px -1px var(--p)}
+.al{flex:1 1 auto;min-width:0}
+.al .w{margin-top:.1rem;font-family:var(--mono);font-size:.64rem;color:var(--faint)}
+.al .w b{color:var(--p);font-weight:400}
 .dots{display:flex;gap:.3rem}
-.dot{width:1.15rem;height:1.15rem;border-radius:50%;border:1.5px solid transparent;background:var(--p);opacity:.35;transition:.15s}
+.dot{width:1.2rem;height:1.2rem;border-radius:50%;background:var(--p);opacity:.34;transition:.15s}
 .dot:hover{opacity:.7}
-.dot.on{opacity:1;box-shadow:0 0 0 2px rgba(255,255,255,.22)}
+.dot.on{opacity:1;box-shadow:0 0 0 2px rgba(255,255,255,.24)}
 
-.empty{padding:.2rem 1.05rem 1rem;color:var(--faint);font-size:.79rem}
-
-@media (max-width:1120px){ .cols{grid-template-columns:minmax(0,1fr)} }
-@media (max-width:760px){
-  :root{--gutter:2.7rem;--row-h:3rem}
-  .app{grid-template-columns:1fr}
-  .rail{position:static;height:auto;padding:.7rem}
-  .rail-inner{flex-direction:row;border-radius:20px}
-  .rail .sep{width:1px;height:1.6rem;margin:0 .3rem}
-  .main{padding:.4rem .7rem 3rem}
-  .grid{min-width:46rem}
+@media (max-width:1240px){
+  .board{grid-template-columns:20rem minmax(0,1fr);grid-template-areas:"next week" "grid grid" "panel side"}
 }
-@media (prefers-reduced-motion:reduce){*{transition:none!important}.addweek:hover .plus{transform:none}}
+@media (max-width:940px){
+  .board{grid-template-columns:minmax(0,1fr);grid-template-areas:"next" "week" "grid" "panel" "side"}
+}
+@media (max-width:720px){
+  :root{--gutter:2.6rem;--row-h:3rem}
+  body{padding:.35rem}
+  .frame{grid-template-columns:1fr;border-radius:24px}
+  .rail{padding:0 0 .5rem}
+  .rail-in{flex-direction:row;height:auto;border-radius:20px}
+  .rail .grow{flex:0}
+  .main{padding:0}
+  .grid{min-width:44rem}
+  .tab{font-size:1.1rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{
-  body{background:#fff;color:#000}
-  .rail,.topbar,.addweek,.newrow,.kill,.scale,.scale-lab{display:none}
-  .card{border:1px solid #999;background:#fff}
-  .cols{grid-template-columns:1fr}
-  .ev{background:#eee;border:1px solid #666;color:#000}
-  .ev .t,.ev .m,.ev .h{color:#000}
+  body{background:#fff;padding:0}
+  .frame{background:#fff;display:block;border-radius:0}
+  .rail,.top,.a-next,.a-panel,.a-side,.addweek,.newrow{display:none}
+  .board{display:block}
+  .card{border:1px solid #999;background:#fff;color:#000}
+  .ev{background:#eee;border:1px solid #666}
+  .ev .t,.ev .m,.ev .h,.ev .p{color:#000}
 }
 </style>
 
-<div class="app">
+<div class="frame">
   <nav class="rail" aria-label="Actions">
-    <div class="rail-inner">
-      <button id="r-today" class="on" title="Revenir à cette semaine" aria-label="Cette semaine">
-        <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg>
-      </button>
-      <button id="r-add" title="Ajouter la semaine suivante" aria-label="Ajouter une semaine">
-        <svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4M12 12.5v5M9.5 15h5"/></svg>
-      </button>
-      <div class="sep"></div>
-      <button id="r-print" title="Imprimer l'agenda" aria-label="Imprimer">
-        <svg viewBox="0 0 24 24"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="7.5" rx="2"/><path d="M7 14h10v6.5H7z"/></svg>
-      </button>
-      <button id="r-reset" title="Effacer mes ajouts" aria-label="Effacer">
-        <svg viewBox="0 0 24 24"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/></svg>
-      </button>
+    <div class="rail-in">
+      <button id="r-today" class="on" title="Cette semaine" aria-label="Cette semaine"><svg class="i" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5M5.5 9.5V20h13V9.5"/></svg></button>
+      <button id="r-add" title="Ajouter une semaine" aria-label="Ajouter une semaine"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4M12 12.5v5M9.5 15h5"/></svg></button>
+      <button id="r-chart" title="Semaine / session" aria-label="Basculer la vue du graphique"><svg class="i" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></button>
+      <button id="r-prof" title="Afficher les professeurs" aria-label="Afficher les professeurs"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></button>
+      <button id="r-print" title="Imprimer" aria-label="Imprimer"><svg class="i" viewBox="0 0 24 24"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="7.5" rx="2"/><path d="M7 14h10v6.5H7z"/></svg></button>
+      <span class="grow"></span>
+      <button id="r-reset" title="Effacer mes ajouts" aria-label="Effacer mes ajouts"><svg class="i" viewBox="0 0 24 24"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/></svg></button>
     </div>
   </nav>
 
   <div class="main">
-    <header class="topbar">
-      <div class="brand">
-        <h1>Agenda</h1>
-        <p id="stamp"></p>
-      </div>
+    <header class="top">
+      <div class="tabs" id="tabs"></div>
+      <button class="addcircle" id="add-top" title="Ajouter la semaine suivante" aria-label="Ajouter la semaine suivante">+</button>
       <span class="grow"></span>
-      <button class="chip" id="today">Aujourd'hui</button>
-      <button class="chip primary" id="add">+ Semaine</button>
+      <span class="divider"></span>
+      <button class="round" id="go-grid" title="Aller à l'horaire" aria-label="Aller à l'horaire"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg></button>
+      <button class="round" id="go-alerts" title="Aller aux alertes" aria-label="Aller aux alertes"><svg class="i" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 13 6 9zM10 18.5a2 2 0 0 0 4 0"/></svg></button>
+      <span class="avatar" id="avatar" title="Maverick Menard">MM</span>
     </header>
 
-    <div class="cols">
-      <div class="stack">
-        <div id="weeks" style="display:flex;flex-direction:column;gap:1.05rem"></div>
-        <button class="addweek" id="add2"><span class="plus">+</span> Ajouter la semaine suivante</button>
+    <div class="board">
+      <!-- Prochain cours -->
+      <section class="card a-next">
+        <div class="chead">
+          <div><h2>Prochain cours</h2><p id="next-when">—</p></div>
+        </div>
+        <div class="gauge">
+          <svg id="dial" viewBox="0 0 220 220" aria-hidden="true"></svg>
+          <div class="mid">
+            <div class="big" id="next-time">—</div>
+            <div class="cap" id="next-name">Aucun cours</div>
+            <div class="sub" id="next-room"></div>
+          </div>
+        </div>
+        <div class="stepper">
+          <button class="step" id="prev-c" aria-label="Cours précédent"><svg class="i" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></button>
+          <button class="step" id="next-c" aria-label="Cours suivant"><svg class="i" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button>
+        </div>
+        <p class="acts-label">Actions</p>
+        <div class="acts">
+          <button class="act primary" id="a-today"><span class="bub"><svg class="i" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5M5.5 9.5V20h13V9.5"/></svg></span><span>Aujourd'hui</span></button>
+          <button class="act" id="a-week"><span class="bub"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M12 12.5v5M9.5 15h5"/></svg></span><span>Semaine</span></button>
+          <button class="act" id="a-print"><span class="bub"><svg class="i" viewBox="0 0 24 24"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="7.5" rx="2"/><path d="M7 14h10v6.5H7z"/></svg></span><span>Imprimer</span></button>
+          <button class="act" id="a-reset"><span class="bub"><svg class="i" viewBox="0 0 24 24"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/></svg></span><span>Effacer</span></button>
+        </div>
+      </section>
+
+      <!-- Cette semaine -->
+      <section class="card a-week">
+        <div class="chead">
+          <h2 id="chart-title">Cette semaine</h2>
+          <span class="grow"></span>
+          <div class="seg" id="chart-seg">
+            <button data-v="jour" class="on">Par jour</button>
+            <button data-v="cours">Par cours</button>
+          </div>
+        </div>
+        <div class="bignum"><b id="wk-h">0</b><i>h</i><em id="wk-sub"></em></div>
+        <div class="chart">
+          <div class="yax" id="yax"></div>
+          <div class="bars" id="bars"></div>
+        </div>
+      </section>
+
+      <!-- Affichage + profs -->
+      <div class="stack a-panel">
+        <section class="card">
+          <div class="chead"><h2>Affichage</h2></div>
+          <div class="tog"><span class="ic"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M16 9.5v11"/></svg></span><span class="nm">Fins de semaine</span><button class="sw" data-t="weekend" aria-label="Fins de semaine"></button></div>
+          <div class="tog"><span class="ic"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></span><span class="nm">Professeurs</span><button class="sw" data-t="profs" aria-label="Professeurs"></button></div>
+          <div class="tog" style="padding-bottom:1rem"><span class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="nm">Locaux</span><button class="sw" data-t="locaux" aria-label="Locaux"></button></div>
+        </section>
+        <section class="card">
+          <div class="chead"><h2>Professeurs</h2><span class="grow"></span><span class="meta" id="prof-n"></span></div>
+          <div class="faces" id="faces"></div>
+        </section>
       </div>
 
-      <div class="stack">
-        <section class="card">
-          <div class="card-head">
-            <h2>À faire</h2>
-            <span class="tag" id="todo-date"></span>
-            <span class="grow"></span>
-            <span class="count" id="todo-count"></span>
-          </div>
-          <ul class="list" id="todo-list"></ul>
-          <p class="empty" id="todo-empty" hidden>Rien pour aujourd'hui.</p>
-          <div class="newrow">
-            <input type="text" id="todo-input" placeholder="Ajouter une tâche…" maxlength="120">
-          </div>
-        </section>
+      <!-- Horaire -->
+      <div class="stack a-grid">
+        <div id="weeks" style="display:flex;flex-direction:column;gap:.9rem"></div>
+        <button class="addweek" id="add-week"><span class="pl">+</span> Ajouter la semaine suivante</button>
+      </div>
 
+      <!-- À faire + alertes -->
+      <div class="stack a-side">
         <section class="card">
-          <div class="card-head">
-            <h2>Alertes</h2>
-            <span class="grow"></span>
-            <span class="count" id="alert-count"></span>
-          </div>
+          <div class="chead"><h2>À faire</h2><span class="badge" id="todo-date"></span><span class="grow"></span><span class="meta" id="todo-n"></span></div>
+          <ul class="list" id="todos"></ul>
+          <p class="empty" id="todo-empty" hidden>Rien pour aujourd'hui.</p>
+          <div class="newrow"><input type="text" id="todo-in" placeholder="Ajouter une tâche…" maxlength="120"></div>
+        </section>
+        <section class="card" id="alerts-card">
+          <div class="chead"><h2>Alertes</h2><span class="grow"></span><span class="meta" id="alert-n"></span></div>
           <div class="scale" aria-hidden="true"></div>
-          <div class="scale-lab"><span>MOINS PRESSANT</span><span>PLUS PRESSANT</span></div>
-          <ul class="list alerts" id="alert-list"></ul>
+          <div class="slab"><span>MOINS PRESSANT</span><span>PLUS PRESSANT</span></div>
+          <ul class="list alerts" id="alerts"></ul>
           <p class="empty" id="alert-empty" hidden>Aucune alerte.</p>
-          <div class="newrow">
-            <input type="text" id="alert-input" placeholder="Nouvelle alerte…" maxlength="120">
-            <div class="dots" id="alert-dots" role="group" aria-label="Urgence"></div>
-          </div>
+          <div class="newrow"><input type="text" id="alert-in" placeholder="Nouvelle alerte…" maxlength="120"><div class="dots" id="dots" role="group" aria-label="Urgence"></div></div>
         </section>
       </div>
     </div>
@@ -285,234 +378,194 @@ li.done .todo-t{color:var(--faint);text-decoration:line-through}
   "use strict";
 
   const START_HOUR = 8, END_HOUR = 18;
-  const KEY = "agenda.v2";
+  const KEY = "agenda.v3";
   const DOW = ["lun","mar","mer","jeu","ven","sam","dim"];
-  const MONTH = ["janvier","février","mars","avril","mai","juin","juillet",
-                 "août","septembre","octobre","novembre","décembre"];
+  const MONTH = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
   const HUES = [150,190,222,264,312,344,22,48];
+  const SEMESTER_START = new Date(2026, 7, 24);   // rentrée A26
 
-  /* Horaire relevé sur le relevé Omnivox (session A26).
-     d = 0 lundi … 4 vendredi ; h = [début, fin[ en heures pleines pour la grille ;
-     time = les vraies heures affichées dans le bloc. */
-  const TIMETABLE = [
+  /* Horaire relevé sur le relevé Omnivox. d = 0 lundi … 4 vendredi ;
+     h = [début, fin[ en heures pleines pour la grille ; time = heures réelles. */
+  const TT = [
     {d:0,h:[12,14],time:"12:00 – 13:50",t:"Philo. rationnelle",k:"TH",code:"340-113-RI",room:"HA3325",prof:"Cinq-Mars, L"},
     {d:0,h:[14,15],time:"14:00 – 14:50",t:"Philo. rationnelle",k:"LA",code:"340-113-RI",room:"HA3325",prof:"Cinq-Mars, L"},
     {d:0,h:[16,18],time:"16:00 – 17:45",t:"Calcul différentiel",k:"TH",code:"201-124-RI",room:"HC1165",prof:"Gagnon, F"},
-
     {d:1,h:[8,10], time:"08:00 – 09:50",t:"Écriture et litt.",k:"TH",code:"601-114-RI",room:"HA3370",prof:"Morissette, J"},
     {d:1,h:[10,11],time:"10:00 – 10:50",t:"Cond. physique",k:"TH",code:"109-511-10",room:"HE1040",prof:"Lesage-Moussa"},
     {d:1,h:[11,12],time:"11:00 – 11:50",t:"Cond. physique",k:"LA",code:"109-511-10",room:"HE1040",prof:"Lesage-Moussa"},
     {d:1,h:[14,15],time:"14:00 – 14:50",t:"Bio. molécu. écosys.",k:"TH",code:"101-115-RI",room:"SA3075",prof:"Alexander, E"},
     {d:1,h:[16,18],time:"16:00 – 17:45",t:"Sociologie",k:"TH",code:"387-114-RI",room:"SD2335",prof:"Letarte, J"},
-
     {d:2,h:[8,10], time:"08:00 – 09:50",t:"Calcul différentiel",k:"LA",code:"201-124-RI",room:"HC2020",prof:"Gagnon, F"},
     {d:2,h:[10,11],time:"10:00 – 10:50",t:"Calcul différentiel",k:"AP",code:"201-124-RI",room:"HC2020",prof:"Gagnon, F"},
     {d:2,h:[15,18],time:"15:00 – 17:45",t:"Conférences",k:"",code:"",room:"",prof:""},
-
     {d:3,h:[10,12],time:"10:00 – 11:50",t:"Bio. molécu. écosys.",k:"TH",code:"101-115-RI",room:"SA3105 / SA3140",prof:"Alexander, E · Colbert, M"},
     {d:3,h:[13,15],time:"13:00 – 14:50",t:"Écriture et litt.",k:"LA",code:"601-114-RI",room:"HA3370",prof:"Morissette, J"},
     {d:3,h:[16,18],time:"16:00 – 17:45",t:"Sociologie",k:"LA",code:"387-114-RI",room:"HA3230",prof:"Letarte, J"},
-
     {d:4,h:[8,10], time:"08:00 – 09:50",t:"Bio. molécu. écosys.",k:"LA",code:"101-115-RI",room:"SA3035",prof:"Alexander, E · Colbert, M"},
     {d:4,h:[12,14],time:"12:00 – 13:50",t:"Enj. géogr. aujourd'hui",k:"TH",code:"320-123-RI",room:"HA3380",prof:"Mathis, M"},
     {d:4,h:[14,15],time:"14:00 – 14:50",t:"Enj. géogr. aujourd'hui",k:"LA",code:"320-123-RI",room:"HA3380",prof:"Mathis, M"},
     {d:4,h:[15,17],time:"15:00 – 16:50",t:"Bio. molécu. écosys.",k:"AP",code:"101-115-RI",room:"",prof:"Alexander, E · Colbert, M"},
   ];
+  const ORDER = [...TT].sort((a,b) => a.d - b.d || a.h[0] - b.h[0]);
 
-  /* jour → heure → { entrée, tête? } */
   const byDay = new Map();
-  for (const e of TIMETABLE) {
-    let m = byDay.get(e.d);
-    if (!m) { m = new Map(); byDay.set(e.d, m); }
+  for (const e of TT) {
+    let m = byDay.get(e.d); if (!m) { m = new Map(); byDay.set(e.d, m); }
     for (let h = e.h[0]; h < e.h[1]; h++) m.set(h, { e, head: h === e.h[0] });
   }
-
-  const hues = new Map(
-    [...new Set(TIMETABLE.map(e => e.t))]
-      .sort((a, b) => a.localeCompare(b, "fr"))
-      .map((t, i) => [t, HUES[i % HUES.length]])
-  );
+  const hues = new Map([...new Set(TT.map(e => e.t))]
+    .sort((a,b) => a.localeCompare(b,"fr")).map((t,i) => [t, HUES[i % HUES.length]]));
   const hueOf = t => {
     if (hues.has(t)) return hues.get(t);
-    let n = 0;
-    for (const c of t.toLowerCase()) n = (n * 31 + c.charCodeAt(0)) >>> 0;
+    let n = 0; for (const c of t.toLowerCase()) n = (n*31 + c.charCodeAt(0)) >>> 0;
     return HUES[n % HUES.length];
   };
 
   /* ── État ─────────────────────────────────────────────────────── */
   const seed = () => ({
-    weeks: 1,
-    events: {},
+    weeks: 1, events: {}, chart: "jour",
+    view: { weekend: true, profs: true, locaux: true },
     todos: [
-      { id: "t1", text: "Réviser le labo de Calcul différentiel", done: false },
-      { id: "t2", text: "Lire le chapitre de Sociologie", done: true },
-      { id: "t3", text: "Repérer le local HA3370", done: false },
+      { id:"t1", text:"Réviser le labo de Calcul différentiel", done:false },
+      { id:"t2", text:"Lire le chapitre de Sociologie", done:true },
+      { id:"t3", text:"Repérer le local HA3370", done:false },
     ],
     alerts: [
-      { id: "a1", text: "Examen — Calcul différentiel", when: "exemple, à modifier", p: 3 },
-      { id: "a2", text: "Remise — Écriture et litt.",   when: "exemple, à modifier", p: 2 },
-      { id: "a3", text: "Lecture — Sociologie",          when: "exemple, à modifier", p: 0 },
+      { id:"a1", text:"Examen — Calcul différentiel", when:"exemple, à modifier", p:3 },
+      { id:"a2", text:"Remise — Écriture et litt.",   when:"exemple, à modifier", p:2 },
+      { id:"a3", text:"Lecture — Sociologie",          when:"exemple, à modifier", p:0 },
     ],
   });
-
   let state;
   try { state = { ...seed(), ...(JSON.parse(localStorage.getItem(KEY)) || {}) }; }
   catch { state = seed(); }
+  state.view = { ...seed().view, ...(state.view || {}) };
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} };
-  const uid = () => "x" + Math.random().toString(36).slice(2, 9);
+  const uid = () => "x" + Math.random().toString(36).slice(2,9);
 
   /* ── Dates ────────────────────────────────────────────────────── */
-  const pad = n => String(n).padStart(2, "0");
-  const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  const addDays = (d, n) => { const c = new Date(d); c.setDate(c.getDate() + n); return c; };
-  const monday = d => {
-    const c = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    return addDays(c, -((c.getDay() + 6) % 7));
-  };
-  const weekNo = d => {
-    const t = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    t.setDate(t.getDate() + 4 - ((t.getDay() + 6) % 7));
-    return Math.ceil(((t - new Date(t.getFullYear(), 0, 1)) / 864e5 + 1) / 7);
-  };
-  const range = (a, b) => {
-    if (a.getMonth() !== b.getMonth())
-      return `${a.getDate()} ${MONTH[a.getMonth()]} – ${b.getDate()} ${MONTH[b.getMonth()]} ${b.getFullYear()}`;
-    return `${a.getDate()} – ${b.getDate()} ${MONTH[a.getMonth()]} ${a.getFullYear()}`;
-  };
+  const pad = n => String(n).padStart(2,"0");
+  const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const addDays = (d,n) => { const c = new Date(d); c.setDate(c.getDate()+n); return c; };
+  const monday = d => { const c = new Date(d.getFullYear(),d.getMonth(),d.getDate()); return addDays(c, -((c.getDay()+6)%7)); };
+  const weekNo = d => { const t = new Date(d.getFullYear(),d.getMonth(),d.getDate());
+    t.setDate(t.getDate()+4-((t.getDay()+6)%7));
+    return Math.ceil(((t - new Date(t.getFullYear(),0,1))/864e5 + 1)/7); };
+  const range = (a,b) => a.getMonth() !== b.getMonth()
+    ? `${a.getDate()} ${MONTH[a.getMonth()]} – ${b.getDate()} ${MONTH[b.getMonth()]}`
+    : `${a.getDate()} – ${b.getDate()} ${MONTH[a.getMonth()]}`;
 
   const now0 = new Date();
-  /* Première semaine de la session A26. Avant cette date, aucun cours n'a lieu,
-     et l'agenda s'ouvre directement sur la semaine de la rentrée. */
-  const SEMESTER_START = new Date(2026, 7, 24);
   const anchor = monday(now0) < SEMESTER_START ? monday(SEMESTER_START) : monday(now0);
   const todayISO = iso(now0);
-  const inSemester = d => d >= SEMESTER_START;
+  const inSem = d => d >= SEMESTER_START;
 
   const el = id => document.getElementById(id);
-  const make = (tag, cls, text) => {
-    const n = document.createElement(tag);
-    if (cls) n.className = cls;
-    if (text !== undefined) n.textContent = text;
-    return n;
-  };
+  const mk = (tag, cls, txt) => { const n = document.createElement(tag);
+    if (cls) n.className = cls; if (txt !== undefined) n.textContent = txt; return n; };
+  const svg = (tag, attrs) => { const n = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]); return n; };
+  const cols = () => state.view.weekend ? 7 : 5;
 
   /* ── Grille ───────────────────────────────────────────────────── */
   const host = el("weeks");
 
   function buildWeek(start) {
-    const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
-    const card = make("section", "card");
+    const n = cols();
+    const days = Array.from({length:n}, (_,i) => addDays(start, i));
+    const card = mk("section","card");
     card.dataset.start = iso(start);
     card.style.scrollMarginTop = "1rem";
 
-    const head = make("div", "card-head");
-    head.append(make("span", "tag", `S${weekNo(start)}`), make("h2", null, range(days[0], days[6])), make("span", "grow"));
-    let n = 0;
+    const head = mk("div","chead");
+    head.append(mk("span","badge",`S${weekNo(start)}`), mk("h2",null,range(days[0], addDays(start,6))), mk("span","grow"));
+    let hrs = 0;
     for (const d of days) {
-      const wd = (d.getDay() + 6) % 7;
-      if (inSemester(d)) n += byDay.get(wd)?.size ?? 0;
-      n += Object.keys(state.events).filter(k => k.startsWith(iso(d) + "|")).length;
+      const wd = (d.getDay()+6)%7;
+      if (inSem(d)) hrs += byDay.get(wd)?.size ?? 0;
+      hrs += Object.keys(state.events).filter(k => k.startsWith(iso(d)+"|")).length;
     }
-    head.append(make("span", "count", `${n} h`));
+    head.append(mk("span","meta", `${hrs} h`));
 
-    const grid = make("div", "grid");
-    grid.append(make("div", "corner"));
+    const grid = mk("div","grid");
+    grid.style.setProperty("--cols", n);
+    grid.append(mk("div","corner"));
     for (const d of days) {
-      const h = make("div", "dayhead");
-      if (d.getDay() === 0 || d.getDay() === 6) h.classList.add("wknd");
-      if (iso(d) === todayISO) h.classList.add("today");
-      h.append(make("span", "dow", DOW[(d.getDay() + 6) % 7]), make("span", "dnum", d.getDate()));
+      const h = mk("div","dh");
+      if (d.getDay() === 0 || d.getDay() === 6) h.classList.add("we");
+      if (iso(d) === todayISO) h.classList.add("td");
+      h.append(mk("span","dow", DOW[(d.getDay()+6)%7]), mk("span","dn", d.getDate()));
       grid.append(h);
     }
-
     for (let hr = START_HOUR; hr <= END_HOUR; hr++) {
-      const g = make("div", hr === START_HOUR ? "hour first" : "hour");
-      g.append(make("b", null, `${pad(hr)}:00`));
+      const g = mk("div", hr === START_HOUR ? "hr first" : "hr");
+      g.append(mk("b", null, `${pad(hr)}:00`));
       grid.append(g);
       for (const d of days) grid.append(buildCell(d, hr));
     }
-
-    const wrap = make("div", "grid-wrap");
-    wrap.append(grid);
+    const wrap = mk("div","gwrap"); wrap.append(grid);
     card.append(head, wrap);
     return card;
   }
 
   function buildCell(date, hr) {
-    const dISO = iso(date);
-    const wd = (date.getDay() + 6) % 7;
-    const cell = make("div", "cell");
+    const dISO = iso(date), wd = (date.getDay()+6)%7;
+    const cell = mk("div","cell");
     cell.dataset.k = `${dISO}|${hr}`;
-    if (date.getDay() === 0 || date.getDay() === 6) cell.classList.add("wknd");
-    if (dISO === todayISO) cell.classList.add("today");
+    if (date.getDay() === 0 || date.getDay() === 6) cell.classList.add("we");
+    if (dISO === todayISO) cell.classList.add("td");
 
     const user = state.events[cell.dataset.k];
-    const slot = inSemester(date) ? byDay.get(wd)?.get(hr) : undefined;
+    const slot = inSem(date) ? byDay.get(wd)?.get(hr) : undefined;
 
     if (user) {
-      const above = state.events[`${dISO}|${hr - 1}`];
-      const below = state.events[`${dISO}|${hr + 1}`];
-      paint(cell, { t: user, k: "", room: "", prof: "", time: `${pad(hr)}:00` },
-            above === user, below === user);
+      const above = state.events[`${dISO}|${hr-1}`], below = state.events[`${dISO}|${hr+1}`];
+      if (above === user) cell.classList.add("under");
+      else {
+        let span = 1; while (state.events[`${dISO}|${hr+span}`] === user) span++;
+        cell.classList.add("run");
+        if (span === 1) cell.classList.add("r1");
+        const box = mk("div","ev");
+        box.style.setProperty("--h", hueOf(user));
+        box.style.setProperty("--span", span);
+        box.append(mk("p","t",user));
+        cell.append(box);
+      }
       cell.tabIndex = 0;
       cell.addEventListener("click", () => edit(cell));
     } else if (slot) {
-      const { e } = slot;
-      const span = e.h[1] - e.h[0];
+      const { e } = slot, span = e.h[1] - e.h[0];
       if (slot.head) {
         cell.classList.add("run");
         if (span === 1) cell.classList.add("r1");
-        const box = make("div", "ev");
+        const box = mk("div","ev");
         box.style.setProperty("--h", hueOf(e.t));
         box.style.setProperty("--span", span);
-        box.append(make("p", "t", e.t));
-        const meta = [e.k, e.room].filter(Boolean).join(" · ");
-        if (meta) box.append(make("p", "m", meta));
-        if (e.time) box.append(make("p", "h", e.time));
-        if (span >= 2 && e.prof) box.append(make("p", "p", e.prof));
+        box.append(mk("p","t", e.t));
+        const meta = [e.k, state.view.locaux ? e.room : ""].filter(Boolean).join(" · ");
+        if (meta) box.append(mk("p","m", meta));
+        if (e.time) box.append(mk("p","h", e.time));
+        if (span >= 2 && e.prof && state.view.profs) box.append(mk("p","p", e.prof));
         cell.append(box);
-      } else {
-        cell.classList.add("under");
-      }
-      cell.title = [e.t, e.code && `${e.code} (${e.k})`, e.room, e.prof, e.time]
-        .filter(Boolean).join("\n");
+      } else cell.classList.add("under");
+      cell.title = [e.t, e.code && `${e.code} (${e.k})`, e.room, e.prof, e.time].filter(Boolean).join("\n");
     } else {
       cell.classList.add("free");
       cell.tabIndex = 0;
       cell.addEventListener("click", () => edit(cell));
-      cell.addEventListener("keydown", ev => {
-        if (ev.key === "Enter") { ev.preventDefault(); edit(cell); }
-      });
+      cell.addEventListener("keydown", ev => { if (ev.key === "Enter") { ev.preventDefault(); edit(cell); } });
     }
     return cell;
-  }
-
-  function paint(cell, e, isCont, isHead) {
-    if (isCont) cell.classList.add("cont");
-    if (isHead) cell.classList.add("head");
-    if (!isCont && !isHead) cell.classList.add("r1");
-    const box = make("div", "ev");
-    box.style.setProperty("--h", hueOf(e.t));
-    box.append(make("p", "t", e.t));
-    const meta = [e.k, e.room].filter(Boolean).join(" · ");
-    if (meta) box.append(make("p", "m", meta));
-    if (e.time) box.append(make("p", "h", e.time));
-
-    cell.append(box);
   }
 
   let open = null;
   function edit(cell) {
     if (open) open.blur();
     const key = cell.dataset.k;
-    const input = make("input");
-    input.type = "text";
+    const input = mk("input"); input.type = "text";
     input.value = state.events[key] || "";
-    input.placeholder = "Ajouter…";
-    input.maxLength = 60;
-    cell.append(input);
-    open = input;
-    input.focus(); input.select();
+    input.placeholder = "Ajouter…"; input.maxLength = 60;
+    cell.append(input); open = input; input.focus(); input.select();
     let cancelled = false;
     input.addEventListener("keydown", ev => {
       if (ev.key === "Enter") { ev.preventDefault(); input.blur(); }
@@ -520,174 +573,311 @@ li.done .todo-t{color:var(--faint);text-decoration:line-through}
     });
     input.addEventListener("blur", () => {
       open = null;
-      if (!cancelled) {
-        const v = input.value.trim();
-        if (v) state.events[key] = v; else delete state.events[key];
-      }
-      renderWeeks();
-    }, { once: true });
+      if (!cancelled) { const v = input.value.trim();
+        if (v) state.events[key] = v; else delete state.events[key]; }
+      renderWeeks(); renderChart();
+    }, { once:true });
   }
 
   function renderWeeks() {
     host.textContent = "";
-    for (let w = 0; w < state.weeks; w++) host.append(buildWeek(addDays(anchor, w * 7)));
-    placeNow();
-    save();
+    for (let w = 0; w < state.weeks; w++) host.append(buildWeek(addDays(anchor, w*7)));
+    renderTabs(); placeNow(); save();
   }
 
   function placeNow() {
-    document.querySelectorAll(".now,.now-label").forEach(n => n.remove());
-    const t = new Date();
-    const h = t.getHours() + t.getMinutes() / 60;
+    document.querySelectorAll(".now,.nowlab").forEach(n => n.remove());
+    const t = new Date(), h = t.getHours() + t.getMinutes()/60;
     if (h < START_HOUR || h > END_HOUR + 1) return;
     const card = document.querySelector(`.card[data-start="${iso(monday(t))}"]`);
     if (!card) return;
-    const grid = card.querySelector(".grid");
-    const dh = grid.querySelector(".dayhead");
+    const grid = card.querySelector(".grid"), dh = grid.querySelector(".dh");
+    const idx = (t.getDay()+6)%7;
+    if (idx >= cols()) return;
     const top = `calc(${dh.offsetTop + dh.offsetHeight}px + var(--row-h) * ${h - START_HOUR})`;
-    const idx = (t.getDay() + 6) % 7;
-
-    const line = make("div", "now");
+    const line = mk("div","now");
     line.style.top = top;
-    line.style.left = `calc(var(--gutter) + (100% - var(--gutter)) / 7 * ${idx})`;
-    line.style.width = "calc((100% - var(--gutter)) / 7)";
-
-    const lab = make("div", "now-label", `${pad(t.getHours())}:${pad(t.getMinutes())}`);
+    line.style.left = `calc(var(--gutter) + (100% - var(--gutter)) / ${cols()} * ${idx})`;
+    line.style.width = `calc((100% - var(--gutter)) / ${cols()})`;
+    const lab = mk("div","nowlab", `${pad(t.getHours())}:${pad(t.getMinutes())}`);
     lab.style.top = top;
-
-    grid.querySelectorAll(".hour b").forEach(b => { b.style.visibility = ""; });
+    grid.querySelectorAll(".hr b").forEach(b => { b.style.visibility = ""; });
     const near = Math.round(h);
     if (Math.abs(h - near) < 0.3) {
-      const g = grid.querySelectorAll(".hour")[near - START_HOUR];
+      const g = grid.querySelectorAll(".hr")[near - START_HOUR];
       if (g) g.querySelector("b").style.visibility = "hidden";
     }
     grid.append(line, lab);
   }
   setInterval(placeNow, 60000);
 
-  /* ── À faire ──────────────────────────────────────────────────── */
-  const CHECK = '<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"/></svg>';
-
-  function renderTodos() {
-    const ul = el("todo-list");
-    ul.textContent = "";
-    for (const it of state.todos) {
-      const li = make("li", it.done ? "done" : "");
-      const tick = make("button", "tick");
-      tick.innerHTML = CHECK;
-      tick.setAttribute("aria-label", it.done ? "Décocher" : "Cocher");
-      tick.addEventListener("click", () => {
-        it.done = !it.done;
-        renderTodos();
+  /* ── Onglets de semaine ───────────────────────────────────────── */
+  function renderTabs() {
+    const box = el("tabs"); box.textContent = "";
+    for (let w = 0; w < state.weeks; w++) {
+      const s = addDays(anchor, w*7);
+      const b = mk("button","tab" + (w === 0 ? " on" : ""));
+      b.append(document.createTextNode(`S${weekNo(s)}`),
+               mk("small", null, `${s.getDate()} ${MONTH[s.getMonth()].slice(0,4)}`));
+      b.addEventListener("click", () => {
+        box.querySelectorAll(".tab").forEach(x => x.classList.remove("on"));
+        b.classList.add("on");
+        host.children[w]?.scrollIntoView({ behavior:"smooth", block:"start" });
       });
-      const kill = make("button", "kill", "×");
-      kill.setAttribute("aria-label", "Supprimer");
-      kill.addEventListener("click", () => {
-        state.todos = state.todos.filter(x => x.id !== it.id);
-        renderTodos();
-      });
-      li.append(tick, make("span", "todo-t", it.text), kill);
-      ul.append(li);
+      box.append(b);
     }
-    const left = state.todos.filter(t => !t.done).length;
-    el("todo-count").textContent = state.todos.length ? `${left} restante${left > 1 ? "s" : ""}` : "";
-    el("todo-empty").hidden = state.todos.length > 0;
+  }
+
+  /* ── Jauge « prochain cours » ─────────────────────────────────── */
+  const C = 110, R = 100;
+  function nextOccurrence(e) {
+    const base = now0 < SEMESTER_START ? SEMESTER_START : now0;
+    const d0 = new Date(base.getFullYear(), base.getMonth(), base.getDate());
+    for (let i = 0; i < 14; i++) {
+      const d = addDays(d0, i);
+      if ((d.getDay()+6)%7 !== e.d) continue;
+      const when = new Date(d.getFullYear(), d.getMonth(), d.getDate(), e.h[0]);
+      if (when > base) return when;
+    }
+    return null;
+  }
+  const SCHEDULE = ORDER.map(e => ({ e, at: nextOccurrence(e) }))
+                        .filter(x => x.at).sort((a,b) => a.at - b.at);
+  let pick = 0;
+
+  function buildDial() {
+    const s = el("dial"); s.textContent = "";
+    const g = svg("g", {});
+    for (let i = 0; i < 60; i++) {
+      const a = (i * 6 - 90) * Math.PI / 180;
+      const major = i % 5 === 0;
+      const r1 = major ? 74 : 78, r2 = 88;
+      g.append(svg("line", {
+        x1: C + r1*Math.cos(a), y1: C + r1*Math.sin(a),
+        x2: C + r2*Math.cos(a), y2: C + r2*Math.sin(a),
+        stroke: "rgba(255,255,255,.20)", "stroke-width": major ? 2 : 1.2, "stroke-linecap":"round",
+      }));
+    }
+    s.append(g);
+    s.append(svg("circle", { cx:C, cy:C, r:R, fill:"none", stroke:"rgba(255,255,255,.10)", "stroke-width":7 }));
+    const arc = svg("circle", { cx:C, cy:C, r:R, fill:"none", stroke:"var(--accent)",
+      "stroke-width":7, "stroke-linecap":"round", transform:`rotate(-90 ${C} ${C})` });
+    arc.id = "arc"; s.append(arc);
+    const knob = svg("circle", { cx:C, cy:C-R, r:7, fill:"var(--accent)",
+      stroke:"rgba(255,255,255,.85)", "stroke-width":2.5 });
+    knob.id = "knob"; s.append(knob);
+  }
+
+  function renderDial() {
+    if (!SCHEDULE.length) return;
+    pick = ((pick % SCHEDULE.length) + SCHEDULE.length) % SCHEDULE.length;
+    const { e, at } = SCHEDULE[pick];
+    const frac = Math.min(1, Math.max(0, (e.h[0] - START_HOUR) / (END_HOUR - START_HOUR)));
+    const circ = 2 * Math.PI * R;
+    const arc = el("arc"), knob = el("knob");
+    arc.setAttribute("stroke-dasharray", `${(frac*circ).toFixed(1)} ${circ.toFixed(1)}`);
+    const a = (frac * 360 - 90) * Math.PI / 180;
+    knob.setAttribute("cx", C + R*Math.cos(a));
+    knob.setAttribute("cy", C + R*Math.sin(a));
+
+    el("next-time").textContent = e.time ? e.time.split(" – ")[0] : "—";
+    el("next-name").textContent = e.t;
+    el("next-room").textContent = [e.k, e.room].filter(Boolean).join(" · ");
+    el("next-when").textContent =
+      `${DOW[(at.getDay()+6)%7]}. ${at.getDate()} ${MONTH[at.getMonth()]}` +
+      (e.prof ? ` · ${e.prof.split(" · ")[0]}` : "");
+  }
+
+  /* ── Histogramme ──────────────────────────────────────────────── */
+  function chartData() {
+    if (state.chart === "cours") {
+      const m = new Map();
+      for (const e of TT) m.set(e.t, (m.get(e.t) || 0) + (e.h[1] - e.h[0]));
+      return [...m].sort((a,b) => b[1] - a[1])
+        .map(([t,v]) => ({ label: t.split(" ").slice(0,2).join(" "), value: v, full: t }));
+    }
+    const n = cols();
+    return Array.from({length:n}, (_,d) => ({
+      label: DOW[d], value: byDay.get(d)?.size ?? 0, full: DOW[d], day: d,
+    }));
+  }
+
+  function renderChart() {
+    const data = chartData();
+    const total = state.chart === "cours"
+      ? data.reduce((s,x) => s + x.value, 0)
+      : Array.from({length:7}, (_,d) => byDay.get(d)?.size ?? 0).reduce((s,v) => s+v, 0);
+    el("wk-h").textContent = total;
+    el("chart-title").textContent = state.chart === "cours" ? "Charge par cours" : "Cette semaine";
+    el("wk-sub").textContent = state.chart === "cours"
+      ? `sur ${data.length} cours` : `sur ${data.filter(x => x.value > 0).length} jours`;
+
+    const max = Math.max(2, ...data.map(x => x.value));
+    const top = Math.ceil(max / 2) * 2;
+    const yax = el("yax"); yax.textContent = "";
+    for (let i = 4; i >= 0; i--) yax.append(mk("span", null, String(Math.round(top * i / 4))));
+
+    const todayIdx = (now0.getDay()+6)%7;
+    let hi = data.reduce((best,x,i) => x.value > data[best].value ? i : best, 0);
+    if (state.chart === "jour" && data[todayIdx] && data[todayIdx].value > 0) hi = todayIdx;
+
+    const bars = el("bars"); bars.textContent = "";
+    data.forEach((x,i) => {
+      const b = mk("div","bar" + (i === hi ? " on" : ""));
+      b.title = `${x.full} — ${x.value} h`;
+      if (i === hi && x.value > 0) b.append(mk("div","bubble", `${x.value} h`));
+      const col = mk("div","col");
+      col.style.height = `calc((100% - 1.25rem) * ${top ? x.value/top : 0})`;
+      b.append(col, mk("div","lab", x.label));
+      bars.append(b);
+    });
     save();
   }
 
-  el("todo-input").addEventListener("keydown", ev => {
+  /* ── Professeurs ──────────────────────────────────────────────── */
+  function renderFaces() {
+    const seen = new Map();
+    for (const e of TT) {
+      if (!e.prof) continue;
+      for (const p of e.prof.split(" · ")) if (!seen.has(p)) seen.set(p, hueOf(e.t));
+    }
+    const box = el("faces"); box.textContent = "";
+    const list = [...seen];
+    for (const [name,h] of list.slice(0,6)) {
+      const parts = name.split(/[^A-Za-zÀ-ÿ]+/).filter(Boolean);
+      const f = mk("span","face", (parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? ""));
+      f.style.background = `hsl(${h} 45% 38%)`;
+      f.title = name;
+      box.append(f);
+    }
+    if (list.length > 6) box.append(mk("span","face more", `+${list.length - 6}`));
+    el("prof-n").textContent = `${list.length}`;
+  }
+
+  /* ── À faire ──────────────────────────────────────────────────── */
+  const CHECK = '<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"/></svg>';
+  function renderTodos() {
+    const ul = el("todos"); ul.textContent = "";
+    for (const it of state.todos) {
+      const li = mk("li", it.done ? "done" : "");
+      const tick = mk("button","tick"); tick.innerHTML = CHECK;
+      tick.setAttribute("aria-label", it.done ? "Décocher" : "Cocher");
+      tick.addEventListener("click", () => { it.done = !it.done; renderTodos(); });
+      const kill = mk("button","kill","×"); kill.setAttribute("aria-label","Supprimer");
+      kill.addEventListener("click", () => { state.todos = state.todos.filter(x => x.id !== it.id); renderTodos(); });
+      li.append(tick, mk("span","tx", it.text), kill);
+      ul.append(li);
+    }
+    const left = state.todos.filter(t => !t.done).length;
+    el("todo-n").textContent = state.todos.length ? `${left} restante${left > 1 ? "s" : ""}` : "";
+    el("todo-empty").hidden = state.todos.length > 0;
+    save();
+  }
+  el("todo-in").addEventListener("keydown", ev => {
     if (ev.key !== "Enter") return;
-    const v = ev.currentTarget.value.trim();
-    if (!v) return;
-    state.todos.push({ id: uid(), text: v, done: false });
-    ev.currentTarget.value = "";
-    renderTodos();
+    const v = ev.currentTarget.value.trim(); if (!v) return;
+    state.todos.push({ id:uid(), text:v, done:false });
+    ev.currentTarget.value = ""; renderTodos();
   });
 
   /* ── Alertes ──────────────────────────────────────────────────── */
-  const P_LABEL = ["Faible", "Moyen", "Élevé", "Urgent"];
+  const P = ["Faible","Moyen","Élevé","Urgent"];
   let draftP = 2;
-
   function renderDots() {
-    const box = el("alert-dots");
-    box.textContent = "";
+    const box = el("dots"); box.textContent = "";
     for (let p = 0; p <= 3; p++) {
-      const b = make("button", "dot" + (p === draftP ? " on" : ""));
+      const b = mk("button","dot" + (p === draftP ? " on" : ""));
       b.style.setProperty("--p", `var(--p${p})`);
-      b.title = P_LABEL[p];
-      b.setAttribute("aria-label", `Urgence : ${P_LABEL[p]}`);
+      b.title = P[p]; b.setAttribute("aria-label", `Urgence : ${P[p]}`);
       b.setAttribute("aria-pressed", String(p === draftP));
       b.addEventListener("click", () => { draftP = p; renderDots(); });
       box.append(b);
     }
   }
-
   function renderAlerts() {
-    const ul = el("alert-list");
-    ul.textContent = "";
-    const sorted = [...state.alerts].sort((a, b) => b.p - a.p);
-    for (const a of sorted) {
-      const li = make("li");
+    const ul = el("alerts"); ul.textContent = "";
+    for (const a of [...state.alerts].sort((x,y) => y.p - x.p)) {
+      const li = mk("li");
       li.style.setProperty("--p", `var(--p${a.p})`);
-      const body = make("div", "al-body");
-      body.append(make("p", "al-t", a.text));
-      const w = make("p", "al-w");
-      w.append(document.createTextNode(a.when || ""));
-      const badge = make("span", "al-p", (a.when ? " · " : "") + P_LABEL[a.p].toUpperCase());
-      w.append(badge);
+      const body = mk("div","al");
+      body.append(mk("p","tx", a.text));
+      const w = mk("p","w");
+      w.append(document.createTextNode(a.when || ""), mk("b", null, (a.when ? " · " : "") + P[a.p].toUpperCase()));
       body.append(w);
-      const kill = make("button", "kill", "×");
-      kill.setAttribute("aria-label", "Supprimer");
-      kill.addEventListener("click", () => {
-        state.alerts = state.alerts.filter(x => x.id !== a.id);
-        renderAlerts();
-      });
-      li.append(make("span", "bar"), body, kill);
+      const kill = mk("button","kill","×"); kill.setAttribute("aria-label","Supprimer");
+      kill.addEventListener("click", () => { state.alerts = state.alerts.filter(x => x.id !== a.id); renderAlerts(); });
+      li.append(mk("span","bar4"), body, kill);
       ul.append(li);
     }
     const urgent = state.alerts.filter(a => a.p === 3).length;
-    el("alert-count").textContent = urgent ? `${urgent} urgente${urgent > 1 ? "s" : ""}` : `${state.alerts.length}`;
+    el("alert-n").textContent = urgent ? `${urgent} urgente${urgent > 1 ? "s" : ""}` : `${state.alerts.length}`;
     el("alert-empty").hidden = state.alerts.length > 0;
+    el("go-alerts").style.color = urgent ? "var(--p3)" : "";
     save();
   }
-
-  el("alert-input").addEventListener("keydown", ev => {
+  el("alert-in").addEventListener("keydown", ev => {
     if (ev.key !== "Enter") return;
-    const v = ev.currentTarget.value.trim();
-    if (!v) return;
-    state.alerts.push({ id: uid(), text: v, when: "", p: draftP });
-    ev.currentTarget.value = "";
-    renderAlerts();
+    const v = ev.currentTarget.value.trim(); if (!v) return;
+    state.alerts.push({ id:uid(), text:v, when:"", p:draftP });
+    ev.currentTarget.value = ""; renderAlerts();
+  });
+
+  /* ── Interrupteurs ────────────────────────────────────────────── */
+  function renderToggles() {
+    document.querySelectorAll(".sw").forEach(sw => {
+      const on = !!state.view[sw.dataset.t];
+      sw.classList.toggle("on", on);
+      sw.setAttribute("aria-pressed", String(on));
+    });
+    el("r-prof").classList.toggle("on", state.view.profs);
+  }
+  document.querySelectorAll(".sw").forEach(sw => {
+    sw.addEventListener("click", () => {
+      state.view[sw.dataset.t] = !state.view[sw.dataset.t];
+      renderToggles(); renderWeeks(); renderChart();
+    });
   });
 
   /* ── Commandes ────────────────────────────────────────────────── */
-  const addWeek = () => {
-    state.weeks++;
-    renderWeeks();
-    host.lastElementChild.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-  const goToday = () => host.firstElementChild.scrollIntoView({ behavior: "smooth", block: "start" });
-
-  el("add").addEventListener("click", addWeek);
-  el("add2").addEventListener("click", addWeek);
-  el("r-add").addEventListener("click", addWeek);
-  el("today").addEventListener("click", goToday);
-  el("r-today").addEventListener("click", goToday);
-  el("r-print").addEventListener("click", () => window.print());
-  el("r-reset").addEventListener("click", () => {
+  const addWeek = () => { state.weeks++; renderWeeks();
+    host.lastElementChild?.scrollIntoView({ behavior:"smooth", block:"start" }); };
+  const goToday = () => host.firstElementChild?.scrollIntoView({ behavior:"smooth", block:"start" });
+  const reset = () => {
     if (!confirm("Effacer tes ajouts (tâches, alertes, entrées manuelles) ?\nTon horaire de cours reste.")) return;
-    state = { ...seed(), weeks: state.weeks, todos: [], alerts: [], events: {} };
-    renderWeeks(); renderTodos(); renderAlerts();
+    state = { ...seed(), weeks: state.weeks, view: state.view, chart: state.chart, todos: [], alerts: [], events: {} };
+    renderWeeks(); renderTodos(); renderAlerts(); renderChart();
+  };
+  const setChart = v => {
+    state.chart = v;
+    el("chart-seg").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === v));
+    renderChart();
+  };
+
+  el("add-top").addEventListener("click", addWeek);
+  el("add-week").addEventListener("click", addWeek);
+  el("r-add").addEventListener("click", addWeek);
+  el("a-week").addEventListener("click", addWeek);
+  el("r-today").addEventListener("click", goToday);
+  el("a-today").addEventListener("click", goToday);
+  el("go-grid").addEventListener("click", goToday);
+  el("go-alerts").addEventListener("click", () => el("alerts-card").scrollIntoView({ behavior:"smooth", block:"center" }));
+  el("r-print").addEventListener("click", () => window.print());
+  el("a-print").addEventListener("click", () => window.print());
+  el("r-reset").addEventListener("click", reset);
+  el("a-reset").addEventListener("click", reset);
+  el("r-chart").addEventListener("click", () => setChart(state.chart === "jour" ? "cours" : "jour"));
+  el("r-prof").addEventListener("click", () => {
+    state.view.profs = !state.view.profs; renderToggles(); renderWeeks();
   });
+  el("chart-seg").querySelectorAll("button").forEach(b =>
+    b.addEventListener("click", () => setChart(b.dataset.v)));
+  el("prev-c").addEventListener("click", () => { pick--; renderDial(); });
+  el("next-c").addEventListener("click", () => { pick++; renderDial(); });
 
-  el("stamp").textContent =
-    `${DOW[(now0.getDay() + 6) % 7]}. ${now0.getDate()} ${MONTH[now0.getMonth()]} ${now0.getFullYear()} · session A26`;
-  el("todo-date").textContent =
-    `${DOW[(now0.getDay() + 6) % 7].toUpperCase()} ${now0.getDate()}`;
+  el("todo-date").textContent = `${DOW[(now0.getDay()+6)%7].toUpperCase()} ${now0.getDate()}`;
 
-  renderWeeks();
-  renderTodos();
-  renderDots();
-  renderAlerts();
+  buildDial(); renderDial();
+  renderToggles(); renderWeeks(); setChart(state.chart);
+  renderFaces(); renderTodos(); renderDots(); renderAlerts();
 })();
 </script>

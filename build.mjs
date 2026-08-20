@@ -6,8 +6,11 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 
 const src = readFileSync("agenda.html", "utf8");
-const at = src.indexOf('<div class="app">');
-if (at < 0) throw new Error('Marqueur <div class="app"> introuvable dans agenda.html');
+// Le corps commence au premier conteneur de mise en page ; tout ce qui précède
+// (title, meta, style) part dans le <head>.
+const MARK = '<div class="frame">';
+const at = src.indexOf(MARK);
+if (at < 0) throw new Error(`Marqueur ${MARK} introuvable dans agenda.html`);
 
 const head = src.slice(0, at).trim();
 const body = src.slice(at).trim();
