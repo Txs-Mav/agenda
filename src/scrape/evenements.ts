@@ -4,107 +4,95 @@ import { log } from "../log.js";
 import type { Deadline } from "../store.js";
 
 /**
- * La page d'accueil d'Omnivox (/intr/) porte une section « Évènements » qui
- * liste déjà les travaux à remettre et les évaluations, avec date, type,
- * cours, sigle et pondération. C'est une meilleure cible que Léa : une seule
- * page, pas de navigation par module.
- *
- * On ne devine aucun sélecteur : on repère les cartes par leur texte
- * (« TRAVAIL À REMETTRE » / « ÉVALUATION ») puis on lit leurs lignes.
- * Un changement de gabarit CSS ne casse rien ; un changement d'intitulé oui,
- * et c'est voulu — mieux vaut zéro échéance qu'une échéance inventée.
+ * Les évènements de l'accueil Omnivox sont des cartes `.carte-evenement`. La
+ * structure réelle, relevée sur la page (pas devinée), est une liste de lignes
+ * propres :
+ *   [jour de semaine] [numéro] [mois] [heure?] [TYPE] [cours] [sigle gr.] [titre]
+ * On lit ces lignes par leur rôle — bien plus robuste qu'une regex sur le texte
+ * concaténé, et insensible à l'ordre exact.
  */
 const MOIS = ["janvier","février","mars","avril","mai","juin",
               "juillet","août","septembre","octobre","novembre","décembre"];
-
 const strip = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
-export type RawEvent = {
-  lines: string[];
-  text: string;
-};
+export type RawCard = { lines: string[] };
 
-export async function readEventCards(page: Page): Promise<RawEvent[]> {
+export async function readEventCards(page: Page): Promise<RawCard[]> {
   await page.goto(urls.intranet, { waitUntil: "domcontentloaded" });
   await page.waitForLoadState("networkidle").catch(() => {});
   return page.evaluate(() => {
-    const rx = /travail\s+à\s+remettre|évaluation/i;
-    const all = [...document.querySelectorAll<HTMLElement>("div,li,article,section,td")];
-    const hits = all.filter((el) => {
-      const t = el.innerText || "";
-      return rx.test(t) && t.length > 20 && t.length < 500;
-    });
-    // Ne garder que les plus internes : une carte, pas ses conteneurs.
-    const inner = hits.filter((el) => !hits.some((o) => o !== el && el.contains(o)));
-    return inner.map((el) => {
-      const text = (el.innerText || "").replace(/ /g, " ");
-      return { text, lines: text.split("\n").map((l) => l.trim()).filter(Boolean) };
-    });
+    const clean = (el: HTMLElement) =>
+      (el.innerText || "").split("\n").map((l) => l.trim()).filter(Boolean);
+
+    const cards = [...document.querySelectorAll<HTMLElement>(".carte-evenement")];
+    if (cards.length) return cards.map((el) => ({ lines: clean(el) }));
+
+    // Repli si la classe change un jour : remonter depuis les blocs de type
+    // colorés jusqu'à l'ancêtre qui porte une date.
+    const MOISRE = /janvier|f[ée]vrier|mars|avril|mai|juin|juillet|ao[ûu]t|septembre|octobre|novembre|d[ée]cembre/i;
+    const types = [...document.querySelectorAll<HTMLElement>("[class*='couleur_TRAV'],[class*='couleur_EVAL']")];
+    const seen = new Set<HTMLElement>();
+    const out: HTMLElement[] = [];
+    for (const t of types) {
+      let el: HTMLElement | null = t;
+      for (let i = 0; i < 6 && el; i++) { if (MOISRE.test(el.innerText || "")) break; el = el.parentElement; }
+      if (el && !seen.has(el)) { seen.add(el); out.push(el); }
+    }
+    return out.map((el) => ({ lines: clean(el) }));
   });
 }
 
-/** Convertit une carte en échéance, ou null si elle n'est pas exploitable. */
-export function parseEvent(ev: RawEvent, today = new Date()): Deadline | null {
-  const text = ev.text;
-
-  const dm = /\b(\d{1,2})\s+(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\b/i
-    .exec(strip(text).replace(/fevrier/, "février").replace(/aout/, "août").replace(/decembre/, "décembre"))
-    ?? /\b(\d{1,2})\s+([a-zà-ÿ]+)\b/i.exec(text);
-  if (!dm) return null;
-  const day = Number(dm[1]);
-  const mIdx = MOIS.findIndex((m) => strip(m).startsWith(strip(dm[2] ?? "").slice(0, 4)));
+/** Une carte → une échéance, ou null si la structure ne s'y prête pas. */
+export function parseCard(lines: string[], today = new Date()): Deadline | null {
+  const dayLine = lines.find((l) => /^\d{1,2}$/.test(l));
+  const monthLine = lines.find((l) => MOIS.some((m) => strip(m) === strip(l)));
+  if (!dayLine || !monthLine) return null;
+  const day = Number(dayLine);
+  const mIdx = MOIS.findIndex((m) => strip(m) === strip(monthLine));
   if (mIdx < 0 || !day) return null;
 
-  // Les cartes n'affichent pas l'année : on prend l'année courante, et si la
-  // date tombe plus de trois mois dans le passé, c'est la session suivante.
+  // Les cartes n'affichent pas l'année : année courante, sauf si la date est à
+  // plus de 3 mois dans le passé — alors c'est la session suivante.
   let year = today.getFullYear();
-  let when = new Date(year, mIdx, day);
-  if ((today.getTime() - when.getTime()) / 864e5 > 90) { year += 1; when = new Date(year, mIdx, day); }
+  if ((today.getTime() - new Date(year, mIdx, day).getTime()) / 864e5 > 90) year += 1;
   const date = `${year}-${String(mIdx + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-  const tm = /\b(\d{1,2})\s*[h:]\s*(\d{2})\b/.exec(text);
-  const time = tm ? `${String(tm[1]).padStart(2, "0")}:${tm[2]}` : "";
+  const timeLine = lines.find((l) => /^\d{1,2}\s*[h:]\s*\d{2}$/.test(l));
+  const tm = timeLine ? /(\d{1,2})\s*[h:]\s*(\d{2})/.exec(timeLine) : null;
+  const time = tm ? `${tm[1]!.padStart(2, "0")}:${tm[2]}` : "";
 
-  const isExam = /évaluation/i.test(text);
-  const code = /(\d{3}-\w{3}-\w{2})/.exec(text)?.[1] ?? "";
-  const weight = /\((\d+(?:[.,]\d+)?)\s*%\)/.exec(text)?.[1] ?? "";
+  const typeLine = lines.find((l) => /travail\s+à\s+remettre|évaluation/i.test(l)) ?? "";
+  const isExam = /évaluation/i.test(typeLine);
+  const weight = /\((\d+(?:[.,]\d+)?)\s*%\)/.exec(typeLine)?.[1] ?? "";
 
-  // Le titre est la dernière ligne utile : ni la date, ni le type, ni le sigle.
-  const skip = /^(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)$/i;
-  const title = [...ev.lines].reverse().find((l) =>
-    l.length > 3 && !skip.test(l) && !/^\d/.test(l)
-    && !/travail\s+à\s+remettre|évaluation/i.test(l) && !/gr\.\s*\d/.test(l)) ?? "";
+  const codeIdx = lines.findIndex((l) => /\d{3}-\w{3}-\w{2}/.test(l));
+  if (codeIdx < 0) return null;
+  const code = /(\d{3}-\w{3}-\w{2})/.exec(lines[codeIdx]!)?.[1] ?? "";
+  const course = lines[codeIdx - 1] ?? "";
+  const title = lines.slice(codeIdx + 1).join(" ").trim();
   if (!title) return null;
-
-  const course = ev.lines.find((l) => /gr\.\s*\d/.test(l))
-    ? ev.lines[ev.lines.findIndex((l) => /gr\.\s*\d/.test(l)) - 1] ?? ""
-    : "";
 
   return {
     id: "e" + [...(code + title + date)].reduce((a, c) => ((a * 31 + c.charCodeAt(0)) >>> 0), 7).toString(36),
     t: weight ? `${title} (${weight} %)` : title,
-    course: (course || code).trim(),
-    date,
-    time,
+    course, date, time,
     kind: isExam ? "examen" : "remise",
-    src: "lea",
-    code,
-    done: false,
+    src: "lea", code, done: false,
   };
 }
 
 export async function collectEvenements(page: Page): Promise<Deadline[]> {
   log.step("Collecte des évènements (accueil Omnivox)");
   const cards = await readEventCards(page);
-  log.info(`${cards.length} cartes d'évènement repérées`);
+  log.info(`${cards.length} cartes repérées`);
   const out: Deadline[] = [];
   const seen = new Set<string>();
   for (const c of cards) {
-    const d = parseEvent(c);
+    const d = parseCard(c.lines);
     if (d && !seen.has(d.id)) { seen.add(d.id); out.push(d); }
   }
   log.info(`${out.length} échéances exploitables`);
   if (cards.length && !out.length)
-    log.warn("Des cartes ont été vues mais aucune n'a pu être lue — le gabarit a changé, lance `npm run discover`.");
+    log.warn("Des cartes ont été vues mais aucune n'a pu être lue — le gabarit a changé.");
   return out;
 }

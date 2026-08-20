@@ -3,39 +3,69 @@ import { urls } from "../config.js";
 import { log } from "../log.js";
 import { fileStore, type Deadline, type Mio } from "../store.js";
 import { readBiggestTable, col, toISODate, toTime } from "./table.js";
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
 
 const uid = (seed: string) =>
   "s" + [...seed].reduce((a, c) => ((a * 31 + c.charCodeAt(0)) >>> 0), 7).toString(36);
 
 export async function collectMios(page: Page): Promise<Mio[]> {
   log.step("Collecte des MIO");
-  await page.goto(urls.mio, { waitUntil: "domcontentloaded" });
-  await page.waitForLoadState("networkidle").catch(() => {});
-  // La boîte peut vivre dans un cadre : on prend la portée qui a le plus de lignes.
-  const scopes = [page, ...page.frames()];
-  let rows = await readBiggestTable(page);
-  for (const f of scopes) {
-    const r = await readBiggestTable(f as never).catch(() => []);
-    if (r.length > rows.length) rows = r;
-  }
-  log.info(`${rows.length} lignes lues dans la boîte MIO`);
+  await page.goto(urls.mio, { waitUntil: "networkidle" }).catch(() => {});
 
-  return rows.map((r) => {
-    const from = col(r, /exp[ée]diteur|de\b|auteur/);
-    const subject = col(r, /objet|sujet/);
-    const date = toISODate(col(r, /date|re[çc]u/));
-    return {
+  // La boîte de réception vit dans un cadre imbriqué (MioListe.aspx),
+  // table#lstMIO. On la cherche dans tous les cadres plutôt que de deviner.
+  let rows: string[][] = [];
+  for (const f of [page, ...page.frames()]) {
+    const r = await (f as never as typeof page).evaluate(() => {
+      const clean = (x: string | null) => (x || "").replace(/\s+/g, " ").trim();
+      const t = document.querySelector("#lstMIO");
+      if (!t) return null;
+      return [...t.querySelectorAll("tr")]
+        .map((tr) => [...tr.querySelectorAll("td")].map((td) => clean(td.textContent)).filter(Boolean))
+        .filter((cells) => cells.length >= 3);
+    }).catch(() => null);
+    if (r && r.length) { rows = r; break; }
+  }
+  log.info(`${rows.length} messages dans la boîte de réception`);
+
+  const out: Mio[] = [];
+  for (const cells of rows) {
+    const dateLike = (c: string) => /^\d{1,2}\s*[h:]\s*\d{2}$/.test(c)
+      || /^\d{1,2}\s+(janv|févr|mars|avr|mai|juin|juil|août|sept|octo|nove|déce)/i.test(c)
+      || /\d{4}-\d{2}-\d{2}/.test(c)
+      || /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(c);
+    const status = cells.find((c) => /message\s+(lu|non\s*lu)/i.test(c)) ?? "";
+    const when = cells.find(dateLike) ?? "";
+    // Ni statut, ni date, ni bouton d'action : ne restent que expéditeur et objet.
+    const rest = cells.filter((c) =>
+      c !== status && !dateLike(c) && !/catégoriser|supprimer|répondre|transférer/i.test(c));
+    if (!rest.length) continue;
+    const sorted = [...rest].sort((a, b) => a.length - b.length);
+    const from = sorted[0] ?? "";
+    const subject = sorted[sorted.length - 1] ?? "";
+    if (!from || !subject || from === subject) continue;
+
+    // Sans année ni ouverture du message : si l'heure seule est affichée, c'est
+    // aujourd'hui ; sinon on garde le libellé tel quel côté date.
+    const isTime = /^\d{1,2}\s*[h:]\s*\d{2}$/.test(when);
+    const date = isTime ? new Date().toISOString().slice(0, 10)
+      : (toISODate(when) || new Date().toISOString().slice(0, 10));
+
+    out.push({
       id: uid(from + subject + date),
       from,
       course: "",
-      date: date || new Date().toISOString().slice(0, 10),
+      date,
       subject,
-      // Le résumé est produit hors ligne par summarize.ts ; ici on ne garde
-      // que ce que la liste expose, sans ouvrir chaque message.
-      summary: "",
+      // Aperçu de la liste. Le vrai résumé en une phrase (ouverture du message
+      // + API Claude) reste à ajouter — cf. src/scrape/summarize.ts à venir.
+      summary: subject,
       add: null,
-    } satisfies Mio;
-  }).filter((m) => m.subject);
+    });
+  }
+  log.info(`${out.length} MIO exploitables`);
+  return out;
 }
 
 /**
@@ -59,10 +89,12 @@ export function persist(mios: Mio[], deadlines: Deadline[]): void {
   const nextD = merge(prevD, deadlines, (d) => d.src === "manuel" || d.done);
   fileStore.write("mios", nextM);
   fileStore.write("deadlines", nextD);
-  fileStore.write("export", {
-    lastScrape: new Date().toISOString(),
-    mios: nextM,
-    deadlines: nextD,
-  });
+  const payload = { lastScrape: new Date().toISOString(), mios: nextM, deadlines: nextD };
+  fileStore.write("export", payload);
+  // Copie servie par l'interface (public/data.json est gitignoré : données
+  // personnelles, jamais committées ni déployées sur l'URL publique).
+  try {
+    writeFileSync(join(process.cwd(), "public", "data.json"), JSON.stringify(payload, null, 2));
+  } catch {}
   log.info(`${nextM.length} MIO et ${nextD.length} échéances enregistrés`);
 }
