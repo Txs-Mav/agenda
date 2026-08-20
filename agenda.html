@@ -103,6 +103,7 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 
 /* ── Plateau ──────────────────────────────────────────────────── */
 .board{display:flex;flex-direction:column;gap:1.25rem}
+.r0{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:.85rem;align-items:stretch}
 .r1{display:grid;grid-template-columns:1fr 1.35fr 1fr;gap:.85rem;align-items:stretch}
 .r2{display:grid;grid-template-columns:20rem minmax(0,1fr);gap:.85rem;align-items:start}
 .stack{display:flex;flex-direction:column;gap:.85rem;min-width:0}
@@ -121,6 +122,27 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 .tile .ic{opacity:.75}
 .tile b{display:block;font-size:1.5rem;font-weight:650;letter-spacing:-.03em;margin-top:.5rem;line-height:1;font-variant-numeric:tabular-nums}
 .tile span{display:block;font-size:.7rem;opacity:.7;margin-top:.2rem}
+
+/* Bandeau du haut : ce qui s'en vient, et les dates qui se préparent */
+.r0>.card{display:flex;flex-direction:column}
+.bellb{display:inline-flex;align-items:center;gap:.38rem;font-size:.78rem;color:var(--dim);
+  padding:.3rem .65rem;border-radius:999px;background:var(--surface-2);transition:background .15s,color .15s}
+.bellb:hover{color:var(--ink)}
+.bellb.on{background:var(--invert);color:var(--on-invert)}
+.bellb svg{width:15px;height:15px}
+.nx{padding:.2rem 1.25rem .3rem;flex:1 1 auto;display:flex;flex-direction:column;justify-content:center}
+.nx .cdx{font-size:2.3rem;font-weight:650;letter-spacing:-.045em;line-height:1.05;font-variant-numeric:tabular-nums}
+.nx .t{display:flex;align-items:center;gap:.5rem;margin-top:.55rem;font-size:1.02rem;font-weight:600;letter-spacing:-.015em}
+.nx .t .pip{background:hsl(var(--h,220) 60% 52%)}
+.nx .w{font-family:var(--mono);font-size:.68rem;color:var(--faint);margin-top:.2rem}
+.nxbar{height:5px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin:.9rem 0 .1rem}
+.nxbar i{display:block;height:100%;border-radius:99px;background:hsl(var(--h,220) 60% 52%);transition:width .4s ease}
+.nx .then{margin-top:.7rem;padding-top:.6rem;border-top:1px solid var(--line);font-size:.78rem;color:var(--dim)}
+.nxnote{padding:.2rem 1.25rem 1.15rem;font-size:.72rem;line-height:1.45;color:var(--faint)}
+.kdrow{align-items:flex-start;gap:.5rem}
+.kdi{flex:0 0 auto;margin-top:.28rem;color:hsl(var(--h,220) 62% var(--evt-tx))}
+.kdi svg{width:15px;height:15px}
+@media (max-width:900px){ .r0{grid-template-columns:1fr} }
 
 /* Histogramme */
 .legend{display:flex;gap:1rem;padding:.1rem 1.25rem .2rem;font-size:.8rem;color:var(--dim)}
@@ -918,6 +940,24 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     </header>
 
     <div class="board" id="board">
+      <div class="r0" id="widget">
+        <section class="card fx" id="wnext">
+          <div class="ch"><h3>Ça s'en vient</h3><span class="grow"></span>
+            <button class="bellb" id="rap-go" aria-pressed="false" title="Être prévenu une heure avant">
+              <svg class="i" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 13 6 9zM10 18.5a2 2 0 0 0 4 0"/></svg>
+              <span id="rap-lab">Rappels</span></button></div>
+          <div class="nx" id="nx-body"></div>
+          <p class="nxnote" id="nx-note"></p>
+        </section>
+
+        <section class="card fx" id="wdates">
+          <div class="ch"><h3>Dates importantes</h3><span class="dim" id="kd-n"></span><span class="grow"></span>
+            <span class="ico"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4"/></svg></span></div>
+          <ul class="nlist" id="kdates"></ul>
+          <p class="empty" id="kd-empty">Les examens et les remises se rangent ici dès qu'une date est connue — collectée dans Léa, annoncée par MIO, ou ajoutée à la main.</p>
+        </section>
+      </div>
+
       <div class="r1" id="top">
         <section class="card dark">
           <div class="ch"><h3>Aperçu de la session</h3><span class="grow"></span>
@@ -1512,6 +1552,10 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
        d'échéance visée : réappliqués après chaque rechargement des données,
        sinon le Léa scrapé restaurerait l'ancienne date. */
     mods: {},
+    /* Rappels : `on` = tu as accepté d'être prévenu, `vus` = ce qui a déjà
+       sonné (par clé d'évènement), pour ne pas réannoncer le même cours à
+       chaque passage de la minuterie. */
+    rappels: { on:false, vus:{} },
     /* Suppressions assumées, par identifiant : { k, t, at }. Ce que tu retires
        à la main doit le rester — le scraper repousse les mêmes échéances Léa à
        chaque collecte, et une ré-analyse peut re-proposer la même tâche sous un
@@ -1526,6 +1570,8 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
   if (!state.acted || typeof state.acted !== "object") state.acted = {};
   if (!state.mods || typeof state.mods !== "object") state.mods = {};
   if (!state.gone || typeof state.gone !== "object") state.gone = {};
+  if (!state.rappels || typeof state.rappels !== "object") state.rappels = { on:false, vus:{} };
+  if (!state.rappels.vus || typeof state.rappels.vus !== "object") state.rappels.vus = {};
   if (!state.ttEdits || typeof state.ttEdits !== "object") state.ttEdits = {};
   if (!state.sheets || typeof state.sheets !== "object") state.sheets = {};
   if (state.wview !== "pile") state.wview = "une";
@@ -2155,7 +2201,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
       host.append(card);
     }
     syncWeekBar();
-    placeNow(); save();
+    placeNow(); renderWidget(); save();
   }
 
   /* « Cette semaine », « La semaine prochaine », puis le compte : de quoi
@@ -2340,7 +2386,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     el("dl-empty").hidden = state.deadlines.length > 0;
     const urg = liveDeadlines().filter(d => countdown(d.date, d.time).lvl === 3).length;
     el("bell-dot").hidden = !urg;
-    save();
+    renderWidget(); save();
   }
   el("dl-add").addEventListener("click", ev => openDeadline(ev.currentTarget));
 
@@ -2767,6 +2813,258 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     }
   }
 
+  /* ── Ce qui s'en vient ────────────────────────────────────────────
+     Trois sources, une seule liste : la grille de cours (récurrente), les
+     blocs posés à la main sur une date, les échéances. La carte du haut, les
+     dates importantes et les rappels lisent tous celle-ci — sinon un rappel
+     annoncerait un cours que la carte ignore, ou l'inverse. */
+  const LEAD_MIN = 60;     // le rappel part une heure avant
+  const HORIZON_D = 21;    // au-delà, « ça s'en vient » ne veut plus rien dire
+  const HHMM = /(\d{1,2}):(\d{2})/;
+
+  /* L'heure exacte d'un bloc de la grille : `time` est ce qui est écrit sur
+     l'horaire (« 16:00 – 17:45 »), `h` n'en est que l'arrondi à l'heure pleine
+     qui sert à le dessiner. On lit donc `time`, et on retombe sur `h` s'il
+     manque — un horaire importé peut ne pas l'avoir. */
+  function ttSpan(e, day) {
+    const [a, b] = (e.time || "").split(/[–—-]/).map(x => HHMM.exec(x || ""));
+    const at = (m, repli) => new Date(day.getFullYear(), day.getMonth(), day.getDate(),
+      m ? +m[1] : repli, m ? +m[2] : 0);
+    return [at(a, e.h[0]), at(b, e.h[1])];
+  }
+
+  function upcoming(now) {
+    const out = [];
+    const d0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    for (let i = 0; i < HORIZON_D; i++) {
+      const day = addDays(d0, i);
+      if (!inSem(day)) continue;
+      const wd = (day.getDay() + 6) % 7;
+      for (const e of TT) {
+        if (e.d !== wd) continue;
+        const [start, end] = ttSpan(e, day);
+        if (end <= now) continue;   // un cours commencé n'est pas passé
+        out.push({ key:`c:${iso(day)}:${e.h[0]}`, kind:"cours", t:e.t, hue:hueOf(e.t),
+          sub:[kindLabel(e.k), e.room].filter(Boolean).join(" · "),
+          start, end, at:new Date(+start - LEAD_MIN * 6e4) });
+      }
+    }
+    for (const [dISO, list] of Object.entries(state.blocks)) {
+      const [y, m, d] = dISO.split("-").map(Number);
+      for (const b of list) {
+        const start = new Date(y, m - 1, d, b.from), end = new Date(y, m - 1, d, b.to);
+        if (end <= now) continue;
+        out.push({ key:`b:${b.id}`, kind:b.kind === "examen" ? "examen" : "bloc", t:b.t,
+          hue:b.h ?? HUES[0], sub:b.kind === "examen" ? "Examen" : "Ajouté à ton horaire",
+          start, end, at:new Date(+start - LEAD_MIN * 6e4) });
+      }
+    }
+    for (const d of liveDeadlines()) {
+      const [y, m, da] = d.date.split("-").map(Number);
+      const t = HHMM.exec(d.time || "");
+      /* Sans heure, une remise vaut pour la journée entière : elle se range en
+         fin de journée et s'annonce le matin même — « dans 1 h » n'aurait rien
+         à quoi se rattacher. */
+      const start = new Date(y, m - 1, da, t ? +t[1] : 23, t ? +t[2] : 59);
+      if (start <= now) continue;
+      const c = courseOf(d);
+      out.push({ key:`e:${d.id}`, t:d.t, hue:hueOf(c), sub:c, start, end:null, jour:!t,
+        kind:d.kind === "examen" ? "examen" : d.kind === "remise" ? "remise" : "echeance",
+        at:t ? new Date(+start - LEAD_MIN * 6e4) : new Date(y, m - 1, da, 8) });
+    }
+    return out.sort((a, b) => a.start - b.start);
+  }
+
+  const clock = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  /* Le même vocabulaire que le compte à rebours des échéances : jamais
+     « dans 0,7 jour », jamais un décompte à la seconde. */
+  function untilTxt(ms) {
+    const m = Math.max(0, Math.round(ms / 6e4));
+    if (m < 1) return "maintenant";
+    if (m < 60) return `dans ${m} min`;
+    const h = Math.floor(m / 60), r = m % 60;
+    if (h < 24) return r ? `dans ${h} h ${pad(r)}` : `dans ${h} h`;
+    const j = Math.round(h / 24);
+    return `dans ${j} jour${j > 1 ? "s" : ""}`;
+  }
+  /* today0 est figé au chargement : une app laissée ouverte trois jours dirait
+     encore « aujourd'hui » pour avant-hier. Ici, le jour se relit à chaque
+     appel. */
+  function dayTxt(d, now) {
+    const j = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate())
+      - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 864e5);
+    return j === 0 ? "Aujourd'hui" : j === 1 ? "Demain"
+      : `${DOW[(d.getDay() + 6) % 7]}. ${d.getDate()} ${MONTH[d.getMonth()].slice(0, 4)}`;
+  }
+  function whenTxt(x, now) {
+    if (x.end && x.start <= now) return `En cours · jusqu'à ${clock(x.end)}`;
+    if (x.jour) return dayTxt(x.start, now);
+    return `${dayTxt(x.start, now)} · ${clock(x.start)}${x.end ? ` – ${clock(x.end)}` : ""}`;
+  }
+  /* La même échelle d'urgence que les échéances : moins d'une heure, moins de
+     trois, aujourd'hui, plus tard. */
+  const lvlOf = ms => ms < 36e5 ? 3 : ms < 108e5 ? 2 : ms < 864e5 ? 1 : 0;
+
+  function renderNext() {
+    const now = new Date(), list = upcoming(now), x = list[0];
+    const box = el("nx-body"), card = el("wnext");
+    box.textContent = "";
+    if (!x) {
+      card.style.removeProperty("--h");
+      box.append(mk("b","cdx cd l0","Rien à venir"),
+        mk("p","w","Ni cours, ni bloc, ni échéance en vue."));
+      renderRappel();
+      return;
+    }
+    const live = x.end && x.start <= now, ms = x.start - now;
+    card.style.setProperty("--h", x.hue);
+    const t = mk("p","t"); t.append(mk("i","pip"), document.createTextNode(x.t));
+    box.append(mk("b", "cdx cd l" + (live ? 3 : lvlOf(ms)), live ? "En cours" : untilTxt(ms)), t,
+      mk("p","w", [whenTxt(x, now), x.sub].filter(Boolean).join(" · ")));
+    /* La barre se remplit pendant la dernière heure, puis pendant le cours
+       lui-même : « ça commence bientôt » et « c'est à moitié fait » se lisent
+       au même endroit. */
+    const pct = live ? (now - x.start) / (x.end - x.start)
+      : ms < LEAD_MIN * 6e4 ? 1 - ms / (LEAD_MIN * 6e4) : 0;
+    if (pct > 0) {
+      const bar = mk("div","nxbar"), i = mk("i");
+      i.style.width = `${Math.min(100, pct * 100).toFixed(1)}%`;
+      bar.append(i); box.append(bar);
+    }
+    const suite = list[1];
+    if (suite) box.append(mk("p","then",
+      `Puis · ${suite.t} · ${whenTxt(suite, now).replace(" · ", ", ")}`));
+    renderRappel();
+  }
+
+  /* Dates importantes : examens et remises d'abord — ce sont elles qu'on
+     prépare des jours à l'avance. Les autres échéances complètent la liste,
+     sinon la carte resterait vide toute la première moitié de session. */
+  const KD_RANK = { examen:0, remise:1, echeance:2 };
+  const KD_ICON = { examen:"examen", remise:"remise", echeance:"autre" };
+  function renderKeyDates() {
+    const now = new Date();
+    const tout = upcoming(now).filter(x => x.kind in KD_RANK);
+    const pick = [...tout]
+      .sort((a, b) => KD_RANK[a.kind] - KD_RANK[b.kind] || a.start - b.start)
+      .slice(0, 5)
+      .sort((a, b) => a.start - b.start);
+    const ul = el("kdates"); ul.textContent = "";
+    for (const x of pick) {
+      const lvl = lvlOf(x.start - now);
+      const li = mk("li","nrow dline kdrow");
+      li.style.setProperty("--p", `var(--p${lvl})`);
+      li.style.setProperty("--h", x.hue);
+      const ic = mk("span","kdi"); ic.innerHTML = ICON[KD_ICON[x.kind]];
+      const al = mk("div","al");
+      al.append(mk("p","tx", x.t));
+      const w = mk("p","w");
+      w.append(mk("b","cd l" + lvl, untilTxt(x.start - now)),
+        document.createTextNode(` · ${dayTxt(x.start, now)}${x.jour ? "" : " " + clock(x.start)}`));
+      al.append(w);
+      if (x.sub) { const c = mk("span","chip"); c.append(mk("i"), document.createTextNode(x.sub)); al.append(c); }
+      li.append(mk("span","bar4"), ic, al);
+      ul.append(li);
+    }
+    el("kd-n").textContent = tout.length ? `(${tout.length})` : "";
+    el("kd-empty").hidden = pick.length > 0;
+  }
+  const renderWidget = () => { renderNext(); renderKeyDates(); };
+
+  /* ── Rappels : une heure avant ─────────────────────────────────────
+     Aucun serveur de push ici — le navigateur ne réveille pas une page
+     fermée. Le rappel part donc quand l'app tourne, fenêtre au fond de
+     l'écran comprise ; d'où le rattrapage au retour, qui annonce ce qui
+     aurait dû sonner pendant qu'elle dormait. */
+  const RAP_TTL = 3 * 864e5;   // au-delà, l'évènement est passé : on oublie qu'il a sonné
+  const RAP_MAX = 3;           // un réveil après une longue veille ne crache pas dix alertes
+  const rapPossible = () => typeof Notification !== "undefined";
+  const rapPret = () => rapPossible() && Notification.permission === "granted";
+
+  function rapPrune() {
+    const seuil = Date.now() - RAP_TTL;
+    for (const [k, at] of Object.entries(state.rappels.vus))
+      if (!(new Date(at).getTime() > seuil)) delete state.rappels.vus[k];
+  }
+
+  /* Par le service worker quand il y en a un : une notification postée par lui
+     survit à la fermeture de l'onglet et sait le rouvrir au clic. Sinon,
+     l'API directe — c'est le cas de agenda.html ouvert seul. */
+  async function rapShow(titre, corps, tag) {
+    const opts = { body:corps, tag, lang:"fr-CA", icon:"icon-192.png", badge:"icon-192.png" };
+    try {
+      const reg = await navigator.serviceWorker?.getRegistration?.();
+      if (reg?.showNotification) { await reg.showNotification(titre, opts); return; }
+    } catch {}
+    try { new Notification(titre, opts); } catch {}
+  }
+
+  const RAP_LBL = { examen:"Examen", remise:"Remise", echeance:"Échéance" };
+  function rapCheck() {
+    if (!state.rappels.on || !rapPret()) return;
+    const now = new Date();
+    let n = 0;
+    for (const x of upcoming(now)) {
+      if (n >= RAP_MAX) break;
+      /* La fenêtre d'annonce va du rappel au début : un cours déjà commencé
+         pendant que l'app était fermée ne se fait pas annoncer après coup. */
+      if (now < x.at || now >= x.start || state.rappels.vus[x.key]) continue;
+      rapShow(`${x.jour ? dayTxt(x.start, now) : untilTxt(x.start - now)} · ${x.t}`,
+        [RAP_LBL[x.kind], whenTxt(x, now), x.sub].filter(Boolean).join(" · "), x.key);
+      state.rappels.vus[x.key] = now.toISOString();
+      n++;
+    }
+    if (n) { rapPrune(); save(); }
+  }
+
+  /* À l'allumage, on ne rejoue pas la journée : tout ce dont la fenêtre est
+     déjà ouverte compte pour annoncé. */
+  function rapPrime() {
+    const now = new Date();
+    for (const x of upcoming(now)) if (x.at <= now) state.rappels.vus[x.key] = now.toISOString();
+    rapPrune(); save();
+  }
+
+  function renderRappel() {
+    const b = el("rap-go"), note = el("nx-note");
+    if (!rapPossible()) {
+      b.hidden = true;
+      note.textContent = "Ce navigateur n'affiche pas de notifications.";
+      return;
+    }
+    const bloque = Notification.permission === "denied";
+    const on = state.rappels.on && !bloque;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-pressed", String(on));
+    el("rap-lab").textContent = on ? "Rappels 1 h avant" : "Rappels";
+    note.textContent = bloque
+      ? "Les notifications sont bloquées pour ce site : c'est dans les réglages du navigateur que ça se rouvre."
+      : on
+      ? "Une heure avant chaque cours, bloc et remise. L'app doit tourner — une fenêtre en arrière-plan suffit."
+      : "Éteints. Une notification une heure avant chaque cours, bloc ou remise.";
+  }
+
+  async function rapToggle() {
+    if (!rapPossible()) return;
+    if (state.rappels.on) { state.rappels.on = false; save(); renderRappel(); return; }
+    /* La demande d'autorisation ne part que d'un vrai clic : c'est la règle du
+       navigateur, et c'est aussi la seule façon honnête de la poser. */
+    if (Notification.permission === "default") { try { await Notification.requestPermission(); } catch {} }
+    if (Notification.permission !== "granted") { renderRappel(); return; }
+    state.rappels.on = true;
+    rapPrime();
+    renderRappel();
+    rapShow("Rappels activés", "Tu seras prévenu une heure avant chaque cours, bloc et remise.", "rap-essai");
+  }
+  el("rap-go").addEventListener("click", rapToggle);
+
+  /* Trente secondes : le compte à rebours reste vivant sans que la minuterie
+     coûte quoi que ce soit. Le retour d'onglet rattrape la veille. */
+  setInterval(() => { renderWidget(); rapCheck(); }, 30000);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) { renderWidget(); rapCheck(); }
+  });
+
   /* ── Fiche d'une matière ─────────────────────────────────────────
      Cliquer une matière — dans la barre latérale ou dans « Mes cours » —
      ouvre sa fiche. Les dates qu'on y ajoute ne sont pas un carnet à part :
@@ -3163,6 +3461,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
 
   applyTheme(); renderWeeks(); renderSubjects(); renderOverview(); renderChart();
   renderRings(); renderCourses(); renderTodos(); renderDeadlines(); renderMios();
+  rapCheck();
   syncTTReset();
   observeCards();
   // Hors-ligne aussi : les actions déjà en mémoire locale s'appliquent.

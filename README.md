@@ -79,6 +79,27 @@ la fenêtre). **Une seule tentative à la fois** — jamais deux `login` de suit
 
 Version illustrée : https://agenda-five-sigma.vercel.app/guide.html#reconnexion
 
+## Rappels, une heure avant
+
+Le haut du tableau de bord porte deux cartes : **« Ça s'en vient »**, le
+prochain cours, bloc ou remise avec son compte à rebours, et **« Dates
+importantes »**, les examens et les remises rangés par date.
+
+Le bouton **Rappels** de la première carte demande l'autorisation au
+navigateur, puis annonce chaque cours, chaque bloc ajouté à la main et chaque
+remise **une heure avant**. Une échéance sans heure est annoncée le matin même,
+à 8 h — « dans 1 h » n'aurait rien à quoi se rattacher.
+
+Ce rappel part de l'app, pas d'un serveur : **elle doit tourner**, une fenêtre
+en arrière-plan suffit (l'app installée sur le Dock fait très bien l'affaire).
+Rien n'est envoyé nulle part, et la liste de ce qui a déjà sonné reste dans le
+navigateur. Au retour d'un onglet endormi, ce qui aurait dû sonner pendant la
+veille est rattrapé — sauf ce qui a déjà commencé, qu'annoncer après coup ne
+servirait à rien.
+
+L'alerte de collecte arrêtée, elle, est une notification macOS envoyée par la
+tâche planifiée : les deux ne se marchent pas dessus.
+
 ## Personnaliser
 
 L'horaire de la session est saisi dans `agenda.html` (constante `TT`) : adapte

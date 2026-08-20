@@ -1,6 +1,6 @@
 /* Réseau d'abord pour la page (un nouveau déploiement arrive sans purge),
    cache d'abord pour les icônes. L'app reste utilisable hors ligne. */
-const CACHE = "agenda-v5";
+const CACHE = "agenda-v6";
 const ASSETS = ["/", "/icon.svg", "/icon-180.png", "/icon-192.png", "/icon-512.png", "/manifest.webmanifest"];
 
 self.addEventListener("install", (e) => {
@@ -27,4 +27,16 @@ self.addEventListener("fetch", (e) => {
     return;
   }
   e.respondWith(caches.match(req).then((r) => r || fetch(req)));
+});
+
+/* Un rappel qui ne ramène pas à l'agenda ne sert qu'à moitié : le clic
+   ramène la fenêtre déjà ouverte au premier plan, ou en ouvre une. */
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      for (const c of list) if ("focus" in c) return c.focus();
+      return self.clients.openWindow("/");
+    }),
+  );
 });
