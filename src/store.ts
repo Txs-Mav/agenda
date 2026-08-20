@@ -37,6 +37,7 @@ export type Deadline = {
   time: string;   // HH:MM ou ""
   kind: "examen" | "remise" | "autre";
   src: "mio" | "lea" | "manuel";
+  code: string;   // sigle du cours, ex. 320-123-RI — sert à retrouver la teinte
   done: boolean;
 };
 

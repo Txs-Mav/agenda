@@ -7,23 +7,17 @@ import { readBiggestTable, col, toISODate, toTime } from "./table.js";
 const uid = (seed: string) =>
   "s" + [...seed].reduce((a, c) => ((a * 31 + c.charCodeAt(0)) >>> 0), 7).toString(36);
 
-/** Suit un lien par son libellé plutôt que par une URL devinée. */
-async function follow(page: Page, re: RegExp, label: string): Promise<boolean> {
-  await page.goto(urls.intranet, { waitUntil: "domcontentloaded" });
-  const link = page.locator("a", { hasText: re }).first();
-  if (!(await link.count())) {
-    log.warn(`Lien « ${label} » introuvable sur l'accueil. Lance \`npm run discover\` et regarde data/navigation.json.`);
-    return false;
-  }
-  await link.click();
-  await page.waitForLoadState("domcontentloaded");
-  return true;
-}
-
 export async function collectMios(page: Page): Promise<Mio[]> {
   log.step("Collecte des MIO");
-  if (!(await follow(page, /\bmio\b|messagerie/i, "MIO"))) return [];
-  const rows = await readBiggestTable(page);
+  await page.goto(urls.mio, { waitUntil: "domcontentloaded" });
+  await page.waitForLoadState("networkidle").catch(() => {});
+  // La boîte peut vivre dans un cadre : on prend la portée qui a le plus de lignes.
+  const scopes = [page, ...page.frames()];
+  let rows = await readBiggestTable(page);
+  for (const f of scopes) {
+    const r = await readBiggestTable(f as never).catch(() => []);
+    if (r.length > rows.length) rows = r;
+  }
   log.info(`${rows.length} lignes lues dans la boîte MIO`);
 
   return rows.map((r) => {
@@ -42,36 +36,6 @@ export async function collectMios(page: Page): Promise<Mio[]> {
       add: null,
     } satisfies Mio;
   }).filter((m) => m.subject);
-}
-
-export async function collectTravaux(page: Page): Promise<Deadline[]> {
-  log.step("Collecte des travaux (Léa)");
-  if (!(await follow(page, /l[ée]a/i, "Léa"))) return [];
-  const sub = page.locator("a", { hasText: /travaux|exercices/i }).first();
-  if (await sub.count()) {
-    await sub.click();
-    await page.waitForLoadState("domcontentloaded");
-  }
-  const rows = await readBiggestTable(page);
-  log.info(`${rows.length} lignes lues dans les travaux`);
-
-  return rows.map((r): Deadline | null => {
-    const title = col(r, /travail|titre|description|activit/);
-    const raw = col(r, /remise|[ée]ch[ée]ance|due|limite/);
-    const date = toISODate(raw);
-    const course = col(r, /cours|mati[èe]re|sigle/);
-    if (!title || !date) return null;
-    return {
-      id: uid(title + date + course),
-      t: title,
-      course,
-      date,
-      time: toTime(raw),
-      kind: (/examen|test|[ée]valuation/i.test(title) ? "examen" : "remise") as Deadline["kind"],
-      src: "lea",
-      done: false,
-    };
-  }).filter((d): d is Deadline => d !== null);
 }
 
 /**

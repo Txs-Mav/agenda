@@ -58,11 +58,16 @@ export async function login(page: Page): Promise<void> {
 
   await page.fill(SEL.user, config.user);
   await page.fill(SEL.pass, config.pass);
-  await Promise.all([
-    page.waitForLoadState("domcontentloaded"),
-    page.click(SEL.submit),
-  ]);
+  await page.click(SEL.submit);
+  // Le bouton porte la classe `recaptcha-trigger` : la soumission réelle passe
+  // par du JavaScript, parfois de façon asynchrone. On attend donc de QUITTER
+  // l'URL de login plutôt que de se fier à un état de chargement, qui peut se
+  // résoudre avant que la navigation ait commencé.
+  await page
+    .waitForURL((u) => !/\/Login\/Account\/Login/i.test(u.toString()), { timeout: 30_000 })
+    .catch(() => {});
   await page.waitForLoadState("networkidle").catch(() => {});
+  log.info(`page après soumission : ${new URL(page.url()).pathname}`);
 
   if ((await page.locator(SEL.form).count()) > 0) {
     // Toujours sur le formulaire: identifiants refusés, ou captcha armé en réaction.

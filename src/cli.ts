@@ -10,7 +10,8 @@ import { openSession } from "./browser.js";
 import { ensureSession, isLoggedIn, AuthRejected, CaptchaArmed } from "./auth.js";
 import { config, urls, PLACEHOLDER_MSG } from "./config.js";
 import { discover } from "./scrape/discover.js";
-import { collectMios, collectTravaux, persist } from "./scrape/collect.js";
+import { collectMios, persist } from "./scrape/collect.js";
+import { collectEvenements } from "./scrape/evenements.js";
 import { log } from "./log.js";
 
 const stampName = () => new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
@@ -40,8 +41,13 @@ async function cmdLogin(): Promise<void> {
       await s.page.waitForURL((u) => !/\/Login\/Account\/Login/i.test(u.toString()), {
         timeout: 5 * 60_000,
       });
+      log.info(`page atteinte : ${new URL(s.page.url()).pathname}`);
       if (!(await isLoggedIn(s.page))) {
-        throw new AuthRejected("La page a changé mais la session n'est pas valide.");
+        throw new AuthRejected(
+          `La page a changé (${new URL(s.page.url()).pathname}) mais /intr/ redemande le formulaire. ` +
+          "Reste connecté dans la fenêtre et relance : si une page intermédiaire s'affiche " +
+          "(première utilisation, avis à accepter), franchis-la à la main d'abord.",
+        );
       }
       log.info("connexion réussie");
     }
@@ -93,9 +99,9 @@ async function cmdScrape(): Promise<void> {
     // ainsi qu'on arme le captcha puis qu'on verrouille le DA. Elle exige une
     // session déjà établie par `npm run login`, et échoue bruyamment sinon.
     log.info(`session ${await ensureSession(s.page, { allowLogin: false })}`);
+    const echeances = await collectEvenements(s.page);
     const mios = await collectMios(s.page);
-    const travaux = await collectTravaux(s.page);
-    persist(mios, travaux);
+    persist(mios, echeances);
     await s.saveState();
   } finally { await s.close(); }
 }

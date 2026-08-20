@@ -84,6 +84,7 @@ export const urls = {
   root: `https://${config.host}/`,
   login: `https://${config.host}/Login/Account/Login?ReturnUrl=%2fintr%2f`,
   intranet: `https://${config.host}/intr/`,
+  mio: `https://${config.host}/WebApplication/Module.MIOE/Default.aspx?Provenance=INTR`,
 };
 
 // Enregistré dès le chargement pour que rien ne puisse fuir dans un log.

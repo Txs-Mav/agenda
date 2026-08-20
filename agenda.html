@@ -568,6 +568,11 @@ li:hover .kill{opacity:1}
   const COURSES = [...new Set(TT.map(e => e.t))].sort((a,b) => a.localeCompare(b,"fr"));
   const hues = new Map(COURSES.map((t,i) => [t, HUES[i % HUES.length]]));
   const hueOf = t => hues.get(t) ?? HUES[((t||"").length * 7) % HUES.length];
+  /* Omnivox nomme les cours autrement que le relevé d'horaire
+     (« Philosophie et rationalité » vs « Philo. rationnelle »). Le sigle, lui,
+     est identique des deux côtés : c'est par lui qu'on retrouve la teinte. */
+  const byCode = new Map(TT.map(e => [e.code, e.t]).filter(([c]) => c));
+  const courseOf = d => byCode.get(d.code) || d.course || "";
   const courseInfo = t => { const rows = TT.filter(e => e.t === t);
     return { hours: rows.reduce((s,e) => s + (e.h[1]-e.h[0]), 0), blocks: rows.length,
              code: rows[0]?.code || "", prof: rows[0]?.prof || "" }; };
@@ -1012,14 +1017,15 @@ li:hover .kill{opacity:1}
       const cd = countdown(d.date, d.time);
       const li = mk("li","nrow dline" + (d.done ? " done" : ""));
       li.style.setProperty("--p", `var(--p${cd.lvl})`);
-      li.style.setProperty("--h", hueOf(d.course));
+      li.style.setProperty("--h", hueOf(courseOf(d)));
       const bar = mk("span","bar4");
       const bd = mk("div","al");
       bd.append(mk("p","tx", d.t));
       const meta = mk("p","w");
       const cdn = mk("b","cd l" + cd.lvl, cd.txt);
       meta.append(cdn, document.createTextNode(` · ${frDate(d.date)}`));
-      if (d.course) { const c = mk("span","chip"); c.append(mk("i"), document.createTextNode(d.course)); bd.append(meta, c); }
+      const cname = courseOf(d);
+      if (cname) { const c = mk("span","chip"); c.append(mk("i"), document.createTextNode(cname)); bd.append(meta, c); }
       else bd.append(meta);
       const bx = mk("button","nbox"); bx.innerHTML = ICON.check;
       bx.setAttribute("aria-label", d.done ? "Rouvrir" : "Marquer fait");
