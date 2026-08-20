@@ -47,6 +47,12 @@ puis `ARRÊT DÉFINITIF`, et sort en code 3. C'est le comportement voulu — une
 tâche de fond qui réessaie une connexion arme le captcha, puis verrouille le
 DA.
 
+**Tu es prévenu sans rien surveiller** : au premier passage manqué, la collecte
+poste une notification macOS avec la commande à taper. Elle ne revient ensuite
+qu'une fois toutes les 6 h tant que la panne dure, et une dernière annonce le
+rétablissement. L'état complet est dans `data/health.json` (`kind: "session"`
+= il faut refaire le login).
+
 Rien n'est à réinstaller : ni les dépendances, ni Chromium, ni la tâche
 `launchd`. Seule la session a expiré.
 

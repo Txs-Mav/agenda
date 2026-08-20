@@ -73,7 +73,7 @@ footer a{color:var(--dim)}
       <div class="mini"><b>2 · La session est réutilisée</b><p>Une collecte automatique passe toutes les heures, sans jamais se reconnecter.</p></div>
       <div class="mini"><b>3 · Ton agenda se remplit</b><p>Échéances datées avec compte à rebours, MIO résumés, pastilles sur les dates d'examen.</p></div>
     </div>
-    <div class="callout"><span>🔒</span><span><b>Modèle de sécurité :</b> aucun serveur central. Ton mot de passe vit dans un fichier <b>.env</b> chez toi, exclu de git. L'authentification multifacteur n'est <b>jamais contournée</b> — c'est toi qui saisis le code, le script attend.</span></span></div>
+    <div class="callout"><span>🔒</span><span><b>Modèle de sécurité :</b> aucun serveur central. Ton mot de passe vit dans un fichier <b>.env</b> chez toi, exclu de git. L'authentification multifacteur n'est <b>jamais contournée</b> — c'est toi qui saisis le code, le script attend.</span></div>
   </div>
 
   <div class="card" id="install">
@@ -149,6 +149,8 @@ AGENDA_PASSWORD=ton-mot-de-passe-d-agenda</pre>
     <h2>Quand la session Omnivox se déconnecte</h2>
     <p>Omnivox finit toujours par fermer la session : après quelques jours, après un changement de mot de passe, ou si tu te déconnectes depuis un autre appareil. La collecte automatique <b>ne se reconnecte jamais toute seule</b> — elle s'arrête net et te rend la main. C'est voulu : une tâche de fond qui réessaie une connexion arme le captcha d'Omnivox, puis verrouille ton dossier.</p>
 
+    <div class="callout" style="background:color-mix(in srgb,var(--warn) 12%,var(--surface-2))"><span>🔔</span><span><b>Tu n'as rien à surveiller.</b> Dès qu'un passage horaire échoue, une <b>notification macOS</b> te le dit, avec la commande exacte à taper. Elle revient au plus une fois toutes les 6 h tant que la panne dure — pas 24 fois par jour — et une dernière t'annonce que la collecte est rétablie.</span></div>
+
     <p style="margin-top:.9rem"><b>1 · Reconnaître le symptôme</b> — ton agenda ne bouge plus depuis quelques heures. Le journal le dit franchement :</p>
     <pre>cd ~/AgendaCegep
 tail -20 data/scrape.log</pre>
@@ -179,7 +181,11 @@ npm run scrape   <span class="c"># rattrape tout de suite la collecte manquée</
     <pre>launchctl print gui/$(id -u)/ca.qc.cegeptr.agenda.scrape
 <span class="c"># « state = not running » entre deux passages, c'est normal</span>
 launchctl kickstart -k gui/$(id -u)/ca.qc.cegeptr.agenda.scrape</pre>
-    <p>Seul <b>« Could not find service »</b> veut dire qu'elle a disparu. C'est alors la seule pièce à réinstaller — le reste du programme est intact :</p>
+    <p style="margin-top:1.2rem"><b>Aucune notification n'arrive</b> — vérifie que le mécanisme fonctionne chez toi :</p>
+    <pre>osascript -e 'display notification "test" with title "Agenda Cégep"'</pre>
+    <p>Rien à l'écran ? macOS bloque les notifications de <b>Script Editor</b>. Ouvre <b>Réglages Système → Notifications → Script Editor</b> et autorise-les. L'état de la collecte reste de toute façon lisible dans <b>data/health.json</b>.</p>
+
+    <p style="margin-top:1.2rem">Seul <b>« Could not find service »</b> veut dire que la tâche horaire a disparu. C'est alors la seule pièce à réinstaller — le reste du programme est intact :</p>
     <pre>launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/ca.qc.cegeptr.agenda.scrape.plist</pre>
   </div>
 

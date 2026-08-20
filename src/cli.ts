@@ -17,6 +17,7 @@ import { analyzeNew } from "./scrape/agent.js";
 import { pushSnapshot } from "./sync/supabase.js";
 import { extractHoraire } from "./scrape/horaire.js";
 import { collectEvenements } from "./scrape/evenements.js";
+import { reportFailure, reportSuccess } from "./notify.js";
 import { log } from "./log.js";
 
 const stampName = () => new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
@@ -147,6 +148,7 @@ async function cmdScrape(): Promise<void> {
     const { readFileSync: rf } = await import("node:fs");
     await pushSnapshot(JSON.parse(rf(join(config.dataDir, "export.json"), "utf8")));
     await s.saveState();
+    await reportSuccess();
   } finally { await s.close(); }
 }
 
@@ -177,7 +179,16 @@ try {
   await run();
 } catch (err) {
   log.error(err);
-  if (err instanceof CaptchaArmed || err instanceof AuthRejected) {
+  const bloquant = err instanceof CaptchaArmed || err instanceof AuthRejected;
+  // Seule la collecte planifiée alerte : pour les commandes lancées à la main,
+  // tu es déjà devant le terminal, une notification serait du bruit.
+  if (name === "scrape") {
+    await reportFailure(
+      bloquant ? "session" : "autre",
+      err instanceof Error ? err.message : String(err),
+    );
+  }
+  if (bloquant) {
     log.error("ARRÊT DÉFINITIF — aucun réessai automatique. Intervention humaine requise.");
     process.exit(3);
   }
