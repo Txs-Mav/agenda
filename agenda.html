@@ -115,7 +115,11 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 .meter{height:5px;border-radius:99px;background:rgba(255,255,255,.16);margin:1rem 1.25rem .2rem;overflow:hidden}
 :root[data-theme="dark"] .meter{background:rgba(0,0,0,.16)}
 .meter i{display:block;height:100%;border-radius:99px;background:var(--on-invert)}
-.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem;padding:1.1rem 1.25rem 1.25rem}
+/* Six colonnes pour deux rangées propres : trois tuiles de 2, puis deux de 3.
+   Sans ça, cinq tuiles sur une grille de trois laissent un trou en bout. */
+.tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:.55rem;padding:1.1rem 1.25rem 1.25rem}
+.tile{grid-column:span 2}
+.tile.wide{grid-column:span 3}
 .tile{background:rgba(255,255,255,.09);border-radius:17px;padding:.75rem .7rem;text-align:left}
 :root[data-theme="dark"] .tile:not(.on){background:rgba(0,0,0,.07)}
 .tile.on{background:var(--on-invert);color:var(--invert)}
@@ -326,8 +330,10 @@ li:hover .kill{opacity:1}
   padding:.34rem .72rem;font-size:.73rem;font-weight:550;color:var(--dim);background:var(--surface-2);
   transition:background .15s,color .15s,box-shadow .15s}
 .pop .kind .kd:hover{color:var(--ink)}
-.pop .kind .kd.on{background:color-mix(in srgb,var(--p3) 14%,transparent);color:var(--p3t);
-  box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--p3) 42%,transparent)}
+.pop .kind .kd.on{--kc:var(--p3);--kt:var(--p3t)}
+.pop .kind .kd[data-k="business"].on{--kc:var(--biz);--kt:var(--bizt)}
+.pop .kind .kd.on{background:color-mix(in srgb,var(--kc) 14%,transparent);color:var(--kt);
+  box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--kc) 42%,transparent)}
 .pop .kind .kd .i{width:13px;height:13px}
 .sw-row{display:flex;gap:.4rem;margin-top:.7rem;flex-wrap:wrap}
 .sw-c{width:1.55rem;height:1.55rem;border-radius:50%;background:hsl(var(--h) 62% 52%);transition:transform .12s,box-shadow .12s}
@@ -374,6 +380,10 @@ li:hover .kill{opacity:1}
 /* ── Ajouts : to-do façon Notion, échéances, MIO, pastilles ────── */
 :root{ --p3t:#C4392C; --p2t:#A2620F; --p1t:#7A6800; --p0t:#2E7D45; --scroll-sh:rgba(16,18,20,.16); }
 :root[data-theme="dark"]{ --p3t:#FF8873; --p2t:#FFB861; --p1t:#EBD469; --p0t:#6BDC8A; --scroll-sh:rgba(0,0,0,.55); }
+/* Le business ne se range pas sur l'échelle d'urgence scolaire : il se tient
+   en neutre franc — gris foncé sur fond clair, blanc sur fond sombre. */
+:root{ --biz:#3A4046; --bizt:#2F343A; }
+:root[data-theme="dark"]{ --biz:#FFFFFF; --bizt:#FFFFFF; }
 
 /* To-do : lignes éditables en place, poignée au survol, aucune boîte de saisie */
 .nlist{list-style:none;padding:.1rem .95rem .3rem}
@@ -434,10 +444,10 @@ li:hover .kill{opacity:1}
 .mio h5,.mio .sm{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .mio.open h5,.mio.open .sm{display:block;-webkit-line-clamp:unset;overflow:visible}
 .mio.clip{cursor:pointer}
-/* Pied de carte : même hauteur totale (1.875rem ≈ le bouton « Ajouter ») et
-   même marge basse (.9rem) que les autres cartes de la rangée — les listes se
-   terminent donc à la même ligne. Une seule ligne de texte, ellipse au besoin. */
-.pending{display:flex;gap:.5rem;align-items:center;margin:.2rem 1.25rem .9rem;padding:.3rem .75rem;min-height:1.875rem;box-sizing:border-box;border:1px dashed var(--line-hi);border-radius:999px;color:var(--faint);font-size:.75rem;line-height:1.35}
+/* Pied de carte : le jumeau exact du bouton « Ajouter » d'en face — texte
+   discret sans boîte, même hauteur (1.875rem), même marge basse (.9rem).
+   Une seule ligne, ellipse au besoin. */
+.pending{display:flex;gap:.45rem;align-items:center;margin:.1rem 1.25rem .9rem;padding:.32rem 0;min-height:1.875rem;box-sizing:border-box;color:var(--faint);font-size:.78rem;line-height:1.35}
 .pending>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* Pastilles d'échéance sur l'en-tête de jour */
@@ -476,7 +486,7 @@ li:hover .kill{opacity:1}
    la rangée. Les dégradés « local » masquent les ombres tant que rien n'est
    coupé ; elles n'apparaissent donc que s'il reste du contenu à défiler. */
 .r2{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}
-.r2>.card{display:flex;flex-direction:column;max-height:min(34rem,72vh)}
+.r2>.card{display:flex;flex-direction:column;height:min(34rem,72vh)}
 .r2 .ch,.r2 .nadd,.r2 .pending{flex:0 0 auto}
 .r2 .nlist,.r2 .miolist{
   flex:0 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
@@ -514,7 +524,7 @@ li:hover .kill{opacity:1}
 @media (prefers-reduced-motion:reduce){.fx,.pop.fx,.card.wr,.card.wl{animation:none}}
 
 @media (max-width:1180px){ .r2{grid-template-columns:repeat(2,minmax(0,1fr))} #mios{grid-column:span 2} }
-@media (max-width:820px){ .r2{grid-template-columns:minmax(0,1fr)} #mios{grid-column:auto} }
+@media (max-width:820px){ .r2{grid-template-columns:minmax(0,1fr)} #mios{grid-column:auto} .r2>.card{height:auto;max-height:min(34rem,72vh)} }
 /* Écran étroit : plutôt que d'écraser les commandes contre le titre, on les
    renvoie à la ligne — l'espaceur devient la cassure. */
 @media (max-width:700px){
@@ -527,22 +537,23 @@ li:hover .kill{opacity:1}
 .ev.dlblk{border-left:3px solid var(--p);border-style:solid;box-shadow:inset 0 0 0 1px var(--p)}
 .ev.dlblk .m{font-weight:600;color:var(--pt)}
 
-/* Un bloc marqué « examen » emprunte le langage des échéances : la couleur
-   choisie reste le fond, l'urgence tient l'anneau et l'étiquette. Rien de
-   nouveau à apprendre — c'est déjà ce que dit une remise dans la grille. */
-.ev.exam{border-left:3px solid var(--p);border-left-style:solid;box-shadow:inset 0 0 0 1.5px var(--p)}
-.ev.exam .m{font-family:var(--mono);font-size:.58rem;letter-spacing:.09em;text-transform:uppercase;
-  font-weight:650;color:var(--pt);opacity:1}
+/* Un bloc marqué emprunte le langage des échéances : la couleur choisie reste
+   le fond, l'anneau et l'étiquette portent la marque. Une seule mécanique pour
+   les deux marquages — seule la teinte change, via --mk / --mkt : l'urgence
+   calculée pour un examen, le neutre pour du business. */
+.ev.mark{border-left:3px solid var(--mk);border-left-style:solid;box-shadow:inset 0 0 0 1.5px var(--mk)}
+.ev.mark .m{font-family:var(--mono);font-size:.58rem;letter-spacing:.09em;text-transform:uppercase;
+  font-weight:650;color:var(--mkt);opacity:1}
 /* Le signal ne bouge que quand ça compte : 3 jours ou moins. Au-delà, une
    grille qui respire toute la session devient du bruit qu'on cesse de voir. */
-.ev.exam.soon{animation:fx-exam 2.6s ease-in-out infinite}
-@keyframes fx-exam{
-  0%,100%{transform:scale(1);box-shadow:inset 0 0 0 1.5px var(--p)}
-  50%{transform:scale(1.015);box-shadow:inset 0 0 0 1.5px var(--p),0 0 0 4px color-mix(in srgb,var(--p) 20%,transparent)}
+.ev.mark.soon{animation:fx-mark 2.6s ease-in-out infinite}
+@keyframes fx-mark{
+  0%,100%{transform:scale(1);box-shadow:inset 0 0 0 1.5px var(--mk)}
+  50%{transform:scale(1.015);box-shadow:inset 0 0 0 1.5px var(--mk),0 0 0 4px color-mix(in srgb,var(--mk) 20%,transparent)}
 }
 /* Sans mouvement, le même signal en statique : un halo permanent. */
 @media (prefers-reduced-motion:reduce){
-  .ev.exam.soon{animation:none;box-shadow:inset 0 0 0 2px var(--p),0 0 0 3px color-mix(in srgb,var(--p) 20%,transparent)}
+  .ev.mark.soon{animation:none;box-shadow:inset 0 0 0 2px var(--mk),0 0 0 3px color-mix(in srgb,var(--mk) 20%,transparent)}
 }
 .nrow .kill{margin-left:.2rem;align-self:flex-start;margin-top:.15rem}
 
@@ -971,6 +982,8 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
             <button class="tile on" data-go="horaire"><span class="ic"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17"/></svg></span><b id="t-blocs">0</b><span>Blocs</span></button>
             <button class="tile" data-go="echeances"><span class="ic"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2"/></svg></span><b id="t-ech">0</b><span>Échéances</span></button>
             <button class="tile" data-go="mios"><span class="ic"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 8.2 6 8.2-6"/></svg></span><b id="t-mio">0</b><span>MIO</span></button>
+            <button class="tile wide" data-go="horaire"><span class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M6 3.5h12v17H6z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span><b id="t-exam">0</b><span>Examens à venir</span></button>
+            <button class="tile wide" data-go="horaire"><span class="ic"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="7.5" width="18" height="12.5" rx="2.5"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3 12.5h18"/></svg></span><b id="t-biz">0</b><span>Business à venir</span></button>
           </div>
         </section>
 
@@ -1025,7 +1038,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
             <span>Chaque MIO est lu en entier puis résumé ici. Les examens, remises, tâches et rencontres qu'il annonce s'ajoutent tout seuls à l'agenda.</span>
           </div>
           <div class="pending"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px;flex:0 0 auto"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3 2"/></svg>
-            <span>Collecte à chaque heure. <span id="last-scrape"></span></span></div>
+            <span>Collecte à chaque heure <span id="last-scrape"></span></span></div>
         </section>
       </div>
 
@@ -1518,6 +1531,9 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     return { txt:`Dans ${days} jours`, lvl:0, days };
   }
 
+  /* Les deux marquages d'un bloc personnel, et l'étiquette qu'ils portent. */
+  const MARKS = { examen:"Examen", business:"Business" };
+
   /* ── État ─────────────────────────────────────────────────────── */
   const seed = () => ({
     wks: [0], theme:"light", weekend:true, chart:"jour", filter:null,
@@ -1600,6 +1616,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     examen:'<svg class="i" viewBox="0 0 24 24"><path d="M6 3.5h12v17H6z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>',
     remise:'<svg class="i" viewBox="0 0 24 24"><path d="M6 3.5h8l4.5 4.5v12.5H6z"/><path d="M14 3.5V8h4.5"/></svg>',
     autre:'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v4.5l3 2"/></svg>',
+    business:'<svg class="i" viewBox="0 0 24 24"><rect x="3" y="7.5" width="18" height="12.5" rx="2.5"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3 12.5h18"/></svg>',
   };
 
   const liveDeadlines = () => state.deadlines.filter(d => !d.done);
@@ -1724,19 +1741,26 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
 
     if (blk) {
       if (blk.from === hr) {
-        const exam = blk.kind === "examen";
+        const label = MARKS[blk.kind] || "";
         paint(cell, { hue:blk.h, span:blk.to-blk.from, title:blk.t,
-          meta: exam ? "Examen" : "", time:`${pad(blk.from)}:00 – ${pad(blk.to)}:00`, mine:true });
-        if (exam) {
-          /* L'urgence se calcule, elle ne se choisit pas : même règle que pour
-             une remise, l'examen de demain crie, celui d'octobre non. */
+          meta: label, time:`${pad(blk.from)}:00 – ${pad(blk.to)}:00`, mine:true });
+        if (label) {
+          /* L'imminence se calcule, elle ne se choisit pas : même règle que
+             pour une remise, ce qui tombe demain crie, ce qui tombe en octobre
+             non. C'est elle qui décide de la respiration, et de la teinte d'un
+             examen ; le business, lui, garde son neutre quoi qu'il arrive. */
           const cd = countdown(dISO, `${pad(blk.from)}:00`);
           const ev = cell.querySelector(".ev");
-          ev.classList.add("exam");
-          if (cd.lvl >= 2) ev.classList.add("soon");
-          ev.style.setProperty("--p", `var(--p${cd.lvl})`);
-          ev.style.setProperty("--pt", `var(--p${cd.lvl}t)`);
-          cell.title = `${blk.t}\nExamen · ${cd.txt}`;
+          ev.classList.add("mark", blk.kind === "examen" ? "exam" : "biz");
+          /* Rien de passé ne respire : une case révolue n'a plus rien à
+             signaler, seul ce qui arrive mérite qu'on la regarde bouger. */
+          if (cd.lvl >= 2 && cd.days >= 0) ev.classList.add("soon");
+          const [mkc, mkt] = blk.kind === "examen"
+            ? [`var(--p${cd.lvl})`, `var(--p${cd.lvl}t)`]
+            : ["var(--biz)", "var(--bizt)"];
+          ev.style.setProperty("--mk", mkc);
+          ev.style.setProperty("--mkt", mkt);
+          cell.title = `${blk.t}\n${label} · ${cd.txt}`;
         }
       }
       else cell.classList.add("under");
@@ -1829,7 +1853,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
       from, to,
       t: covered.length === 1 ? covered[0].t : "",
       h: covered.length ? covered[0].h : HUES[0],
-      kind: covered.some(b => b.kind === "examen") ? "examen" : null,
+      kind: covered.find(b => b.kind)?.kind ?? null,
       merge: covered.map(b => b.id),
     }, !covered.length);
     markRange(d, from, to - 1);
@@ -1883,17 +1907,23 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     input.placeholder = "Examen, travail, rendez-vous…"; input.value = blk.t || "";
     box.append(input);
 
+    /* Marquages exclusifs : un bloc est un examen, ou du business, ou rien.
+       Cliquer celui déjà allumé l'éteint. */
     let kind = blk.kind || null;
     const kindRow = mk("div","kind");
-    const examBtn = mk("button","kd" + (kind === "examen" ? " on" : ""));
-    examBtn.innerHTML = ICON.examen;
-    examBtn.append(document.createTextNode("Examen"));
-    examBtn.title = "Marquer ce bloc comme un examen";
-    examBtn.addEventListener("click", () => {
-      kind = kind === "examen" ? null : "examen";
-      examBtn.classList.toggle("on", kind === "examen");
-    });
-    kindRow.append(examBtn);
+    const chip = (val, label, icon) => {
+      const b = mk("button","kd" + (kind === val ? " on" : ""));
+      b.dataset.k = val;
+      b.innerHTML = icon;
+      b.append(document.createTextNode(label));
+      b.title = `Marquer ce bloc : ${label.toLowerCase()}`;
+      b.addEventListener("click", () => {
+        kind = kind === val ? null : val;
+        kindRow.querySelectorAll(".kd").forEach(x => x.classList.toggle("on", x.dataset.k === kind));
+      });
+      return b;
+    };
+    kindRow.append(chip("examen","Examen",ICON.examen), chip("business","Business",ICON.business));
     box.append(kindRow);
 
     let hue = blk.h ?? HUES[0];
@@ -1917,7 +1947,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
         for (const b of dayBlocks(d)) if (ids.has(b.id)) noteSuppression("bloc", b);
         state.blocks[d] = dayBlocks(d).filter(b => !ids.has(b.id));
         if (!state.blocks[d].length) delete state.blocks[d];
-        closePop(); renderWeeks(); renderMios(); // une puce d'agent peut repasser à « + »
+        closePop(); renderWeeks(); renderOverview(); renderMios(); // une puce d'agent peut repasser à « + »
       });
       acts.append(del);
     }
@@ -1932,7 +1962,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
       const list = dayBlocks(d).filter(b => !drop.has(b.id) && !(b.from < blk.to && b.to > blk.from));
       list.push({ id: uid(), from: blk.from, to: blk.to, t, h: hue, ...(kind ? { kind } : {}) });
       state.blocks[d] = list.sort((a,b) => a.from - b.from);
-      closePop(); renderWeeks();
+      closePop(); renderWeeks(); renderOverview();
     };
     ok.addEventListener("click", commit);
     /* Un titre vide n'enregistre rien : on le dit avec le bouton plutôt que
@@ -2667,7 +2697,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     el("mio-empty").hidden = state.mios.length > 0;
     el("n-m").textContent = state.mios.length || "";
     el("last-scrape").textContent = state.lastScrape
-      ? `Dernière collecte : ${state.lastScrape}` : "Aucune collecte encore";
+      ? `· ${state.lastScrape}` : "· aucune encore";
     save();
   }
 
@@ -2694,6 +2724,13 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     el("t-blocs").textContent = TT.length;
     el("t-ech").textContent = liveDeadlines().length;
     el("t-mio").textContent = state.mios.length;
+    /* Un compteur d'examens qui inclut ceux de septembre dernier ne veut rien
+       dire : on ne compte que ce qui est encore devant. */
+    const marques = k => Object.entries(state.blocks || {})
+      .filter(([d]) => d >= todayISO)
+      .reduce((n, [, list]) => n + list.filter(b => b.kind === k).length, 0);
+    el("t-exam").textContent = marques("examen");
+    el("t-biz").textContent = marques("business");
     el("n-h").textContent = `${hours}h`;
     el("n-e").textContent = liveDeadlines().length || "";
     el("n-c").textContent = COURSES.length;
