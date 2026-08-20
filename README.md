@@ -39,6 +39,37 @@ Guide illustré et détaillé : https://agenda-five-sigma.vercel.app/guide.html
 La collecte automatique passe toutes les heures via `launchd`
 (`horaire.scrape.plist`). Journal : `data/scrape.log`.
 
+## Quand la session Omnivox expire
+
+Omnivox ferme la session au bout de quelques jours. La collecte planifiée
+**ne se reconnecte jamais seule** : elle s'arrête sur `Aucune session valide`
+puis `ARRÊT DÉFINITIF`, et sort en code 3. C'est le comportement voulu — une
+tâche de fond qui réessaie une connexion arme le captcha, puis verrouille le
+DA.
+
+Rien n'est à réinstaller : ni les dépendances, ni Chromium, ni la tâche
+`launchd`. Seule la session a expiré.
+
+```bash
+cd ~/AgendaCegep      # ou le dossier du dépôt
+npm run check         # « session réutilisée » = rien à faire
+npm run login         # fenêtre visible, tu saisis le code MFA
+npm run scrape        # rattrape la collecte manquée sans attendre l'heure
+```
+
+La tâche horaire reprend d'elle-même au passage suivant. Pour la forcer, ou
+vérifier qu'elle est toujours chargée :
+
+```bash
+launchctl print gui/$(id -u)/ca.qc.cegeptr.agenda.scrape
+launchctl kickstart -k gui/$(id -u)/ca.qc.cegeptr.agenda.scrape
+```
+
+Si le login résiste : `npm run login -- --manuel` (tout est tapé à la main dans
+la fenêtre). **Une seule tentative à la fois** — jamais deux `login` de suite.
+
+Version illustrée : https://agenda-five-sigma.vercel.app/guide.html#reconnexion
+
 ## Personnaliser
 
 L'horaire de la session est saisi dans `agenda.html` (constante `TT`) : adapte

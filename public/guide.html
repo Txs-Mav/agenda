@@ -62,6 +62,7 @@ footer a{color:var(--dim)}
     <span class="cta">
       <a class="btn solid" href="#install">Installer en 5 étapes</a>
       <a class="btn" href="/">Voir l'agenda</a>
+      <a class="btn" href="#reconnexion">Ma session a expiré</a>
     </span>
   </div>
 
@@ -144,13 +145,42 @@ AGENDA_PASSWORD=ton-mot-de-passe-d-agenda</pre>
     <div class="callout"><span>🔒</span><span>Ce compte ne transporte que les <b>données dérivées</b> (échéances, résumés). Tes identifiants Omnivox n'y sont <b>jamais</b> — ils restent dans ton .env local. Côté base, chaque compte ne peut lire que ses propres lignes.</span></div>
   </div>
 
+  <div class="card" id="reconnexion">
+    <h2>Quand la session Omnivox se déconnecte</h2>
+    <p>Omnivox finit toujours par fermer la session : après quelques jours, après un changement de mot de passe, ou si tu te déconnectes depuis un autre appareil. La collecte automatique <b>ne se reconnecte jamais toute seule</b> — elle s'arrête net et te rend la main. C'est voulu : une tâche de fond qui réessaie une connexion arme le captcha d'Omnivox, puis verrouille ton dossier.</p>
+
+    <p style="margin-top:.9rem"><b>1 · Reconnaître le symptôme</b> — ton agenda ne bouge plus depuis quelques heures. Le journal le dit franchement :</p>
+    <pre>cd ~/AgendaCegep
+tail -20 data/scrape.log</pre>
+    <div class="callout"><span>🔎</span><span>Tu cherches ces deux lignes : <b>✖ Aucune session valide</b>, puis <b>ARRÊT DÉFINITIF — aucun réessai automatique</b>. C'est ce cas-ci. Un doute ? <b>npm run check</b> tranche en dix secondes : « session réutilisée » = tout va bien, rien à faire.</span></div>
+
+    <p style="margin-top:.9rem"><b>2 · Refaire la session — et rien d'autre</b> — deux commandes, dans l'ordre :</p>
+    <pre>npm run login    <span class="c"># fenêtre visible : tu saisis le code de vérification</span>
+npm run scrape   <span class="c"># rattrape tout de suite la collecte manquée</span></pre>
+    <div class="callout mfa"><span>📱</span><span>Comme au premier jour : tes identifiants sont préremplis, le code de vérification s'affiche, <b>tu le tapes dans la fenêtre</b>. Coche <b>« se souvenir de cet appareil »</b> si l'option revient — c'est ce qui espace les reconnexions.</span></div>
+
+    <div class="callout"><span>✅</span><span><b>Il n'y a rien à réinstaller.</b> Ne relance pas <b>install.sh</b>, ni <b>npm install</b>, ni <b>npx playwright install</b>, ni la tâche <b>launchctl</b> : tout ça est déjà en place et le reste. Seule la session avait expiré. La collecte horaire repart d'elle-même à la prochaine heure — le <b>npm run scrape</b> ci-dessus sert seulement à ne pas attendre.</span></div>
+    <span class="pill ok">LA SESSION SEULEMENT · L'INSTALLATION RESTE INTACTE</span>
+
+    <p style="margin-top:1.1rem"><b>3 · Si la connexion résiste</b> — laisse tomber le préremplissage et fais tout à la main dans la fenêtre :</p>
+    <pre>npm run login -- --manuel</pre>
+    <div class="callout" style="background:color-mix(in srgb,var(--bad) 10%,var(--surface-2))"><span>⛔</span><span><b>Une seule tentative à la fois.</b> Si le login échoue, ne relance pas la commande en boucle : des essais répétés arment le captcha d'Omnivox, puis verrouillent ton dossier étudiant. Attends quelques minutes, connecte-toi d'abord à la main sur <b>omnivox.ca</b> dans ton navigateur habituel pour confirmer que ton compte va bien, et reviens ensuite à <b>npm run login</b>.</span></div>
+  </div>
+
   <div class="card">
     <h2>En cas de pépin</h2>
     <div class="grid3">
-      <div class="mini"><b>« Aucune session valide »</b><p>La session a expiré ou n'existe pas encore : relance <b>npm run login</b>. La collecte ne tente jamais de se connecter seule — c'est voulu.</p></div>
-      <div class="mini"><b>Captcha au login</b><p>Ferme, attends un peu, relance <b>npm run login</b> et connecte-toi entièrement à la main dans la fenêtre.</p></div>
-      <div class="mini"><b>Rien ne se collecte</b><p>Regarde <b>data/scrape.log</b>. « session réutilisée » suivi de comptes = tout va bien ; « code 3 » = refais le login.</p></div>
+      <div class="mini"><b>« Aucune session valide »</b><p>La session a expiré : <b>npm run login</b> puis <b>npm run scrape</b>. La marche à suivre complète est <a href="#reconnexion" style="color:var(--ink)">juste au-dessus</a>.</p></div>
+      <div class="mini"><b>Captcha au login</b><p>Ferme, attends quelques minutes, puis <b>npm run login -- --manuel</b> et connecte-toi entièrement à la main dans la fenêtre. Jamais deux essais de suite.</p></div>
+      <div class="mini"><b>Rien ne se collecte</b><p>Regarde <b>data/scrape.log</b>. « session réutilisée » suivi de comptes = tout va bien ; « ARRÊT DÉFINITIF » = refais le login.</p></div>
     </div>
+
+    <p style="margin-top:1.2rem"><b>La tâche horaire ne passe plus</b> — vérifie qu'elle existe encore, et relance-la sans attendre l'heure :</p>
+    <pre>launchctl print gui/$(id -u)/ca.qc.cegeptr.agenda.scrape
+<span class="c"># « state = not running » entre deux passages, c'est normal</span>
+launchctl kickstart -k gui/$(id -u)/ca.qc.cegeptr.agenda.scrape</pre>
+    <p>Seul <b>« Could not find service »</b> veut dire qu'elle a disparu. C'est alors la seule pièce à réinstaller — le reste du programme est intact :</p>
+    <pre>launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/ca.qc.cegeptr.agenda.scrape.plist</pre>
   </div>
 
   <footer>
