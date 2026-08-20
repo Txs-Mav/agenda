@@ -408,6 +408,10 @@ li:hover .kill{opacity:1}
 
 @media (max-width:1180px){ .r2{grid-template-columns:repeat(2,minmax(0,1fr))} #mios{grid-column:span 2} }
 @media (max-width:820px){ .r2{grid-template-columns:minmax(0,1fr)} #mios{grid-column:auto} }
+
+/* Une échéance horodatée s'affiche dans la grille, marquée par l'urgence. */
+.ev.dlblk{border-left:3px solid var(--p);border-style:solid;box-shadow:inset 0 0 0 1px var(--p)}
+.ev.dlblk .m{font-weight:600;color:var(--pt)}
 </style>
 
 <div class="shell">
@@ -746,6 +750,9 @@ li:hover .kill{opacity:1}
 
     const slot = courseAt(dISO, hr);
     const blk  = blockAt(dISO, hr);
+    const dl   = !slot && !blk
+      ? liveDeadlines().find(x => x.date === dISO && x.time && Number(x.time.slice(0,2)) === hr)
+      : undefined;
 
     if (slot) {
       const { e } = slot;
@@ -755,6 +762,12 @@ li:hover .kill{opacity:1}
       else cell.classList.add("under");
       cell.title = [e.t, e.code && `${e.code} (${e.k})`, e.room, e.prof, e.time].filter(Boolean).join("\n");
       if (state.filter && state.filter !== e.t) cell.querySelector(".ev")?.style.setProperty("opacity",".26");
+      cell.style.cursor = "pointer";
+      cell.tabIndex = 0;
+      cell.addEventListener("pointerdown", ev => { ev.preventDefault(); openCourse(cell, e); });
+      cell.addEventListener("keydown", ev => {
+        if (ev.key === "Enter") { ev.preventDefault(); openCourse(cell, e); }
+      });
       return cell;
     }
 
@@ -762,6 +775,18 @@ li:hover .kill{opacity:1}
       if (blk.from === hr) paint(cell, { hue:blk.h, span:blk.to-blk.from, title:blk.t,
         meta:"", time:`${pad(blk.from)}:00 – ${pad(blk.to)}:00`, mine:true });
       else cell.classList.add("under");
+    } else if (dl) {
+      const cd = countdown(dl.date, dl.time);
+      paint(cell, { hue:hueOf(courseOf(dl)), span:1, title:dl.t,
+        meta:dl.kind === "examen" ? "Examen" : "Remise", time:dl.time });
+      const ev = cell.querySelector(".ev");
+      ev.classList.add("dlblk");
+      ev.style.setProperty("--p", `var(--p${cd.lvl})`);
+      ev.style.setProperty("--pt", `var(--p${cd.lvl}t)`);   // variante lisible sur fond clair
+      cell.title = `${dl.t}\n${cd.txt}`;
+      cell.style.cursor = "pointer";
+      cell.addEventListener("pointerdown", e2 => { e2.preventDefault(); goto("echeances"); });
+      return cell;
     } else {
       cell.classList.add("free");
       cell.tabIndex = 0;
@@ -770,8 +795,8 @@ li:hover .kill{opacity:1}
           openBlock(cell, dISO, { from:hr, to:hr+1, t:"", h:HUES[0] }, true); }
       });
     }
-    cell.addEventListener("mousedown", ev => { ev.preventDefault(); startSel(dISO, hr, !!blk); });
-    cell.addEventListener("mouseenter", () => extendSel(dISO, hr));
+    cell.addEventListener("pointerdown", ev => { ev.preventDefault(); startSel(dISO, hr, !!blk); });
+    cell.addEventListener("pointerenter", () => extendSel(dISO, hr));
     return cell;
   }
 
@@ -806,7 +831,7 @@ li:hover .kill{opacity:1}
       first.appendChild(hint);
     }
   }
-  document.addEventListener("mouseup", () => {
+  document.addEventListener("pointerup", () => {
     if (!sel) return;
     const lo = Math.min(sel.a, sel.b), hi = Math.max(sel.a, sel.b);
     const d = sel.d, single = lo === hi;
@@ -898,9 +923,36 @@ li:hover .kill{opacity:1}
     acts.append(cancel, ok); box.append(acts);
     pop = box; place(box, cell, true); input.focus(); input.select();
   }
-  document.addEventListener("mousedown", ev => {
+  document.addEventListener("pointerdown", ev => {
     if (pop && !pop.contains(ev.target) && !ev.target.closest(".cell")) closePop();
   });
+
+  function openCourse(cell, e) {
+    pop?.remove();
+    const box = mk("div","pop fx");
+    box.append(mk("h4", null, e.t));
+    box.append(mk("p","when", [e.code && `${e.code} (${e.k})`, e.time].filter(Boolean).join(" · ")));
+    const lines = [
+      ["Local", e.room], ["Professeur", e.prof],
+      ["Durée", `${e.h[1] - e.h[0]} h`],
+    ].filter(([, v]) => v);
+    const ul = mk("div"); ul.style.cssText = "margin-top:.7rem;display:flex;flex-direction:column;gap:.3rem";
+    for (const [k, v] of lines) {
+      const r = mk("div"); r.style.cssText = "display:flex;gap:.6rem;font-size:.82rem";
+      const a = mk("span", "dim", k); a.style.cssText = "width:5.5rem;flex:0 0 auto";
+      r.append(a, mk("span", null, v)); ul.append(r);
+    }
+    box.append(ul);
+    const acts = mk("div","acts"); acts.append(mk("span","grow"));
+    const close = mk("button","btn quiet","Fermer"); close.addEventListener("click", closePop);
+    const filt = mk("button","btn solid", state.filter === e.t ? "Retirer le filtre" : "Filtrer cette matière");
+    filt.addEventListener("click", () => {
+      state.filter = state.filter === e.t ? null : e.t;
+      closePop(); renderSubjects(); renderWeeks(); save();
+    });
+    acts.append(close, filt); box.append(acts);
+    pop = box; place(box, cell, true);
+  }
 
   function renderWeeks() {
     host.textContent = "";
