@@ -7,6 +7,8 @@
   "scripts": {
     "login": "tsx src/cli.ts login",
     "check": "tsx src/cli.ts check",
+    "discover": "tsx src/cli.ts discover",
+    "scrape": "tsx src/cli.ts scrape",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

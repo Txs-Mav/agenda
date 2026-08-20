@@ -315,6 +315,99 @@ li:hover .kill{opacity:1}
   .card,.work,.course{box-shadow:none;border:1px solid #bbb}
   .course{background:#fff;color:#000}
 }
+
+/* ── Ajouts : to-do façon Notion, échéances, MIO, pastilles ────── */
+:root{ --p3t:#C4392C; --p2t:#A2620F; --p1t:#7A6800; --p0t:#2E7D45; }
+:root[data-theme="dark"]{ --p3t:#FF8873; --p2t:#FFB861; --p1t:#EBD469; --p0t:#6BDC8A; }
+
+/* To-do : lignes éditables en place, poignée au survol, aucune boîte de saisie */
+.nlist{list-style:none;padding:.1rem .95rem .3rem}
+.nrow{display:flex;align-items:flex-start;gap:.3rem;border-radius:8px;padding:.16rem .2rem;position:relative}
+.nrow:hover{background:var(--surface-2)}
+.nrow.dragging{opacity:.35}
+.nrow.over{box-shadow:0 -2px 0 0 var(--ink)}
+.nrow[data-lvl="1"]{margin-left:1.6rem}
+.grab{flex:0 0 auto;width:.95rem;height:1.4rem;display:grid;place-items:center;color:var(--faint);opacity:0;cursor:grab;transition:opacity .12s;font-size:.85rem;line-height:1}
+.nrow:hover .grab{opacity:1}
+.grab:active{cursor:grabbing}
+.nbox{flex:0 0 auto;width:1.05rem;height:1.05rem;margin-top:.22rem;border-radius:5px;border:1.5px solid var(--line-hi);display:grid;place-items:center;color:transparent;transition:.14s}
+.nbox:hover{border-color:var(--ink)}
+.nbox svg{width:9px;height:9px;stroke:currentColor;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.nrow.done .nbox{background:var(--invert);border-color:var(--invert);color:var(--on-invert)}
+.ntx{flex:1 1 auto;min-width:0;font-size:.875rem;line-height:1.48;padding:.05rem 0;outline:none;overflow-wrap:anywhere;white-space:pre-wrap}
+.ntx:empty::before{content:attr(data-ph);color:var(--faint);pointer-events:none}
+.nrow.done .ntx{color:var(--faint);text-decoration:line-through}
+.nadd{display:flex;align-items:center;gap:.45rem;margin:.1rem .95rem .9rem;padding:.32rem .45rem;border-radius:8px;color:var(--faint);font-size:.85rem;width:calc(100% - 1.9rem);text-align:left;transition:background .14s,color .14s}
+.nadd:hover{background:var(--surface-2);color:var(--dim)}
+
+/* Échéances */
+.dl{background:var(--surface);border-radius:22px;box-shadow:var(--shadow);padding:.95rem 1.05rem;display:flex;flex-direction:column;gap:.45rem;min-height:10.5rem;border-top:3px solid hsl(var(--h) 60% 55%)}
+.dl .top{display:flex;align-items:flex-start;gap:.5rem}
+.dl .em{width:2.05rem;height:2.05rem;border-radius:11px;display:grid;place-items:center;background:hsl(var(--h) 62% 55% / .16);color:hsl(var(--h) 62% var(--evt-tx));flex:0 0 auto}
+.dl h4{font-size:.92rem;font-weight:600;line-height:1.28;letter-spacing:-.01em}
+.dl.done h4{text-decoration:line-through;opacity:.5}
+.cd{font-size:.95rem;font-weight:650;letter-spacing:-.02em}
+.cd.l3{color:var(--p3t)} .cd.l2{color:var(--p2t)} .cd.l1{color:var(--p1t)} .cd.l0{color:var(--dim)}
+.dl .when{font-family:var(--mono);font-size:.68rem;color:var(--faint)}
+.dl .btm{margin-top:auto;display:flex;align-items:center;gap:.45rem}
+.src{font-family:var(--mono);font-size:.58rem;letter-spacing:.07em;text-transform:uppercase;padding:.14rem .38rem;border-radius:6px;background:var(--surface-2);color:var(--faint)}
+.src.mio{background:color-mix(in srgb,var(--ink) 88%,transparent);color:var(--surface)}
+
+/* Résumés de MIO */
+.miolist{padding:0 1.25rem}
+.mio{padding:.72rem 0;border-top:1px solid var(--line);display:flex;gap:.65rem;align-items:flex-start}
+.mio:first-child{border-top:0}
+.mio .av{flex:0 0 auto;width:1.85rem;height:1.85rem;border-radius:50%;display:grid;place-items:center;font-size:.6rem;font-weight:650;color:#fff;background:hsl(var(--h) 45% 42%)}
+.mio .bd{flex:1 1 auto;min-width:0}
+.mio .hd{display:flex;gap:.4rem;align-items:baseline}
+.mio h5{font-size:.85rem;font-weight:600;letter-spacing:-.01em;min-width:0;overflow-wrap:anywhere}
+.mio .dt{margin-left:auto;font-family:var(--mono);font-size:.62rem;color:var(--faint);flex:0 0 auto}
+.mio .sm{font-size:.78rem;color:var(--dim);line-height:1.4;margin-top:.15rem}
+.mio .who{font-family:var(--mono);font-size:.62rem;color:var(--faint);margin-top:.2rem}
+.mio .go{margin-top:.4rem;font-size:.74rem;color:var(--ink);background:var(--surface-2);border-radius:8px;padding:.28rem .55rem;transition:background .14s}
+.mio .go:hover{background:var(--surface-3)}
+.pending{display:flex;gap:.5rem;align-items:center;margin:.2rem 1.25rem 1.15rem;padding:.6rem .75rem;border:1px dashed var(--line-hi);border-radius:13px;color:var(--faint);font-size:.75rem;line-height:1.35}
+
+/* Pastilles d'échéance sur l'en-tête de jour */
+.dh{position:relative}
+.dh .mark{position:absolute;top:.2rem;left:50%;transform:translateX(-50%);display:flex;gap:.15rem;z-index:2}
+.dh .mark i{width:.34rem;height:.34rem;border-radius:50%}
+
+/* Suppression d'une semaine */
+.xweek{opacity:0;color:var(--faint);width:1.7rem;height:1.7rem;border-radius:50%;display:grid;place-items:center;transition:opacity .14s,background .14s,color .14s;flex:0 0 auto}
+.card:hover .xweek{opacity:1}
+.xweek:hover{background:var(--surface-2);color:var(--p3t)}
+.xweek:focus-visible{opacity:1}
+
+/* Trois colonnes de hauteur égale : plus de vide à droite. */
+.r2{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}
+.r2>.card{display:flex;flex-direction:column}
+.r2 .nlist{flex:0 0 auto}
+.r2 .miolist{flex:0 0 auto}
+.emptybox{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35rem;flex:1 1 auto;padding:1.6rem 1.4rem;text-align:center;color:var(--faint)}
+.emptybox b{font-size:.85rem;font-weight:600;color:var(--dim)}
+.emptybox span{font-size:.75rem;line-height:1.42;max-width:16rem}
+.pending{margin-top:auto}
+.dline{align-items:flex-start;gap:.6rem;padding:.5rem .2rem}
+.dline .bar4{align-self:stretch;min-height:2.2rem}
+.dline.done{opacity:.5}
+.dline.done .tx{text-decoration:line-through}
+.dline .chip{margin-top:.15rem}
+
+/* Apparitions sobres : montée courte, jamais sur un re-rendu complet. */
+@keyframes fx-rise{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@keyframes fx-pop{from{opacity:0;transform:scale(.975)}to{opacity:1;transform:none}}
+.fx{animation:fx-rise .3s cubic-bezier(.2,.7,.3,1) both}
+.pop.fx{animation:fx-pop .15s ease both}
+.cell::before{transition:opacity .12s ease}
+.cell.free::after{transition:opacity .12s ease}
+.nrow{transition:background .12s ease}
+.dl,.work,.course{transition:transform .16s ease,box-shadow .16s ease}
+.course:hover{transform:translateY(-2px)}
+@media (prefers-reduced-motion:reduce){.fx,.pop.fx{animation:none}}
+
+@media (max-width:1180px){ .r2{grid-template-columns:repeat(2,minmax(0,1fr))} #mios{grid-column:span 2} }
+@media (max-width:820px){ .r2{grid-template-columns:minmax(0,1fr)} #mios{grid-column:auto} }
 </style>
 
 <div class="shell">
@@ -323,11 +416,10 @@ li:hover .kill{opacity:1}
       <span class="mk"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h7M4 12h16M4 18h11"/></svg></span>
       <b>Agenda</b>
     </div>
-
     <button class="navi on" data-go="top"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg> Tableau de bord</button>
     <button class="navi" data-go="horaire"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4"/></svg> Horaire <span class="cnt" id="n-h"></span></button>
-    <button class="navi" data-go="travaux"><svg class="i" viewBox="0 0 24 24"><path d="M6 3.5h8l4.5 4.5v12.5H6z"/><path d="M14 3.5V8h4.5M9 13.5l2 2 4-4"/></svg> Travaux <span class="cnt" id="n-t"></span></button>
-    <button class="navi" data-go="alertes"><svg class="i" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 13 6 9zM10 18.5a2 2 0 0 0 4 0"/></svg> Alertes <span class="cnt" id="n-a"></span></button>
+    <button class="navi" data-go="echeances"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg> Échéances <span class="cnt" id="n-e"></span></button>
+    <button class="navi" data-go="mios"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 8.2 6 8.2-6"/></svg> MIO <span class="cnt" id="n-m"></span></button>
     <button class="navi" data-go="cours"><svg class="i" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 18.5V21h16"/></svg> Mes cours <span class="cnt" id="n-c"></span></button>
 
     <p class="grp">Matières</p>
@@ -345,13 +437,12 @@ li:hover .kill{opacity:1}
       <h1 class="hi">Salut, Maverick&nbsp;!<small id="stamp"></small></h1>
       <span class="grow"></span>
       <button class="pill" id="add-week"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Semaine</button>
-      <button class="rnd" id="go-alerts" title="Alertes"><svg class="i" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 13 6 9zM10 18.5a2 2 0 0 0 4 0"/></svg><span class="dot" id="bell-dot" hidden></span></button>
+      <button class="rnd" id="go-alerts" title="Échéances"><svg class="i" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 13 6 9zM10 18.5a2 2 0 0 0 4 0"/></svg><span class="dot" id="bell-dot" hidden></span></button>
       <button class="rnd" id="go-theme" title="Basculer le thème"><span id="th-icon"></span></button>
       <span class="me" title="Maverick Menard">MM</span>
     </header>
 
     <div class="board">
-      <!-- Rangée 1 -->
       <div class="r1" id="top">
         <section class="card dark">
           <div class="ch"><h3>Aperçu de la session</h3><span class="grow"></span>
@@ -363,8 +454,8 @@ li:hover .kill{opacity:1}
           <div class="meter"><i id="meter" style="width:0%"></i></div>
           <div class="tiles">
             <button class="tile on" data-go="horaire"><span class="ic"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17"/></svg></span><b id="t-blocs">0</b><span>Blocs</span></button>
-            <button class="tile" data-go="travaux"><span class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M6 3.5h8l4.5 4.5v12.5H6z"/><path d="M14 3.5V8h4.5"/></svg></span><b id="t-trav">0</b><span>Travaux</span></button>
-            <button class="tile" data-go="alertes"><span class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M12 3.5 21 20H3z"/><path d="M12 10v4M12 17h.01"/></svg></span><b id="t-alrt">0</b><span>Alertes</span></button>
+            <button class="tile" data-go="echeances"><span class="ic"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2"/></svg></span><b id="t-ech">0</b><span>Échéances</span></button>
+            <button class="tile" data-go="mios"><span class="ic"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 8.2 6 8.2-6"/></svg></span><b id="t-mio">0</b><span>MIO</span></button>
           </div>
         </section>
 
@@ -386,45 +477,49 @@ li:hover .kill{opacity:1}
           </div>
           <div class="foot">
             <button class="rnd" id="go-print" title="Imprimer" style="width:2.4rem;height:2.4rem"><svg class="i" viewBox="0 0 24 24"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="7.5" rx="2"/><path d="M7 14h10v6.5H7z"/></svg></button>
-            <button class="ghost" id="dl-ics">Exporter .ics <svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M12 4v11M8 11.5 12 15.5l4-4M5 19.5h14"/></svg></button>
+            <button class="ghost" id="dl-ics">Copier .ics <svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M12 4v11M8 11.5 12 15.5l4-4M5 19.5h14"/></svg></button>
           </div>
         </section>
       </div>
 
-      <!-- Rangée 2 -->
       <div class="r2">
-        <div class="stack">
-          <section class="card">
-            <div class="ch"><h3>Objectifs</h3><span class="grow"></span><span class="mono dim" id="goal-n" style="font-size:.72rem"></span></div>
-            <ul class="list" id="todos"></ul>
-            <p class="empty" id="todo-empty" hidden>Rien pour aujourd'hui.</p>
-            <div class="newrow"><input type="text" id="todo-in" placeholder="Ajouter un objectif…" maxlength="120"></div>
-          </section>
-          <section class="card" id="alertes">
-            <div class="ch"><h3>Alertes</h3><span class="grow"></span><span class="mono dim" id="alert-n" style="font-size:.72rem"></span></div>
-            <div class="scale" aria-hidden="true"></div>
-            <div class="slab"><span>MOINS PRESSANT</span><span>PLUS PRESSANT</span></div>
-            <ul class="list alerts" id="alerts"></ul>
-            <p class="empty" id="alert-empty" hidden>Aucune alerte.</p>
-            <div class="newrow"><input type="text" id="alert-in" placeholder="Nouvelle alerte…" maxlength="120"><div class="dots" id="dots" role="group" aria-label="Urgence"></div></div>
-          </section>
-        </div>
+        <section class="card fx" id="todocard">
+          <div class="ch"><h3>À faire</h3><span class="grow"></span><span class="mono dim" id="goal-n" style="font-size:.72rem"></span></div>
+          <ul class="nlist" id="todos"></ul>
+          <button class="nadd" id="todo-add"><svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg> Ajouter une tâche</button>
+        </section>
 
-        <div id="travaux">
-          <div class="sect"><h2>Travaux en cours <span class="dim" id="w-n"></span></h2><span class="grow"></span>
-            <span class="link mono" style="font-size:.7rem" id="w-src">saisie manuelle</span></div>
-          <div class="tgrid" id="works"></div>
-        </div>
+        <section class="card fx" id="echeances">
+          <div class="ch"><h3>Échéances</h3><span class="dim" id="e-n"></span><span class="grow"></span>
+            <span class="scale" style="width:4.2rem;margin:0" title="L'urgence se calcule à partir de la date"></span></div>
+          <ul class="nlist" id="deadlines"></ul>
+          <div class="emptybox" id="dl-empty">
+            <svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg>
+            <b>Aucune échéance</b>
+            <span>Le scraper Léa et MIO les ajoutera tout seul. Une pastille rouge apparaîtra alors sur la date dans l'horaire.</span>
+          </div>
+          <button class="nadd" id="dl-add"><svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg> Ajouter une échéance</button>
+        </section>
+
+        <section class="card fx" id="mios">
+          <div class="ch"><h3>Résumés MIO</h3><span class="grow"></span><span class="mono dim" id="mio-n" style="font-size:.72rem"></span></div>
+          <div class="miolist" id="miolist"></div>
+          <div class="emptybox" id="mio-empty">
+            <svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 8.2 6 8.2-6"/></svg>
+            <b>Aucun message collecté</b>
+            <span>Chaque MIO sera résumé ici en une phrase, avec un bouton pour le transformer en échéance.</span>
+          </div>
+          <div class="pending"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px;flex:0 0 auto"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3 2"/></svg>
+            <span>Collecte à chaque heure. <span id="last-scrape"></span></span></div>
+        </section>
       </div>
 
-      <!-- Horaire -->
       <div id="horaire">
         <div class="sect"><h2>Horaire</h2><span class="dim mono" style="font-size:.75rem" id="h-sub"></span><span class="grow"></span>
           <button class="link" id="add-week2">Ajouter une semaine <svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button></div>
         <div class="stack" id="weeks"></div>
       </div>
 
-      <!-- Cours -->
       <div id="cours">
         <div class="sect"><h2>Mes cours <span class="dim" id="c-n"></span></h2><span class="grow"></span>
           <span class="link mono" style="font-size:.7rem">session A26</span></div>
@@ -439,7 +534,7 @@ li:hover .kill{opacity:1}
   "use strict";
 
   const START_HOUR = 8, END_HOUR = 18;
-  const KEY = "agenda.v4";
+  const KEY = "agenda.v5";
   const DOW = ["lun","mar","mer","jeu","ven","sam","dim"];
   const DL  = ["L","M","M","J","V","S","D"];
   const MONTH = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
@@ -472,37 +567,10 @@ li:hover .kill{opacity:1}
 
   const COURSES = [...new Set(TT.map(e => e.t))].sort((a,b) => a.localeCompare(b,"fr"));
   const hues = new Map(COURSES.map((t,i) => [t, HUES[i % HUES.length]]));
-  const hueOf = t => hues.get(t) ?? HUES[(t.length * 7) % HUES.length];
-  const courseInfo = t => {
-    const rows = TT.filter(e => e.t === t);
+  const hueOf = t => hues.get(t) ?? HUES[((t||"").length * 7) % HUES.length];
+  const courseInfo = t => { const rows = TT.filter(e => e.t === t);
     return { hours: rows.reduce((s,e) => s + (e.h[1]-e.h[0]), 0), blocks: rows.length,
-             code: rows[0]?.code || "", prof: rows[0]?.prof || "" };
-  };
-
-  /* ── État ─────────────────────────────────────────────────────── */
-  const seed = () => ({
-    weeks: 1, theme: "light", weekend: true, chart: "jour", filter: null,
-    blocks: {},
-    todos: [
-      { id:"g1", text:"Réviser le labo de Calcul différentiel", done:false },
-      { id:"g2", text:"Lire le chapitre de Sociologie", done:true },
-      { id:"g3", text:"Repérer le local HA3370", done:false },
-    ],
-    works: [
-      { id:"w1", t:"Rapport de laboratoire", course:"Bio. molécu. écosys.", due:"2026-09-04", done:false },
-      { id:"w2", t:"Dissertation critique", course:"Écriture et litt.", due:"2026-09-11", done:false },
-    ],
-    alerts: [
-      { id:"a1", text:"Examen — Calcul différentiel", when:"exemple, à modifier", p:3 },
-      { id:"a2", text:"Remise — Écriture et litt.",   when:"exemple, à modifier", p:2 },
-      { id:"a3", text:"Lecture — Sociologie",          when:"exemple, à modifier", p:0 },
-    ],
-  });
-  let state;
-  try { state = { ...seed(), ...(JSON.parse(localStorage.getItem(KEY)) || {}) }; }
-  catch { state = seed(); }
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} };
-  const uid = () => "x" + Math.random().toString(36).slice(2,9);
+             code: rows[0]?.code || "", prof: rows[0]?.prof || "" }; };
 
   /* ── Dates ────────────────────────────────────────────────────── */
   const pad = n => String(n).padStart(2,"0");
@@ -515,67 +583,128 @@ li:hover .kill{opacity:1}
   const range = (a,b) => a.getMonth() !== b.getMonth()
     ? `${a.getDate()} ${MONTH[a.getMonth()]} – ${b.getDate()} ${MONTH[b.getMonth()]}`
     : `${a.getDate()} – ${b.getDate()} ${MONTH[a.getMonth()]}`;
-  const frDate = s => { const [y,m,d] = s.split("-").map(Number);
-    return `${d} ${MONTH[m-1].slice(0,4)}`; };
+  const frDate = s => { const [y,m,d] = s.split("-").map(Number); return `${d} ${MONTH[m-1].slice(0,4)}`; };
 
   const now0 = new Date();
+  const today0 = new Date(now0.getFullYear(), now0.getMonth(), now0.getDate());
   const anchor = monday(now0) < SEMESTER_START ? monday(SEMESTER_START) : monday(now0);
   const todayISO = iso(now0);
   const inSem = d => d >= SEMESTER_START;
-  const cols = () => state.weekend ? 7 : 5;
+
+  /* Compte à rebours : c'est lui qui décide de l'urgence, pas l'utilisateur.
+     dans 5 jours → dans 2 jours → demain → aujourd'hui · 14:00 → en retard. */
+  function countdown(dateStr, timeStr) {
+    const [y,m,d] = dateStr.split("-").map(Number);
+    const days = Math.round((new Date(y, m-1, d) - today0) / 864e5);
+    if (days < 0)   return { txt:`En retard de ${-days} jour${-days>1?"s":""}`, lvl:3, days };
+    if (days === 0) return { txt: timeStr ? `Aujourd'hui · ${timeStr}` : "Aujourd'hui", lvl:3, days };
+    if (days === 1) return { txt: timeStr ? `Demain · ${timeStr}` : "Demain", lvl:3, days };
+    if (days <= 3)  return { txt:`Dans ${days} jours`, lvl:2, days };
+    if (days <= 7)  return { txt:`Dans ${days} jours`, lvl:1, days };
+    return { txt:`Dans ${days} jours`, lvl:0, days };
+  }
+
+  /* ── État ─────────────────────────────────────────────────────── */
+  const seed = () => ({
+    wks: [0], theme:"light", weekend:true, chart:"jour", filter:null,
+    blocks: {},
+    todos: [
+      { id:"g1", t:"Réviser le labo de Calcul différentiel", done:false, lvl:0 },
+      { id:"g2", t:"Relire les chapitres 1 à 4 de philo", done:false, lvl:1 },
+      { id:"g3", t:"Lire le chapitre de Sociologie", done:true, lvl:0 },
+      { id:"g4", t:"Repérer le local HA3370", done:false, lvl:0 },
+    ],
+    /* Vides par conception : remplis par le scraper Léa/MIO, pas par des exemples. */
+    deadlines: [],
+    mios: [],
+    lastScrape: null,
+  });
+  let state;
+  try { state = { ...seed(), ...(JSON.parse(localStorage.getItem(KEY)) || {}) }; }
+  catch { state = seed(); }
+  if (!Array.isArray(state.wks) || !state.wks.length) state.wks = [0];
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} };
+  const uid = () => "x" + Math.random().toString(36).slice(2,9);
 
   const el = id => document.getElementById(id);
   const mk = (tag, cls, txt) => { const n = document.createElement(tag);
     if (cls) n.className = cls; if (txt !== undefined) n.textContent = txt; return n; };
   const svgEl = (tag, a) => { const n = document.createElementNS("http://www.w3.org/2000/svg", tag);
     for (const k in a) n.setAttribute(k, a[k]); return n; };
+  const cols = () => state.weekend ? 7 : 5;
   const ICON = {
-    check:'<svg class="i" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"/></svg>',
+    check:'<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"/></svg>',
     sun:'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg>',
     moon:'<svg class="i" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5z"/></svg>',
     plus:'<svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
-    doc:'<svg class="i" viewBox="0 0 24 24"><path d="M6 3.5h8l4.5 4.5v12.5H6z"/><path d="M14 3.5V8h4.5"/></svg>',
+    examen:'<svg class="i" viewBox="0 0 24 24"><path d="M6 3.5h12v17H6z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>',
+    remise:'<svg class="i" viewBox="0 0 24 24"><path d="M6 3.5h8l4.5 4.5v12.5H6z"/><path d="M14 3.5V8h4.5"/></svg>',
+    autre:'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v4.5l3 2"/></svg>',
   };
 
-  /* ── Blocs personnels ─────────────────────────────────────────── */
+  const liveDeadlines = () => state.deadlines.filter(d => !d.done);
+  const deadlinesOn = dISO => liveDeadlines().filter(d => d.date === dISO);
+
+  /* ── Grille, sélection, fusion ────────────────────────────────── */
+  const host = el("weeks");
+  let sel = null;              // { d, a, b, fromBlock }
+
   const dayBlocks = d => state.blocks[d] || [];
   const blockAt = (d,h) => dayBlocks(d).find(b => h >= b.from && h < b.to);
-  const busy = (d,h) => {
+  /* Seuls les cours bloquent la sélection : les blocs personnels peuvent être
+     traversés, ce qui permet d'en joindre plusieurs en une seule activité. */
+  const courseAt = (d,h) => {
     const dt = new Date(d + "T00:00:00");
-    const wd = (dt.getDay()+6)%7;
-    return (inSem(dt) && byDay.get(wd)?.has(h)) || !!blockAt(d,h);
+    return inSem(dt) ? byDay.get((dt.getDay()+6)%7)?.get(h) : undefined;
   };
 
-  /* ── Grille + sélection multi-cases ───────────────────────────── */
-  const host = el("weeks");
-  let sel = null;             // { d, a, b } — jour ISO, heure d'ancrage, heure courante
-
-  function buildWeek(start) {
+  function buildWeek(off) {
+    const start = addDays(anchor, off*7);
     const n = cols();
     const days = Array.from({length:n}, (_,i) => addDays(start,i));
-    const card = mk("section","card");
-    card.dataset.start = iso(start);
+    const card = mk("section","card fx");
+    card.dataset.start = iso(start); card.dataset.off = off;
     card.style.scrollMarginTop = "1rem";
 
     const head = mk("div","ch");
-    head.append(mk("h3", null, range(days[0], addDays(start,6))));
-    head.append(mk("span","grow"));
+    head.append(mk("h3", null, range(days[0], addDays(start,6))), mk("span","grow"));
     let hrs = 0;
     for (const d of days) {
       const wd = (d.getDay()+6)%7;
       if (inSem(d)) hrs += byDay.get(wd)?.size ?? 0;
       hrs += dayBlocks(iso(d)).reduce((s,b) => s + (b.to-b.from), 0);
     }
-    head.append(mk("span","mono dim", `S${weekNo(start)} · ${hrs} h`));
-    head.querySelector(".mono").style.fontSize = ".72rem";
+    const meta = mk("span","mono dim", `S${weekNo(start)} · ${hrs} h`);
+    meta.style.fontSize = ".72rem";
+    head.append(meta);
+    const x = mk("button","xweek","×");
+    x.title = "Retirer cette semaine"; x.setAttribute("aria-label","Retirer cette semaine");
+    x.addEventListener("click", () => {
+      if (state.wks.length < 2) return;
+      state.wks = state.wks.filter(o => o !== off);
+      renderWeeks();
+    });
+    if (state.wks.length > 1) head.append(x);
 
     const grid = mk("div","grid");
     grid.style.setProperty("--cols", n);
     grid.append(mk("div","corner"));
     for (const d of days) {
+      const dI = iso(d);
       const h = mk("div","dh");
       if (d.getDay() === 0 || d.getDay() === 6) h.classList.add("we");
-      if (iso(d) === todayISO) h.classList.add("td");
+      if (dI === todayISO) h.classList.add("td");
+      const marks = deadlinesOn(dI);
+      if (marks.length) {
+        const m = mk("div","mark");
+        m.title = marks.map(x => `${x.t}${x.time ? " · " + x.time : ""}`).join("\n");
+        for (const x of marks.slice(0,3)) {
+          const i = mk("i");
+          i.style.background = `var(--p${countdown(x.date, x.time).lvl})`;
+          m.append(i);
+        }
+        h.append(m);
+      }
       h.append(mk("span","dow", DOW[(d.getDay()+6)%7]), mk("span","dn", d.getDate()));
       grid.append(h);
     }
@@ -590,16 +719,16 @@ li:hover .kill{opacity:1}
     return card;
   }
 
-  function paintBlock(cell, { hue, span, title, meta, time, prof, mine }) {
+  function paint(cell, o) {
     cell.classList.add("run");
-    if (span === 1) cell.classList.add("r1");
-    const box = mk("div","ev" + (mine ? " mine" : ""));
-    box.style.setProperty("--h", hue);
-    box.style.setProperty("--span", span);
-    box.append(mk("p","t", title));
-    if (meta) box.append(mk("p","m", meta));
-    if (time) box.append(mk("p","h", time));
-    if (prof) box.append(mk("p","p", prof));
+    if (o.span === 1) cell.classList.add("r1");
+    const box = mk("div","ev" + (o.mine ? " mine" : ""));
+    box.style.setProperty("--h", o.hue);
+    box.style.setProperty("--span", o.span);
+    box.append(mk("p","t", o.title));
+    if (o.meta) box.append(mk("p","m", o.meta));
+    if (o.time) box.append(mk("p","h", o.time));
+    if (o.prof) box.append(mk("p","p", o.prof));
     cell.append(box);
   }
 
@@ -610,42 +739,44 @@ li:hover .kill{opacity:1}
     if (date.getDay() === 0 || date.getDay() === 6) cell.classList.add("we");
     if (dISO === todayISO) cell.classList.add("td");
 
-    const slot = inSem(date) ? byDay.get(wd)?.get(hr) : undefined;
+    const slot = courseAt(dISO, hr);
     const blk  = blockAt(dISO, hr);
 
     if (slot) {
       const { e } = slot;
-      if (slot.head) paintBlock(cell, { hue:hueOf(e.t), span:e.h[1]-e.h[0], title:e.t,
+      if (slot.head) paint(cell, { hue:hueOf(e.t), span:e.h[1]-e.h[0], title:e.t,
         meta:[e.k, e.room].filter(Boolean).join(" · "), time:e.time,
         prof:(e.h[1]-e.h[0]) >= 2 ? e.prof : "" });
       else cell.classList.add("under");
       cell.title = [e.t, e.code && `${e.code} (${e.k})`, e.room, e.prof, e.time].filter(Boolean).join("\n");
-      if (state.filter && state.filter !== e.t) cell.querySelector(".ev")?.style.setProperty("opacity",".28");
-    } else if (blk) {
-      if (blk.from === hr) paintBlock(cell, { hue:blk.h, span:blk.to-blk.from, title:blk.t,
-        meta:"", time:`${pad(blk.from)}:00 – ${pad(blk.to)}:00`, prof:"", mine:true });
+      if (state.filter && state.filter !== e.t) cell.querySelector(".ev")?.style.setProperty("opacity",".26");
+      return cell;
+    }
+
+    if (blk) {
+      if (blk.from === hr) paint(cell, { hue:blk.h, span:blk.to-blk.from, title:blk.t,
+        meta:"", time:`${pad(blk.from)}:00 – ${pad(blk.to)}:00`, mine:true });
       else cell.classList.add("under");
-      cell.style.cursor = "pointer";
-      cell.addEventListener("mousedown", ev => { ev.preventDefault(); openBlock(cell, dISO, blk); });
     } else {
       cell.classList.add("free");
       cell.tabIndex = 0;
-      cell.addEventListener("mousedown", ev => { ev.preventDefault(); startSel(dISO, hr); });
-      cell.addEventListener("mouseenter", () => extendSel(dISO, hr));
       cell.addEventListener("keydown", ev => {
-        if (ev.key === "Enter") { ev.preventDefault(); openBlock(cell, dISO, { from:hr, to:hr+1, t:"", h:HUES[0] }, true); }
+        if (ev.key === "Enter") { ev.preventDefault();
+          openBlock(cell, dISO, { from:hr, to:hr+1, t:"", h:HUES[0] }, true); }
       });
     }
+    cell.addEventListener("mousedown", ev => { ev.preventDefault(); startSel(dISO, hr, !!blk); });
+    cell.addEventListener("mouseenter", () => extendSel(dISO, hr));
     return cell;
   }
 
-  /* Sélection : glisser sur des cases libres d'une même journée. */
-  function startSel(d, h) { sel = { d, a:h, b:h }; paintSel(); }
+  function startSel(d, h, onBlock) { sel = { d, a:h, b:h, onBlock }; paintSel(); }
   function extendSel(d, h) {
     if (!sel || sel.d !== d) return;
     const dir = h >= sel.a ? 1 : -1;
     let cur = sel.a;
-    while (cur !== h) { const nx = cur + dir; if (busy(d, nx)) break; cur = nx; }
+    while (cur !== h) { const nx = cur + dir;
+      if (nx < START_HOUR || nx > END_HOUR || courseAt(d, nx)) break; cur = nx; }
     sel.b = cur; paintSel();
   }
   function clearSel() {
@@ -656,53 +787,50 @@ li:hover .kill{opacity:1}
     clearSel();
     if (!sel) return;
     const lo = Math.min(sel.a, sel.b), hi = Math.max(sel.a, sel.b);
-    let last = null;
     for (let h = lo; h <= hi; h++) {
       const c = document.querySelector(`.cell[data-d="${sel.d}"][data-h="${h}"]`);
       if (!c) continue;
       c.classList.add("sel");
       if (lo !== hi) c.classList.add(h === lo ? "top" : h === hi ? "bot" : "mid");
-      last = c;
     }
-    if (last) {
-      const n = hi - lo + 1;
-      const hint = mk("div","selhint", `${n} h · ${pad(lo)}:00 – ${pad(hi+1)}:00`);
-      hint.style.left = "50%"; hint.style.top = "0";
-      const first = document.querySelector(`.cell[data-d="${sel.d}"][data-h="${lo}"]`);
+    const first = document.querySelector(`.cell[data-d="${sel.d}"][data-h="${lo}"]`);
+    if (first && lo !== hi) {
+      const joined = dayBlocks(sel.d).filter(b => b.from < hi+1 && b.to > lo).length;
+      const hint = mk("div","selhint",
+        joined > 1 ? `Joindre ${joined} blocs · ${hi-lo+1} h` : `${hi-lo+1} h · ${pad(lo)}:00 – ${pad(hi+1)}:00`);
       first.appendChild(hint);
     }
   }
   document.addEventListener("mouseup", () => {
     if (!sel) return;
     const lo = Math.min(sel.a, sel.b), hi = Math.max(sel.a, sel.b);
-    const cell = document.querySelector(`.cell[data-d="${sel.d}"][data-h="${lo}"]`);
-    const d = sel.d;
-    openBlock(cell, d, { from:lo, to:hi+1, t:"", h:HUES[0] }, true);
+    const d = sel.d, single = lo === hi;
+    const cell = document.querySelector(`.cell[data-d="${d}"][data-h="${lo}"]`);
+    const covered = dayBlocks(d).filter(b => b.from < hi+1 && b.to > lo);
+    if (single && sel.onBlock && covered[0]) { openBlock(cell, d, covered[0], false); return; }
+    const from = covered.length ? Math.min(lo, ...covered.map(b => b.from)) : lo;
+    const to   = covered.length ? Math.max(hi+1, ...covered.map(b => b.to)) : hi+1;
+    openBlock(cell, d, {
+      from, to,
+      t: covered.length === 1 ? covered[0].t : "",
+      h: covered.length ? covered[0].h : HUES[0],
+      merge: covered.map(b => b.id),
+    }, !covered.length);
   });
 
   /* ── Composeur ────────────────────────────────────────────────── */
   let pop = null;
-  const closePop = () => { pop?.remove(); pop = null; clearSel(); sel = null; renderWeeks(); };
+  const closePop = () => { pop?.remove(); pop = null; clearSel(); sel = null; };
 
-  /* side:true → à droite (ou à gauche) de l'ancre, pour ne pas recouvrir
-     la sélection qu'on vient de tracer. */
   function place(node, anchorEl, side) {
     const r = anchorEl.getBoundingClientRect();
     node.style.visibility = "hidden";
     document.body.append(node);
     const w = node.offsetWidth, h = node.offsetHeight;
     let x, y;
-    if (side) {
-      x = r.right + 10;
-      if (x + w > innerWidth - 8) x = r.left - w - 10;
-      y = r.top - 6;
-    } else {
-      x = r.left + r.width / 2 - w / 2;
-      y = r.bottom + 8;
-    }
+    if (side) { x = r.right + 10; if (x + w > innerWidth - 8) x = r.left - w - 10; y = r.top - 6; }
+    else { x = r.left + r.width/2 - w/2; y = r.bottom + 8; }
     if (y + h > innerHeight - 8) y = r.top - h - 8;
-    // Borner dans la fenêtre : une case hors vue ne doit pas expédier le
-    // composeur hors de l'écran.
     y = Math.min(Math.max(8, y), Math.max(8, innerHeight - h - 8));
     node.style.left = Math.min(Math.max(8, x), Math.max(8, innerWidth - w - 8)) + "px";
     node.style.top = y + "px";
@@ -711,9 +839,10 @@ li:hover .kill{opacity:1}
 
   function openBlock(cell, d, blk, isNew) {
     pop?.remove();
-    const box = mk("div","pop");
+    const merging = (blk.merge || []).length > 1;
+    const box = mk("div","pop fx");
     const dt = new Date(d + "T00:00:00");
-    box.append(mk("h4", null, isNew ? "Nouveau bloc" : "Modifier le bloc"));
+    box.append(mk("h4", null, merging ? "Joindre en une activité" : isNew ? "Nouveau bloc" : "Modifier le bloc"));
     box.append(mk("p","when",
       `${DOW[(dt.getDay()+6)%7]}. ${dt.getDate()} ${MONTH[dt.getMonth()]} · ${pad(blk.from)}:00 – ${pad(blk.to)}:00 · ${blk.to-blk.from} h`));
     const input = mk("input"); input.type = "text"; input.maxLength = 60;
@@ -734,34 +863,34 @@ li:hover .kill{opacity:1}
 
     const acts = mk("div","acts");
     if (!isNew) {
-      const del = mk("button","btn danger","Supprimer");
+      const del = mk("button","btn danger", merging ? "Supprimer tout" : "Supprimer");
       del.addEventListener("click", () => {
-        state.blocks[d] = dayBlocks(d).filter(b => b.id !== blk.id);
+        const ids = new Set(blk.merge?.length ? blk.merge : [blk.id]);
+        state.blocks[d] = dayBlocks(d).filter(b => !ids.has(b.id));
         if (!state.blocks[d].length) delete state.blocks[d];
-        closePop(); renderAll();
+        closePop(); renderWeeks();
       });
       acts.append(del);
     }
     acts.append(mk("span","grow"));
     const cancel = mk("button","btn quiet","Annuler");
     cancel.addEventListener("click", closePop);
-    const ok = mk("button","btn solid", isNew ? "Ajouter" : "Enregistrer");
+    const ok = mk("button","btn solid", merging ? "Joindre" : isNew ? "Ajouter" : "Enregistrer");
     const commit = () => {
       const t = input.value.trim();
       if (!t) { closePop(); return; }
-      const list = dayBlocks(d).filter(b => b.id !== blk.id);
-      list.push({ id: blk.id || uid(), from: blk.from, to: blk.to, t, h: hue });
+      const drop = new Set(blk.merge?.length ? blk.merge : [blk.id].filter(Boolean));
+      const list = dayBlocks(d).filter(b => !drop.has(b.id) && !(b.from < blk.to && b.to > blk.from));
+      list.push({ id: uid(), from: blk.from, to: blk.to, t, h: hue });
       state.blocks[d] = list.sort((a,b) => a.from - b.from);
-      closePop(); renderAll();
+      closePop(); renderWeeks();
     };
     ok.addEventListener("click", commit);
     input.addEventListener("keydown", ev => {
       if (ev.key === "Enter") { ev.preventDefault(); commit(); }
       if (ev.key === "Escape") { ev.preventDefault(); closePop(); }
     });
-    acts.append(cancel, ok);
-    box.append(acts);
-
+    acts.append(cancel, ok); box.append(acts);
     pop = box; place(box, cell, true); input.focus(); input.select();
   }
   document.addEventListener("mousedown", ev => {
@@ -770,8 +899,8 @@ li:hover .kill{opacity:1}
 
   function renderWeeks() {
     host.textContent = "";
-    for (let w = 0; w < state.weeks; w++) host.append(buildWeek(addDays(anchor, w*7)));
-    el("h-sub").textContent = `${state.weeks} semaine${state.weeks>1?"s":""} affichée${state.weeks>1?"s":""}`;
+    for (const off of state.wks) host.append(buildWeek(off));
+    el("h-sub").textContent = `${state.wks.length} semaine${state.wks.length>1?"s":""} affichée${state.wks.length>1?"s":""}`;
     placeNow(); save();
   }
 
@@ -801,17 +930,189 @@ li:hover .kill{opacity:1}
   }
   setInterval(placeNow, 60000);
 
-  /* ── Barre latérale : matières ────────────────────────────────── */
+  /* ── À faire : lignes éditables en place (façon Notion) ───────── */
+  function focusRow(i, atEnd) {
+    const n = el("todos").children[i]?.querySelector(".ntx");
+    if (!n) return;
+    n.focus();
+    const r = document.createRange(), s = getSelection();
+    r.selectNodeContents(n); r.collapse(!atEnd);
+    s.removeAllRanges(); s.addRange(r);
+  }
+  function renderTodos(focus) {
+    const ul = el("todos"); ul.textContent = "";
+    state.todos.forEach((it,i) => {
+      const li = mk("li","nrow" + (it.done ? " done" : ""));
+      li.dataset.lvl = it.lvl || 0;
+      const grab = mk("span","grab","⠿");
+      grab.draggable = true; grab.title = "Glisser pour réordonner";
+      grab.addEventListener("dragstart", e => {
+        e.dataTransfer.setData("text/plain", String(i));
+        e.dataTransfer.effectAllowed = "move"; li.classList.add("dragging");
+      });
+      grab.addEventListener("dragend", () => li.classList.remove("dragging"));
+      li.addEventListener("dragover", e => { e.preventDefault(); li.classList.add("over"); });
+      li.addEventListener("dragleave", () => li.classList.remove("over"));
+      li.addEventListener("drop", e => {
+        e.preventDefault(); li.classList.remove("over");
+        const from = Number(e.dataTransfer.getData("text/plain"));
+        if (!Number.isInteger(from) || from === i) return;
+        const [m] = state.todos.splice(from,1);
+        state.todos.splice(i,0,m); renderTodos();
+      });
+      const bx = mk("button","nbox"); bx.innerHTML = ICON.check;
+      bx.setAttribute("aria-label", it.done ? "Décocher" : "Cocher");
+      bx.addEventListener("click", () => { it.done = !it.done; renderTodos(); renderRings(); });
+      const tx = mk("span","ntx", it.t);
+      tx.contentEditable = "true"; tx.spellcheck = false;
+      tx.dataset.ph = "Écris une tâche…";
+      tx.addEventListener("input", () => { it.t = tx.textContent; countTodos(); save(); });
+      tx.addEventListener("keydown", ev => {
+        const sels = getSelection();
+        const atStart = sels.anchorOffset === 0 && sels.isCollapsed;
+        if (ev.key === "Enter" && !ev.shiftKey) {
+          ev.preventDefault();
+          state.todos.splice(i+1, 0, { id:uid(), t:"", done:false, lvl:it.lvl||0 });
+          renderTodos(); focusRow(i+1);
+        } else if (ev.key === "Backspace" && atStart && !tx.textContent) {
+          ev.preventDefault();
+          if (state.todos.length === 1) return;
+          state.todos.splice(i,1); renderTodos(); focusRow(Math.max(0,i-1), true);
+        } else if (ev.key === "Tab") {
+          ev.preventDefault();
+          it.lvl = ev.shiftKey ? 0 : 1; renderTodos(); focusRow(i, true);
+        } else if (ev.key === "ArrowUp" && atStart) {
+          ev.preventDefault(); focusRow(Math.max(0,i-1), true);
+        } else if (ev.key === "ArrowDown" && sels.isCollapsed && sels.anchorOffset === tx.textContent.length) {
+          ev.preventDefault(); focusRow(Math.min(state.todos.length-1, i+1), true);
+        }
+      });
+      li.append(grab, bx, tx);
+      ul.append(li);
+    });
+    countTodos(); save();
+    if (focus !== undefined) focusRow(focus);
+  }
+  function countTodos() {
+    const done = state.todos.filter(t => t.done && t.t.trim()).length;
+    const all = state.todos.filter(t => t.t.trim()).length;
+    el("goal-n").textContent = all ? `${done}/${all}` : "";
+  }
+  el("todo-add").addEventListener("click", () => {
+    state.todos.push({ id:uid(), t:"", done:false, lvl:0 });
+    renderTodos(state.todos.length - 1);
+  });
+
+  /* ── Échéances ────────────────────────────────────────────────── */
+  function renderDeadlines() {
+    const box = el("deadlines"); box.textContent = "";
+    const list = [...state.deadlines].sort((a,b) =>
+      (a.done - b.done) || a.date.localeCompare(b.date) || (a.time||"").localeCompare(b.time||""));
+    for (const d of list) {
+      const cd = countdown(d.date, d.time);
+      const li = mk("li","nrow dline" + (d.done ? " done" : ""));
+      li.style.setProperty("--p", `var(--p${cd.lvl})`);
+      li.style.setProperty("--h", hueOf(d.course));
+      const bar = mk("span","bar4");
+      const bd = mk("div","al");
+      bd.append(mk("p","tx", d.t));
+      const meta = mk("p","w");
+      const cdn = mk("b","cd l" + cd.lvl, cd.txt);
+      meta.append(cdn, document.createTextNode(` · ${frDate(d.date)}`));
+      if (d.course) { const c = mk("span","chip"); c.append(mk("i"), document.createTextNode(d.course)); bd.append(meta, c); }
+      else bd.append(meta);
+      const bx = mk("button","nbox"); bx.innerHTML = ICON.check;
+      bx.setAttribute("aria-label", d.done ? "Rouvrir" : "Marquer fait");
+      bx.addEventListener("click", () => { d.done = !d.done; renderDeadlines(); renderWeeks(); renderOverview(); renderRings(); });
+      const kill = mk("button","kill","×");
+      kill.addEventListener("click", () => {
+        state.deadlines = state.deadlines.filter(x => x.id !== d.id);
+        renderDeadlines(); renderWeeks(); renderOverview(); renderRings();
+      });
+      li.append(bar, bd, bx, kill);
+      box.append(li);
+    }
+    const n = liveDeadlines().length;
+    el("e-n").textContent = n ? `(${n})` : "";
+    el("dl-empty").hidden = state.deadlines.length > 0;
+    const urg = liveDeadlines().filter(d => countdown(d.date, d.time).lvl === 3).length;
+    el("bell-dot").hidden = !urg;
+    save();
+  }
+  el("dl-add").addEventListener("click", ev => openDeadline(ev.currentTarget));
+
+  function openDeadline(anchorEl, pre) {
+    pop?.remove();
+    const box = mk("div","pop fx");
+    box.append(mk("h4", null, "Nouvelle échéance"));
+    box.append(mk("p","when","L'urgence se calcule à partir de la date."));
+    const t = mk("input"); t.type = "text"; t.placeholder = "Examen, remise, lecture…"; t.maxLength = 70;
+    t.value = pre?.t || "";
+    const c = mk("select");
+    c.style.cssText = "width:100%;margin-top:.5rem;background:var(--surface-2);border:1px solid transparent;border-radius:12px;padding:.6rem .7rem;color:var(--ink);font:inherit;font-size:.85rem";
+    for (const name of COURSES) { const o = mk("option", null, name); o.value = name;
+      if (pre?.course === name) o.selected = true; c.append(o); }
+    const wrap = mk("div"); wrap.style.cssText = "display:flex;gap:.5rem;margin-top:.5rem";
+    const d = mk("input"); d.type = "date"; d.value = pre?.date || iso(addDays(today0, 7)); d.style.flex = "1 1 auto";
+    const h = mk("input"); h.type = "time"; h.value = pre?.time || ""; h.style.width = "7.5rem";
+    wrap.append(d, h);
+    box.append(t, c, wrap);
+    const acts = mk("div","acts");
+    acts.append(mk("span","grow"));
+    const cancel = mk("button","btn quiet","Annuler"); cancel.addEventListener("click", closePop);
+    const ok = mk("button","btn solid","Ajouter");
+    const commit = () => {
+      const v = t.value.trim(); if (!v) { closePop(); return; }
+      state.deadlines.push({ id:uid(), t:v, course:c.value, date:d.value || iso(addDays(today0,7)),
+        time:h.value || "", kind:pre?.kind || "autre", src:pre?.src || "manuel", done:false });
+      closePop(); renderDeadlines(); renderWeeks(); renderOverview(); renderRings();
+    };
+    ok.addEventListener("click", commit);
+    t.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); commit(); }
+      if (e.key === "Escape") closePop(); });
+    acts.append(cancel, ok); box.append(acts);
+    pop = box; place(box, anchorEl); t.focus();
+  }
+
+  /* ── Résumés MIO ──────────────────────────────────────────────── */
+  function renderMios() {
+    const box = el("miolist"); box.textContent = "";
+    for (const m of state.mios) {
+      const row = mk("div","mio");
+      row.style.setProperty("--h", hueOf(m.course));
+      const parts = (m.from || "?").split(/[^A-Za-zÀ-ÿ]+/).filter(Boolean);
+      const av = mk("span","av", (parts[0]?.[0] ?? "?") + (parts[1]?.[0] ?? ""));
+      const bd = mk("div","bd");
+      const hd = mk("div","hd");
+      hd.append(mk("h5", null, m.subject), mk("span","dt", frDate(m.date)));
+      bd.append(hd, mk("p","sm", m.summary), mk("p","who", [m.from, m.course].filter(Boolean).join(" · ")));
+      if (m.add) {
+        const go = mk("button","go","+ Créer l'échéance");
+        go.addEventListener("click", ev => openDeadline(ev.currentTarget,
+          { ...m.add, course:m.course, src:"mio" }));
+        bd.append(go);
+      }
+      row.append(av, bd);
+      box.append(row);
+    }
+    el("mio-n").textContent = state.mios.length || "";
+    el("mio-empty").hidden = state.mios.length > 0;
+    el("n-m").textContent = state.mios.length || "";
+    el("last-scrape").textContent = state.lastScrape
+      ? `Dernière collecte : ${state.lastScrape}` : "Aucune collecte encore";
+    save();
+  }
+
+  /* ── Barre latérale, aperçu, graphique, anneaux, cours ────────── */
   function renderSubjects() {
     const box = el("subjects"); box.textContent = "";
     for (const c of COURSES) {
       const info = courseInfo(c);
-      const b = mk("button","subj" + (state.filter === c ? " on" : ""));
+      const b = mk("button","subj");
       const pip = mk("span","pip"); pip.style.background = `hsl(${hueOf(c)} 62% 52%)`;
       b.append(pip, mk("span", null, c), mk("span","cnt", `${info.hours}h`));
-      b.style.opacity = state.filter && state.filter !== c ? ".45" : "";
-      b.style.background = state.filter === c ? "var(--surface-2)" : "";
-      b.style.color = state.filter === c ? "var(--ink)" : "";
+      if (state.filter === c) { b.style.background = "var(--surface-2)"; b.style.color = "var(--ink)"; }
+      else if (state.filter) b.style.opacity = ".45";
       b.addEventListener("click", () => {
         state.filter = state.filter === c ? null : c;
         renderSubjects(); renderWeeks(); save();
@@ -819,190 +1120,94 @@ li:hover .kill{opacity:1}
       box.append(b);
     }
   }
-
-  /* ── Aperçu ───────────────────────────────────────────────────── */
   function renderOverview() {
     const hours = TT.reduce((s,e) => s + (e.h[1]-e.h[0]), 0);
-    el("f-h").textContent = hours;
-    el("f-c").textContent = COURSES.length;
+    el("f-h").textContent = hours; el("f-c").textContent = COURSES.length;
     el("t-blocs").textContent = TT.length;
-    el("t-trav").textContent = state.works.filter(w => !w.done).length;
-    el("t-alrt").textContent = state.alerts.length;
+    el("t-ech").textContent = liveDeadlines().length;
+    el("t-mio").textContent = state.mios.length;
     el("n-h").textContent = `${hours}h`;
-    el("n-t").textContent = state.works.filter(w => !w.done).length || "";
-    el("n-a").textContent = state.alerts.length || "";
+    el("n-e").textContent = liveDeadlines().length || "";
     el("n-c").textContent = COURSES.length;
     el("c-n").textContent = `(${COURSES.length})`;
-    const doneDays = Math.min(5, Math.max(0, (now0.getDay()+6)%7 + (now0 >= SEMESTER_START ? 1 : 0)));
-    el("meter").style.width = `${(doneDays/5*100).toFixed(0)}%`;
+    const dayIdx = Math.min(5, Math.max(0, (now0.getDay()+6)%7 + (now0 >= SEMESTER_START ? 1 : 0)));
+    el("meter").style.width = `${(dayIdx/5*100).toFixed(0)}%`;
   }
-
-  /* ── Histogramme ──────────────────────────────────────────────── */
   function chartData() {
     if (state.chart === "cours")
-      return COURSES.map(c => ({ label: c.split(" ").slice(0,2).join(" "), value: courseInfo(c).hours, full: c, hue: hueOf(c) }))
+      return COURSES.map(c => ({ label:c.split(" ").slice(0,2).join(" "), value:courseInfo(c).hours, full:c, hue:hueOf(c) }))
                     .sort((a,b) => b.value - a.value);
-    return Array.from({length: cols()}, (_,d) => ({
-      label: DOW[d], value: byDay.get(d)?.size ?? 0, full: DOW[d], day: d }));
+    return Array.from({length: cols()}, (_,d) => ({ label:DOW[d], value:byDay.get(d)?.size ?? 0, full:DOW[d], day:d }));
   }
   function renderChart() {
-    const data = chartData();
-    const byCourse = state.chart === "cours";
+    const data = chartData(), byCourse = state.chart === "cours";
     el("chart-title").textContent = byCourse ? "Charge par cours" : "Cette semaine";
     el("chart-flip").firstChild.textContent = byCourse ? "Par jour " : "Par cours ";
-
     const lg = el("legend"); lg.textContent = "";
-    if (byCourse) {
-      for (const x of data.slice(0,3)) {
-        const s = mk("span", null, x.full.split(" ")[0]);
-        const i = mk("i"); i.style.background = `hsl(${x.hue} 62% 52%)`;
-        s.prepend(i); lg.append(s);
-      }
+    if (byCourse) for (const x of data.slice(0,3)) {
+      const s = mk("span", null, x.full.split(" ")[0]); const i = mk("i");
+      i.style.background = `hsl(${x.hue} 62% 52%)`; s.prepend(i); lg.append(s);
     } else {
       const tot = TT.reduce((s,e) => s + (e.h[1]-e.h[0]), 0);
-      const s1 = mk("span", null, `${tot} h de cours`); const i1 = mk("i"); i1.style.background = "var(--invert)"; s1.prepend(i1);
-      const s2 = mk("span", null, `${COURSES.length} matières`); const i2 = mk("i"); i2.style.background = "var(--surface-3)"; s2.prepend(i2);
+      const s1 = mk("span", null, `${tot} h de cours`), i1 = mk("i");
+      i1.style.background = "var(--invert)"; s1.prepend(i1);
+      const s2 = mk("span", null, `${COURSES.length} matières`), i2 = mk("i");
+      i2.style.background = "var(--surface-3)"; s2.prepend(i2);
       lg.append(s1, s2);
     }
-
-    const max = Math.max(2, ...data.map(x => x.value));
-    const top = Math.ceil(max/2)*2;
+    const max = Math.max(2, ...data.map(x => x.value)), top = Math.ceil(max/2)*2;
     const yax = el("yax"); yax.textContent = "";
     for (let i = 4; i >= 0; i--) yax.append(mk("span", null, String(Math.round(top*i/4))));
-
     const todayIdx = (now0.getDay()+6)%7;
     let hi = data.reduce((best,x,i) => x.value > data[best].value ? i : best, 0);
     if (!byCourse && data[todayIdx]?.value > 0) hi = todayIdx;
-
     const bars = el("bars"); bars.textContent = "";
     data.forEach((x,i) => {
       const b = mk("div","bar" + (i === hi ? " on" : ""));
       b.title = `${x.full} — ${x.value} h`;
       const col = mk("div","col");
       col.style.height = `calc((100% - 1.6rem) * ${top ? x.value/top : 0})`;
-      if (i === hi && x.value > 0) col.append(mk("div","bubble", `${x.value} h`));
       if (byCourse) col.style.background = `hsl(${x.hue} 62% ${i === hi ? "48%" : "72%"})`;
-      b.append(col);
-      bars.append(b);
+      if (i === hi && x.value > 0) col.append(mk("div","bubble", `${x.value} h`));
+      b.append(col); bars.append(b);
     });
-
     const days = el("days"); days.textContent = "";
-    if (byCourse) {
-      for (const x of data) { const d = mk("span","day", x.label[0]); d.title = x.full; d.style.width = "auto"; d.style.padding = "0 .4rem"; days.append(d); }
-    } else {
-      data.forEach((x,i) => days.append(mk("span","day" + (i === hi ? " on" : ""), DL[i])));
-    }
+    if (byCourse) for (const x of data) { const d = mk("span","day", x.label[0]);
+      d.title = x.full; d.style.width = "auto"; d.style.padding = "0 .4rem"; days.append(d); }
+    else data.forEach((x,i) => days.append(mk("span","day" + (i === hi ? " on" : ""), DL[i])));
     save();
   }
-
-  /* ── Anneaux ──────────────────────────────────────────────────── */
   function renderRings() {
-    const doneT = state.todos.filter(t => t.done).length, allT = state.todos.length;
-    const doneW = state.works.filter(w => w.done).length, allW = state.works.length;
+    const dT = state.todos.filter(t => t.done && t.t.trim()).length, aT = state.todos.filter(t => t.t.trim()).length;
+    const dD = state.deadlines.filter(d => d.done).length, aD = state.deadlines.length;
     const dayIdx = Math.min(5, Math.max(0, (now0.getDay()+6)%7 + (now0 >= SEMESTER_START ? 1 : 0)));
     const rows = [
-      { n:"Objectifs", v: allT ? doneT/allT : 0, txt:`${doneT}/${allT}`, o:1 },
-      { n:"Travaux",   v: allW ? doneW/allW : 0, txt:`${doneW}/${allW}`, o:.55 },
-      { n:"Semaine",   v: dayIdx/5,              txt:`${dayIdx}/5 j`,    o:.28 },
+      { n:"À faire",  v:aT ? dT/aT : 0, txt:`${dT}/${aT}`, o:1 },
+      { n:"Échéances",v:aD ? dD/aD : 0, txt:aD ? `${dD}/${aD}` : "—", o:.55 },
+      { n:"Semaine",  v:dayIdx/5,       txt:`${dayIdx}/5 j`, o:.28 },
     ];
     const list = el("rlist"); list.textContent = "";
-    for (const r of rows) {
-      const d = mk("div");
-      const i = mk("i"); i.style.background = `color-mix(in srgb, var(--ink) ${r.o*100}%, transparent)`;
-      d.append(i, mk("span", null, r.n), mk("b", null, r.txt));
-      list.append(d);
-    }
+    for (const r of rows) { const d = mk("div"); const i = mk("i");
+      i.style.background = `color-mix(in srgb, var(--ink) ${r.o*100}%, transparent)`;
+      d.append(i, mk("span", null, r.n), mk("b", null, r.txt)); list.append(d); }
     const s = el("dial"); s.textContent = "";
-    const R = [50, 39, 28];
-    rows.forEach((r,i) => {
-      const c = 2*Math.PI*R[i];
-      s.append(svgEl("circle", { cx:60, cy:60, r:R[i], fill:"none",
-        stroke:"color-mix(in srgb, var(--ink) 9%, transparent)", "stroke-width":8 }));
+    const R = [50,39,28];
+    rows.forEach((r,i) => { const c = 2*Math.PI*R[i];
+      s.append(svgEl("circle", { cx:60, cy:60, r:R[i], fill:"none", stroke:"color-mix(in srgb, var(--ink) 9%, transparent)", "stroke-width":8 }));
       s.append(svgEl("circle", { cx:60, cy:60, r:R[i], fill:"none",
         stroke:`color-mix(in srgb, var(--ink) ${r.o*100}%, transparent)`, "stroke-width":8,
         "stroke-linecap":"round", "stroke-dasharray":`${(r.v*c).toFixed(1)} ${c.toFixed(1)}`,
-        transform:"rotate(-90 60 60)" }));
-    });
-    const pct = Math.round(rows.reduce((a,r) => a + r.v, 0)/rows.length*100);
-    el("prog-pct").textContent = `${pct}%`;
-    el("prog-sub").textContent = `${doneT + doneW} élément${doneT+doneW>1?"s":""} complété${doneT+doneW>1?"s":""} cette semaine`;
+        transform:"rotate(-90 60 60)" })); });
+    el("prog-pct").textContent = `${Math.round(rows.reduce((a,r) => a+r.v, 0)/rows.length*100)}%`;
+    el("prog-sub").textContent = `${dT + dD} élément${dT+dD>1?"s":""} complété${dT+dD>1?"s":""}`;
   }
-
-  /* ── Travaux ──────────────────────────────────────────────────── */
-  function renderWorks() {
-    const box = el("works"); box.textContent = "";
-    const list = [...state.works].sort((a,b) => (a.done - b.done) || a.due.localeCompare(b.due));
-    for (const w of list) {
-      const card = mk("div","work" + (!w.done && w.due < todayISO ? " late" : ""));
-      card.style.setProperty("--h", hueOf(w.course));
-      const top = mk("div","top");
-      const em = mk("span","em"); em.innerHTML = ICON.doc;
-      const kill = mk("button","kill","×"); kill.setAttribute("aria-label","Supprimer");
-      kill.addEventListener("click", () => { state.works = state.works.filter(x => x.id !== w.id); renderAll(); });
-      top.append(em, mk("span","grow"), kill);
-      top.querySelector(".grow").style.flex = "1 1 auto";
-      const h4 = mk("h4", null, w.t);
-      if (w.done) h4.style.textDecoration = "line-through";
-      if (w.done) h4.style.opacity = ".5";
-      const chip = mk("p","chip"); chip.append(mk("i"), document.createTextNode(w.course));
-      const btm = mk("div","btm");
-      btm.append(mk("span","due", frDate(w.due)), mk("span","grow"));
-      btm.querySelector(".grow").style.flex = "1 1 auto";
-      const bx = mk("button","box"); bx.innerHTML = ICON.check;
-      if (w.done) { bx.style.background = "var(--invert)"; bx.style.borderColor = "var(--invert)"; bx.style.color = "var(--on-invert)"; }
-      bx.setAttribute("aria-label", w.done ? "Marquer à faire" : "Marquer remis");
-      bx.addEventListener("click", () => { w.done = !w.done; renderAll(); });
-      btm.append(bx);
-      card.append(top, h4, chip, btm);
-      box.append(card);
-    }
-    const ghost = mk("button","ghostcard");
-    ghost.innerHTML = ICON.plus + "<span>Ajouter un travail</span>";
-    ghost.addEventListener("click", () => openWork(ghost));
-    box.append(ghost);
-    el("w-n").textContent = `(${state.works.filter(w => !w.done).length})`;
-    save();
-  }
-
-  function openWork(anchorEl) {
-    pop?.remove();
-    const box = mk("div","pop");
-    box.append(mk("h4", null, "Nouveau travail"));
-    box.append(mk("p","when","Sera rempli automatiquement depuis Léa une fois le scraper en place."));
-    const t = mk("input"); t.type = "text"; t.placeholder = "Titre du travail"; t.maxLength = 70;
-    const c = mk("select");
-    c.style.cssText = "width:100%;margin-top:.5rem;background:var(--surface-2);border:1px solid transparent;border-radius:12px;padding:.6rem .7rem;color:var(--ink);font:inherit;font-size:.85rem";
-    for (const name of COURSES) { const o = mk("option", null, name); o.value = name; c.append(o); }
-    const d = mk("input"); d.type = "date"; d.value = iso(addDays(now0, 7));
-    d.style.cssText = "margin-top:.5rem";
-    box.append(t, c, d);
-    const acts = mk("div","acts");
-    acts.append(mk("span","grow"));
-    const cancel = mk("button","btn quiet","Annuler");
-    cancel.addEventListener("click", closePop);
-    const ok = mk("button","btn solid","Ajouter");
-    const commit = () => {
-      const v = t.value.trim(); if (!v) { closePop(); return; }
-      state.works.push({ id:uid(), t:v, course:c.value, due:d.value || iso(addDays(now0,7)), done:false });
-      closePop(); renderAll();
-    };
-    ok.addEventListener("click", commit);
-    t.addEventListener("keydown", ev => { if (ev.key === "Enter") { ev.preventDefault(); commit(); }
-      if (ev.key === "Escape") closePop(); });
-    acts.append(cancel, ok); box.append(acts);
-    pop = box; place(box, anchorEl); t.focus();
-  }
-
-  /* ── Cours ────────────────────────────────────────────────────── */
   function renderCourses() {
     const box = el("courses"); box.textContent = "";
     const max = Math.max(...COURSES.map(c => courseInfo(c).hours));
     for (const c of COURSES) {
       const info = courseInfo(c), h = hueOf(c);
-      const card = mk("div","course");
-      card.style.setProperty("--h", h);
-      const top = mk("div","top");
-      top.append(mk("h4", null, c));
+      const card = mk("div","course fx"); card.style.setProperty("--h", h);
+      const top = mk("div","top"); top.append(mk("h4", null, c));
       const ring = mk("div","ring");
       const s = svgEl("svg", { viewBox:"0 0 40 40", width:40, height:40 });
       const circ = 2*Math.PI*16;
@@ -1012,84 +1217,15 @@ li:hover .kill{opacity:1}
         transform:"rotate(-90 20 20)" }));
       ring.append(s, mk("span", null, `${info.hours}h`));
       top.append(ring);
-      const st = mk("p","st"); st.append(mk("i"), document.createTextNode(`${info.blocks} bloc${info.blocks > 1 ? "s" : ""} · ${info.code || "—"}`));
-      const dsc = mk("p","dsc", info.prof || "Aucun professeur inscrit");
-      card.append(top, st, dsc);
-      card.addEventListener("click", () => {
-        state.filter = state.filter === c ? null : c;
-        renderSubjects(); renderWeeks();
-        el("horaire").scrollIntoView({ behavior:"smooth", block:"start" });
-      });
+      const st = mk("p","st");
+      st.append(mk("i"), document.createTextNode(`${info.blocks} bloc${info.blocks>1?"s":""} · ${info.code || "—"}`));
+      card.append(top, st, mk("p","dsc", info.prof || "Aucun professeur inscrit"));
       card.style.cursor = "pointer";
+      card.addEventListener("click", () => { state.filter = state.filter === c ? null : c;
+        renderSubjects(); renderWeeks(); el("horaire").scrollIntoView({ behavior:"smooth", block:"start" }); });
       box.append(card);
     }
   }
-
-  /* ── Objectifs / alertes ──────────────────────────────────────── */
-  function renderTodos() {
-    const ul = el("todos"); ul.textContent = "";
-    for (const it of state.todos) {
-      const li = mk("li", it.done ? "done" : "");
-      const bx = mk("button","box"); bx.innerHTML = ICON.check;
-      bx.setAttribute("aria-label", it.done ? "Décocher" : "Cocher");
-      bx.addEventListener("click", () => { it.done = !it.done; renderTodos(); renderRings(); });
-      const kill = mk("button","kill","×"); kill.setAttribute("aria-label","Supprimer");
-      kill.addEventListener("click", () => { state.todos = state.todos.filter(x => x.id !== it.id); renderTodos(); renderRings(); });
-      li.append(bx, mk("span","tx", it.text), kill);
-      ul.append(li);
-    }
-    const left = state.todos.filter(t => !t.done).length;
-    el("goal-n").textContent = state.todos.length ? `${state.todos.length - left}/${state.todos.length}` : "";
-    el("todo-empty").hidden = state.todos.length > 0;
-    save();
-  }
-  el("todo-in").addEventListener("keydown", ev => {
-    if (ev.key !== "Enter") return;
-    const v = ev.currentTarget.value.trim(); if (!v) return;
-    state.todos.push({ id:uid(), text:v, done:false });
-    ev.currentTarget.value = ""; renderTodos(); renderRings();
-  });
-
-  const P = ["Faible","Moyen","Élevé","Urgent"];
-  let draftP = 2;
-  function renderDots() {
-    const box = el("dots"); box.textContent = "";
-    for (let p = 0; p <= 3; p++) {
-      const b = mk("button","dot" + (p === draftP ? " on" : ""));
-      b.style.setProperty("--p", `var(--p${p})`);
-      b.title = P[p]; b.setAttribute("aria-label", `Urgence : ${P[p]}`);
-      b.setAttribute("aria-pressed", String(p === draftP));
-      b.addEventListener("click", () => { draftP = p; renderDots(); });
-      box.append(b);
-    }
-  }
-  function renderAlerts() {
-    const ul = el("alerts"); ul.textContent = "";
-    for (const a of [...state.alerts].sort((x,y) => y.p - x.p)) {
-      const li = mk("li");
-      li.style.setProperty("--p", `var(--p${a.p})`);
-      const body = mk("div","al");
-      body.append(mk("p","tx", a.text));
-      const w = mk("p","w");
-      w.append(document.createTextNode(a.when || ""), mk("b", null, (a.when ? " · " : "") + P[a.p].toUpperCase()));
-      body.append(w);
-      const kill = mk("button","kill","×"); kill.setAttribute("aria-label","Supprimer");
-      kill.addEventListener("click", () => { state.alerts = state.alerts.filter(x => x.id !== a.id); renderAll(); });
-      li.append(mk("span","bar4"), body, kill);
-      ul.append(li);
-    }
-    const urgent = state.alerts.filter(a => a.p === 3).length;
-    el("alert-n").textContent = urgent ? `${urgent} urgente${urgent>1?"s":""}` : `${state.alerts.length}`;
-    el("alert-empty").hidden = state.alerts.length > 0;
-    el("bell-dot").hidden = !urgent;
-    save();
-  }
-  el("alert-in").addEventListener("keydown", ev => {
-    if (ev.key !== "Enter") return;
-    const v = ev.currentTarget.value.trim(); if (!v) return;
-    state.alerts.push({ id:uid(), text:v, when:"", p:draftP });
-    ev.currentTarget.value = ""; renderAll();
-  });
 
   /* ── Thème + commandes ────────────────────────────────────────── */
   function applyTheme() {
@@ -1100,7 +1236,7 @@ li:hover .kill{opacity:1}
     save();
   }
   const flipTheme = () => { state.theme = state.theme === "dark" ? "light" : "dark"; applyTheme(); };
-  const addWeek = () => { state.weeks++; renderWeeks();
+  const addWeek = () => { state.wks.push(Math.max(...state.wks) + 1); renderWeeks();
     host.lastElementChild?.scrollIntoView({ behavior:"smooth", block:"start" }); };
   const goto = id => el(id)?.scrollIntoView({ behavior:"smooth", block:"start" });
 
@@ -1114,7 +1250,7 @@ li:hover .kill{opacity:1}
   }));
   el("add-week").addEventListener("click", addWeek);
   el("add-week2").addEventListener("click", addWeek);
-  el("go-alerts").addEventListener("click", () => goto("alertes"));
+  el("go-alerts").addEventListener("click", () => goto("echeances"));
   el("go-theme").addEventListener("click", flipTheme);
   el("t-theme").addEventListener("click", flipTheme);
   el("t-print").addEventListener("click", () => window.print());
@@ -1124,43 +1260,58 @@ li:hover .kill{opacity:1}
 
   el("dl-ics").addEventListener("click", async () => {
     const lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Agenda Cegep//FR"];
-    const stamp = d => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
-    for (let w = 0; w < state.weeks; w++) {
-      const start = addDays(anchor, w*7);
+    const st = d => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+    for (const off of state.wks) {
+      const start = addDays(anchor, off*7);
       for (let i = 0; i < 7; i++) {
         const day = addDays(start, i), dI = iso(day);
-        const rows = inSem(day) ? TT.filter(e => e.d === i) : [];
-        for (const e of rows) {
+        for (const e of (inSem(day) ? TT.filter(x => x.d === i) : [])) {
           const [h1,m1] = e.time.split(" – ")[0].split(":").map(Number);
           const [h2,m2] = e.time.split(" – ")[1].split(":").map(Number);
           lines.push("BEGIN:VEVENT",
-            `DTSTART:${stamp(new Date(day.getFullYear(),day.getMonth(),day.getDate(),h1,m1))}`,
-            `DTEND:${stamp(new Date(day.getFullYear(),day.getMonth(),day.getDate(),h2,m2))}`,
+            `DTSTART:${st(new Date(day.getFullYear(),day.getMonth(),day.getDate(),h1,m1))}`,
+            `DTEND:${st(new Date(day.getFullYear(),day.getMonth(),day.getDate(),h2,m2))}`,
             `SUMMARY:${e.t} (${e.k})`, `LOCATION:${e.room}`, "END:VEVENT");
         }
-        for (const b of dayBlocks(dI)) {
-          lines.push("BEGIN:VEVENT",
-            `DTSTART:${stamp(new Date(day.getFullYear(),day.getMonth(),day.getDate(),b.from))}`,
-            `DTEND:${stamp(new Date(day.getFullYear(),day.getMonth(),day.getDate(),b.to))}`,
-            `SUMMARY:${b.t}`, "END:VEVENT");
-        }
+        for (const b of dayBlocks(dI)) lines.push("BEGIN:VEVENT",
+          `DTSTART:${st(new Date(day.getFullYear(),day.getMonth(),day.getDate(),b.from))}`,
+          `DTEND:${st(new Date(day.getFullYear(),day.getMonth(),day.getDate(),b.to))}`,
+          `SUMMARY:${b.t}`, "END:VEVENT");
       }
     }
     lines.push("END:VCALENDAR");
-    const ics = lines.join("\r\n");
-    const btn = el("dl-ics"), old = btn.textContent;
-    try { await navigator.clipboard.writeText(ics); btn.textContent = "Copié ✓"; }
+    const btn = el("dl-ics");
+    try { await navigator.clipboard.writeText(lines.join("\r\n")); btn.textContent = "Copié ✓"; }
     catch { btn.textContent = "Copie refusée"; }
-    setTimeout(() => { btn.innerHTML = old + ' <svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M12 4v11M8 11.5 12 15.5l4-4M5 19.5h14"/></svg>'; }, 1600);
+    setTimeout(() => { btn.innerHTML = 'Copier .ics <svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M12 4v11M8 11.5 12 15.5l4-4M5 19.5h14"/></svg>'; }, 1600);
   });
 
   el("stamp").textContent =
     `${DOW[(now0.getDay()+6)%7]}. ${now0.getDate()} ${MONTH[now0.getMonth()]} ${now0.getFullYear()} · session A26`;
 
-  function renderAll() {
-    renderOverview(); renderChart(); renderRings();
-    renderWorks(); renderCourses(); renderTodos(); renderAlerts(); renderSubjects();
-  }
-  applyTheme(); renderWeeks(); renderAll(); renderDots();
+  applyTheme(); renderWeeks(); renderSubjects(); renderOverview(); renderChart();
+  renderRings(); renderCourses(); renderTodos(); renderDeadlines(); renderMios();
+
+  /* Contrat avec le scraper : il écrit data/export.json, tu le copies en
+     public/data.json. Ce qui vient d'Omnivox remplace le scrapé ; ce que tu as
+     saisi à la main ou coché « fait » survit. */
+  if (location.protocol.startsWith("http")) fetch("./data.json", { cache: "no-store" })
+    .then(r => (r.ok ? r.json() : null))
+    .then(d => {
+      if (!d || (!d.deadlines && !d.mios)) return;
+      const kept = state.deadlines.filter(x => x.src === "manuel");
+      const doneIds = new Set(state.deadlines.filter(x => x.done).map(x => x.id));
+      state.deadlines = [
+        ...kept,
+        ...(d.deadlines || []).map(x => ({ ...x, done: x.done || doneIds.has(x.id) })),
+      ];
+      state.mios = d.mios || [];
+      if (d.lastScrape) {
+        const t = new Date(d.lastScrape);
+        state.lastScrape = `${DOW[(t.getDay()+6)%7]}. ${t.getDate()} ${MONTH[t.getMonth()].slice(0,4)} ${pad(t.getHours())}:${pad(t.getMinutes())}`;
+      }
+      renderDeadlines(); renderMios(); renderWeeks(); renderOverview(); renderRings();
+    })
+    .catch(() => {});
 })();
 </script>

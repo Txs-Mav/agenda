@@ -9,6 +9,8 @@ import { join } from "node:path";
 import { openSession } from "./browser.js";
 import { ensureSession, isLoggedIn, AuthRejected, CaptchaArmed } from "./auth.js";
 import { config, urls, PLACEHOLDER_MSG } from "./config.js";
+import { discover } from "./scrape/discover.js";
+import { collectMios, collectTravaux, persist } from "./scrape/collect.js";
 import { log } from "./log.js";
 
 const stampName = () => new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
@@ -71,7 +73,36 @@ async function cmdCheck(): Promise<void> {
   }
 }
 
-const commands: Record<string, () => Promise<void>> = { login: cmdLogin, check: cmdCheck };
+/** Relève la navigation réelle du portail (aucun contenu, seulement des chemins). */
+async function cmdDiscover(): Promise<void> {
+  const s = await openSession({ headed: false });
+  try {
+    // allowLogin:false — seul `npm run login` a le droit de s'authentifier.
+    await ensureSession(s.page, { allowLogin: false });
+    await discover(s.page);
+    await s.saveState();
+  } finally { await s.close(); }
+}
+
+/** Une collecte : MIO + travaux Léa, fusionnés avec l'existant. */
+async function cmdScrape(): Promise<void> {
+  const s = await openSession({ headed: false });
+  try {
+    log.step("Collecte Omnivox");
+    // Une tâche horaire ne doit JAMAIS pouvoir tenter une connexion : c'est
+    // ainsi qu'on arme le captcha puis qu'on verrouille le DA. Elle exige une
+    // session déjà établie par `npm run login`, et échoue bruyamment sinon.
+    log.info(`session ${await ensureSession(s.page, { allowLogin: false })}`);
+    const mios = await collectMios(s.page);
+    const travaux = await collectTravaux(s.page);
+    persist(mios, travaux);
+    await s.saveState();
+  } finally { await s.close(); }
+}
+
+const commands: Record<string, () => Promise<void>> = {
+  login: cmdLogin, check: cmdCheck, discover: cmdDiscover, scrape: cmdScrape,
+};
 
 const name = process.argv[2] ?? "";
 const run = commands[name];

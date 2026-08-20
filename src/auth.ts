@@ -93,7 +93,10 @@ export async function ensureSession(
 ): Promise<"réutilisée" | "nouvelle"> {
   if (await isLoggedIn(page)) return "réutilisée";
   if (opts.allowLogin === false) {
-    throw new AuthRejected("Session expirée et connexion automatique désactivée pour ce run.");
+    throw new AuthRejected(
+      "Aucune session valide. Cette commande ne s'authentifie pas — lance `npm run login` " +
+      "(navigateur visible) et regarde ce qui se passe après la soumission du formulaire.",
+    );
   }
   if (!config.hasCredentials) {
     throw new AuthRejected(

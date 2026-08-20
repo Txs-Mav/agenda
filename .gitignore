@@ -33,6 +33,9 @@ npm-debug.log*
 
 # Sortie de build et lien de projet Vercel
 /public/index.html
+# Données scrapées : objets de MIO et échéances. Ne jamais committer, et ne
+# déployer qu'avec la protection Vercel activée (l'URL de prod est publique).
+/public/data.json
 .vercel/
 .vercel
 apercu-agenda.png

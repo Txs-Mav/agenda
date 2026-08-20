@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>ca.qc.cegeptr.agenda.scrape</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string><string>-lc</string>
+    <string>cd ~/Desktop/agenda &amp;&amp; npm run scrape</string>
+  </array>
+  <!-- Toutes les heures. launchd rattrape le tir au réveil si le Mac dormait. -->
+  <key>StartInterval</key><integer>3600</integer>
+  <key>RunAtLoad</key><false/>
+  <key>StandardOutPath</key><string>/tmp/agenda-scrape.log</string>
+  <key>StandardErrorPath</key><string>/tmp/agenda-scrape.err</string>
+</dict>
+</plist>
