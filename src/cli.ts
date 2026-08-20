@@ -7,7 +7,8 @@
  */
 import { join } from "node:path";
 import { openSession } from "./browser.js";
-import { ensureSession, isLoggedIn, AuthRejected, CaptchaArmed } from "./auth.js";
+import { ensureSession, isLoggedIn, submitCredentials, isMfa, AuthRejected, CaptchaArmed } from "./auth.js";
+import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { config, urls, PLACEHOLDER_MSG } from "./config.js";
 import { discover } from "./scrape/discover.js";
 import { collectMios, persist } from "./scrape/collect.js";
@@ -23,24 +24,43 @@ const stampName = () => new Date().toISOString().replace(/[:.]/g, "-").slice(0, 
  *
  * `npm run login -- --auto` utilise le .env, seulement s'il est vraiment rempli.
  */
+/**
+ * Établit une session. Le script remplit tes identifiants ; TOI seul franchis
+ * l'authentification multifacteur — le code qui s'affiche, c'est à toi de le
+ * saisir. Le second facteur existe précisément pour qu'un script ne puisse pas
+ * s'en passer, et je n'écrirai pas de contournement.
+ *
+ * `--manuel` saute même le remplissage et te laisse tout taper.
+ */
 async function cmdLogin(): Promise<void> {
-  const auto = process.argv.includes("--auto");
+  const manuel = process.argv.includes("--manuel") || !config.hasCredentials;
   const s = await openSession({ headed: true });
   try {
-    log.step("Étape 1a — établir une session");
+    log.step("Étape 1 — établir une session");
 
     if (await isLoggedIn(s.page)) {
       log.info("session déjà valide, rien à faire");
-    } else if (auto) {
-      if (!config.hasCredentials) throw new AuthRejected(PLACEHOLDER_MSG);
-      await ensureSession(s.page);
     } else {
-      log.info("Connecte-toi dans la fenêtre qui vient de s'ouvrir.");
-      log.info("Ton cégep a une authentification multifacteur : franchis aussi cette étape.");
-      log.info("Je n'écris rien dans le formulaire et je ne lis pas ce que tu tapes.");
-      log.info("J'attends jusqu'à 10 minutes, puis j'enregistre la session.");
-      await s.page.goto(urls.login, { waitUntil: "domcontentloaded" });
-      // On attend d'avoir quitté le formulaire ET l'étape multifacteur.
+      if (manuel) {
+        log.info("Connecte-toi entièrement dans la fenêtre ouverte.");
+        await s.page.goto(urls.login, { waitUntil: "domcontentloaded" });
+      } else {
+        log.info("Je remplis ton matricule et ton mot de passe…");
+        await submitCredentials(s.page);
+      }
+
+      if (isMfa(s.page)) {
+        log.info("");
+        log.info("  ┌──────────────────────────────────────────────────────────┐");
+        log.info("  │  AUTHENTIFICATION MULTIFACTEUR                           │");
+        log.info("  │  Un code s'affiche : saisis-le dans la fenêtre ouverte.  │");
+        log.info("  │  Coche « se souvenir de cet appareil » si proposé —      │");
+        log.info("  │  c'est ce qui allonge la durée de la session.            │");
+        log.info("  └──────────────────────────────────────────────────────────┘");
+        log.info("");
+      }
+
+      log.info("J'attends que tu aies terminé (jusqu'à 10 minutes)…");
       await s.page.waitForURL(
         (u) => {
           const p = u.toString();
@@ -48,42 +68,51 @@ async function cmdLogin(): Promise<void> {
         },
         { timeout: 10 * 60_000 },
       );
+      await s.page.waitForLoadState("networkidle").catch(() => {});
       log.info(`page atteinte : ${new URL(s.page.url()).pathname}`);
+
       if (!(await isLoggedIn(s.page))) {
         throw new AuthRejected(
-          `La page a changé (${new URL(s.page.url()).pathname}) mais /intr/ redemande le formulaire. ` +
-          "Reste connecté dans la fenêtre et relance : si une page intermédiaire s'affiche " +
-          "(première utilisation, avis à accepter), franchis-la à la main d'abord.",
+          `Sortie du flux de connexion (${new URL(s.page.url()).pathname}) mais /intr/ ` +
+            "redemande le formulaire. Reste dans la fenêtre, atteins l'accueil Omnivox, puis relance.",
         );
       }
       log.info("connexion réussie");
     }
 
     await s.saveState();
-    log.info("OK. Lance `npm run check`, puis relance-le dans 30 min.");
+    writeFileSync(
+      join(config.dataDir, "session-meta.json"),
+      JSON.stringify({ savedAt: new Date().toISOString() }, null, 2),
+    );
+    log.info("OK. Lance maintenant `npm run scrape`.");
   } finally {
     await s.close();
   }
 }
 
+/** Vérifie que la session tient, et dit depuis combien de temps elle existe. */
 async function cmdCheck(): Promise<void> {
   const s = await openSession({ headed: false });
   try {
-    log.step("Étape 1b — vérifier la session et screenshoter l'accueil");
-    const how = await ensureSession(s.page);
-    log.info(`session ${how}`);
+    log.step("Vérification de la session");
+    log.info(`session ${await ensureSession(s.page, { allowLogin: false })}`);
+
+    const metaPath = join(config.dataDir, "session-meta.json");
+    if (existsSync(metaPath)) {
+      const { savedAt } = JSON.parse(readFileSync(metaPath, "utf8"));
+      const h = (Date.now() - new Date(savedAt).getTime()) / 36e5;
+      log.info(`session établie il y a ${h < 1 ? `${Math.round(h * 60)} min` : `${h.toFixed(1)} h`}`);
+    }
 
     await s.page.goto(urls.intranet, { waitUntil: "networkidle" }).catch(() => {});
     const shot = join(config.runsDir, `${stampName()}-accueil.png`);
     await s.page.screenshot({ path: shot, fullPage: true });
     await s.saveState();
-
     log.info(`titre: ${await s.page.title()}`);
     log.info(`screenshot → ${shot}`);
-    log.warn("ce screenshot montre une page connectée (nom, DA) — dossier gitignoré, ne le partage pas");
-  } finally {
-    await s.close();
-  }
+    log.warn("ce screenshot montre une page connectée (nom, DA) — dossier gitignoré");
+  } finally { await s.close(); }
 }
 
 /** Relève la navigation réelle du portail (aucun contenu, seulement des chemins). */

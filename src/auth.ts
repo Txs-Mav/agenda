@@ -76,6 +76,29 @@ export async function captchaIsArmed(page: Page): Promise<boolean> {
  * UNE seule tentative de connexion. Toute erreur est terminale par conception:
  * répéter une auth échouée arme le captcha puis verrouille le DA.
  */
+/** Remplit et soumet le formulaire. S'arrête là : la suite peut être une MFA. */
+export async function submitCredentials(page: Page): Promise<void> {
+  log.step("saisie des identifiants");
+  await page.goto(urls.login, { waitUntil: "domcontentloaded" });
+
+  if (await captchaIsArmed(page)) {
+    throw new CaptchaArmed(
+      "Omnivox a armé son captcha sur le formulaire. Connecte-toi entièrement à la main.",
+    );
+  }
+  await page.fill(SEL.user, config.user);
+  await page.fill(SEL.pass, config.pass);
+  await page.click(SEL.submit);
+  await page
+    .waitForURL((u) => !/\/Login\/Account\/Login/i.test(u.toString()), { timeout: 30_000 })
+    .catch(() => {});
+  await page.waitForLoadState("networkidle").catch(() => {});
+  log.info(`page après soumission : ${new URL(page.url()).pathname}`);
+}
+
+/** Vrai si la page courante est l'étape multifacteur. */
+export const isMfa = (page: Page): boolean => /\/apps\/mfa\//i.test(page.url());
+
 export async function login(page: Page): Promise<void> {
   log.step("connexion");
   await page.goto(urls.login, { waitUntil: "domcontentloaded" });
@@ -139,8 +162,9 @@ export async function ensureSession(
   if (await isLoggedIn(page)) return "réutilisée";
   if (opts.allowLogin === false) {
     throw new AuthRejected(
-      "Aucune session valide. Cette commande ne s'authentifie pas — lance `npm run login` " +
-      "(navigateur visible) et regarde ce qui se passe après la soumission du formulaire.",
+      "Aucune session valide. Cette commande ne s'authentifie jamais (ton cégep exige une " +
+      "authentification multifacteur). Lance `npm run login` : je remplis tes identifiants, " +
+      "tu saisis le code, et toutes les collectes suivantes réutilisent la session.",
     );
   }
   if (!config.hasCredentials) {
