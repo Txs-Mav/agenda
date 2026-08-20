@@ -13,6 +13,7 @@ import { config, urls, PLACEHOLDER_MSG } from "./config.js";
 import { discover } from "./scrape/discover.js";
 import { collectMios, persist } from "./scrape/collect.js";
 import { summarizeNew } from "./scrape/summarize.js";
+import { pushSnapshot } from "./sync/supabase.js";
 import { collectEvenements } from "./scrape/evenements.js";
 import { log } from "./log.js";
 
@@ -140,6 +141,8 @@ async function cmdScrape(): Promise<void> {
     const miosBruts = await collectMios(s.page);
     const mios = await summarizeNew(miosBruts);   // nouveaux seulement, modèle le moins cher
     persist(mios, echeances);
+    const { readFileSync: rf } = await import("node:fs");
+    await pushSnapshot(JSON.parse(rf(join(config.dataDir, "export.json"), "utf8")));
     await s.saveState();
   } finally { await s.close(); }
 }

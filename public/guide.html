@@ -119,6 +119,14 @@ launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/ca.qc.cegeptr.agenda.scr
   </div>
 
   <div class="card">
+    <h2>Facultatif · Synchroniser vers le nuage</h2>
+    <p>Pour retrouver tes échéances et MIO depuis n'importe où : crée un <b>compte d'agenda</b> (bouton « Connexion » dans la barre latérale de l'app), confirme le courriel reçu, puis donne ces deux variables à ton agent local :</p>
+    <pre>AGENDA_EMAIL=toi@exemple.com
+AGENDA_PASSWORD=ton-mot-de-passe-d-agenda</pre>
+    <div class="callout"><span>🔒</span><span>Ce compte ne transporte que les <b>données dérivées</b> (échéances, résumés). Tes identifiants Omnivox n'y sont <b>jamais</b> — ils restent dans ton .env local. Côté base, chaque compte ne peut lire que ses propres lignes.</span></div>
+  </div>
+
+  <div class="card">
     <h2>En cas de pépin</h2>
     <div class="grid3">
       <div class="mini"><b>« Aucune session valide »</b><p>La session a expiré ou n'existe pas encore : relance <b>npm run login</b>. La collecte ne tente jamais de se connecter seule — c'est voulu.</p></div>

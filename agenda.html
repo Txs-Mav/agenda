@@ -447,6 +447,8 @@ li:hover .kill{opacity:1}
     <div id="subjects"></div>
 
     <span class="grow"></span>
+    <p class="grp">Compte</p>
+    <button class="navi" id="sb-account"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg> <span id="sb-label">Connexion</span></button>
     <p class="grp">Affichage</p>
     <button class="navi" id="t-theme"><span id="t-icon"></span> <span id="t-label">Thème sombre</span></button>
     <button class="navi" id="t-weekend"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M16 9.5v11"/></svg> Fins de semaine</button>
@@ -1422,6 +1424,112 @@ li:hover .kill{opacity:1}
   applyTheme(); renderWeeks(); renderSubjects(); renderOverview(); renderChart();
   renderRings(); renderCourses(); renderTodos(); renderDeadlines(); renderMios();
   observeCards();
+
+  /* ── Compte nuagique (Supabase) ──────────────────────────────────
+     Le compte d'agenda (courriel + mot de passe) n'a RIEN à voir avec les
+     identifiants Omnivox : il ne sert qu'à retrouver ses données dérivées.
+     RLS côté base : chaque compte ne voit que ses lignes. */
+  const SB_URL = "https://olkbhrbyubejetqygdcy.supabase.co";
+  const SB_KEY = "sb_publishable_3aYnT7wlRlEEzraSpmgbVA_WytRBC3X";
+  const SB_STORE = "agenda.sb";
+
+  const sbSession = () => { try { return JSON.parse(localStorage.getItem(SB_STORE)) || null; } catch { return null; } };
+  const sbSave = (sess) => localStorage.setItem(SB_STORE, JSON.stringify(sess));
+  const sbClear = () => localStorage.removeItem(SB_STORE);
+
+  async function sbAuth(pathQ, body) {
+    const r = await fetch(`${SB_URL}/auth/v1/${pathQ}`, {
+      method: "POST",
+      headers: { apikey: SB_KEY, "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.msg || d.error_description || d.message || `erreur ${r.status}`);
+    return d;
+  }
+  const sbKeep = (d) => { sbSave({ at: d.access_token, rt: d.refresh_token, uid: d.user?.id, email: d.user?.email }); };
+
+  async function sbFetchSnapshot(retry = true) {
+    const s0 = sbSession();
+    if (!s0) return null;
+    const r = await fetch(`${SB_URL}/rest/v1/agenda_snapshots?kind=eq.export&select=payload,updated_at`, {
+      headers: { apikey: SB_KEY, authorization: `Bearer ${s0.at}` },
+    });
+    if (r.status === 401 && retry && s0.rt) {
+      try { sbKeep(await sbAuth("token?grant_type=refresh_token", { refresh_token: s0.rt })); }
+      catch { sbClear(); renderAccount(); return null; }
+      return sbFetchSnapshot(false);
+    }
+    if (!r.ok) return null;
+    const rows = await r.json();
+    return rows[0] || null;
+  }
+
+  function applyCloud(row) {
+    if (!row?.payload) return;
+    const d = row.payload;
+    const kept = state.deadlines.filter(x => x.src === "manuel");
+    const doneIds = new Set(state.deadlines.filter(x => x.done).map(x => x.id));
+    state.deadlines = [...kept, ...(d.deadlines || []).map(x => ({ ...x, done: x.done || doneIds.has(x.id) }))];
+    state.mios = d.mios || [];
+    if (d.lastScrape) {
+      const t = new Date(d.lastScrape);
+      state.lastScrape = `${DOW[(t.getDay()+6)%7]}. ${t.getDate()} ${MONTH[t.getMonth()].slice(0,4)} ${pad(t.getHours())}:${pad(t.getMinutes())}`;
+    }
+    renderDeadlines(); renderMios(); renderWeeks(); renderOverview(); renderRings();
+  }
+
+  function renderAccount() {
+    const s0 = sbSession();
+    el("sb-label").textContent = s0?.email ? s0.email.split("@")[0] : "Connexion";
+  }
+
+  function openAccount(anchorEl) {
+    pop?.remove();
+    const s0 = sbSession();
+    const box = mk("div","pop fx");
+    if (s0) {
+      box.append(mk("h4", null, "Compte"));
+      box.append(mk("p","when", s0.email || ""));
+      box.append(mk("p","when","Tes échéances et MIO se synchronisent depuis l'agent local à chaque collecte."));
+      const acts = mk("div","acts");
+      const out = mk("button","btn danger","Se déconnecter");
+      out.addEventListener("click", () => { sbClear(); renderAccount(); closePop(); });
+      acts.append(out, mk("span","grow"));
+      const close = mk("button","btn quiet","Fermer"); close.addEventListener("click", closePop);
+      const sync = mk("button","btn solid","Rafraîchir");
+      sync.addEventListener("click", async () => { applyCloud(await sbFetchSnapshot()); closePop(); });
+      acts.append(close, sync); box.append(acts);
+    } else {
+      box.append(mk("h4", null, "Compte d'agenda"));
+      box.append(mk("p","when","Sert uniquement à retrouver tes données. Rien à voir avec tes identifiants Omnivox, qui restent sur ta machine."));
+      const em = mk("input"); em.type = "email"; em.placeholder = "Courriel";
+      const pw = mk("input"); pw.type = "password"; pw.placeholder = "Mot de passe (8+ caractères)";
+      pw.style.marginTop = ".5rem";
+      const msg = mk("p","when"); msg.style.marginTop = ".55rem";
+      box.append(em, pw, msg);
+      const acts = mk("div","acts");
+      const mkBtn = (cls, label, path) => {
+        const b = mk("button", cls, label);
+        b.addEventListener("click", async () => {
+          msg.textContent = "…";
+          try {
+            const d = await sbAuth(path, { email: em.value.trim(), password: pw.value });
+            if (d.access_token) { sbKeep(d); renderAccount(); closePop(); applyCloud(await sbFetchSnapshot()); }
+            else msg.textContent = "Compte créé : clique le lien de confirmation reçu par courriel, puis connecte-toi.";
+          } catch (e2) { msg.textContent = String(e2.message || e2); }
+        });
+        return b;
+      };
+      acts.append(mkBtn("btn quiet","Créer un compte","signup"), mk("span","grow"),
+                  mkBtn("btn solid","Se connecter","token?grant_type=password"));
+      box.append(acts);
+    }
+    pop = box; place(box, anchorEl); (box.querySelector("input") || box).focus?.();
+  }
+  el("sb-account").addEventListener("click", ev => openAccount(ev.currentTarget));
+  renderAccount();
+  if (sbSession()) sbFetchSnapshot().then(applyCloud).catch(() => {});
 
   /* Contrat avec le scraper : il écrit data/export.json, tu le copies en
      public/data.json. Ce qui vient d'Omnivox remplace le scrapé ; ce que tu as
