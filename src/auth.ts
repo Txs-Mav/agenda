@@ -19,6 +19,37 @@ const SEL = {
 } as const;
 
 /**
+ * Relevé structurel d'une page, sans aucun contenu personnel : chemin, titre,
+ * présence de marqueurs connus, cadres. Sert à comprendre où le flux se casse
+ * sans avoir à regarder une capture d'une page connectée.
+ */
+export async function diagnose(page: Page, tag: string): Promise<void> {
+  const info = await page.evaluate(() => {
+    const txt = document.body?.innerText || "";
+    const has = (re: RegExp) => re.test(txt);
+    return {
+      titre: document.title,
+      formulaireLogin: !!document.querySelector("#formLogin"),
+      liens: [...document.querySelectorAll("a")].length,
+      marqueurs: {
+        lea: has(/\bL[ée]a\b/), mio: has(/\bMio\b/i),
+        mesServices: has(/Mes\s+Services/i),
+        evenements: has(/[ÉE]v[èe]nements/i),
+        premiereUtilisation: has(/premi[èe]re\s+utilisation/i),
+        conditions: has(/conditions\s+d'utilisation|j'accepte/i),
+        erreur: has(/incorrect|invalide|erreur|verrouill/i),
+      },
+      champs: [...document.querySelectorAll("input")].map((i) => i.getAttribute("name") || i.type),
+    };
+  });
+  log.info(`[${tag}] ${new URL(page.url()).pathname} · « ${info.titre} »`);
+  log.info(`[${tag}] formulaire=${info.formulaireLogin} liens=${info.liens} champs=${JSON.stringify(info.champs)}`);
+  log.info(`[${tag}] marqueurs=${JSON.stringify(info.marqueurs)}`);
+  const frames = page.frames().map((f) => { try { return new URL(f.url()).pathname; } catch { return "?"; } });
+  if (frames.length > 1) log.info(`[${tag}] cadres=${JSON.stringify(frames)}`);
+}
+
+/**
  * Vérifie l'état de session AVANT de parser quoi que ce soit. Sans ça, toute
  * panne en aval ressemble à une erreur de parsing.
  */
@@ -68,6 +99,15 @@ export async function login(page: Page): Promise<void> {
     .catch(() => {});
   await page.waitForLoadState("networkidle").catch(() => {});
   log.info(`page après soumission : ${new URL(page.url()).pathname}`);
+  await diagnose(page, "après-soumission");
+
+  if (/\/apps\/mfa\//i.test(page.url())) {
+    throw new CaptchaArmed(
+      "Omnivox demande une authentification multifacteur. Un script ne peut pas la franchir : " +
+        "lance `npm run login` (navigateur visible), valide le second facteur à la main, " +
+        "et la session sera réutilisée par les collectes suivantes.",
+    );
+  }
 
   if ((await page.locator(SEL.form).count()) > 0) {
     // Toujours sur le formulaire: identifiants refusés, ou captcha armé en réaction.

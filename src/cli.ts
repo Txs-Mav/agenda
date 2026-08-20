@@ -36,11 +36,18 @@ async function cmdLogin(): Promise<void> {
       await ensureSession(s.page);
     } else {
       log.info("Connecte-toi dans la fenêtre qui vient de s'ouvrir.");
+      log.info("Ton cégep a une authentification multifacteur : franchis aussi cette étape.");
       log.info("Je n'écris rien dans le formulaire et je ne lis pas ce que tu tapes.");
+      log.info("J'attends jusqu'à 10 minutes, puis j'enregistre la session.");
       await s.page.goto(urls.login, { waitUntil: "domcontentloaded" });
-      await s.page.waitForURL((u) => !/\/Login\/Account\/Login/i.test(u.toString()), {
-        timeout: 5 * 60_000,
-      });
+      // On attend d'avoir quitté le formulaire ET l'étape multifacteur.
+      await s.page.waitForURL(
+        (u) => {
+          const p = u.toString();
+          return !/\/Login\/Account\/Login/i.test(p) && !/\/apps\/mfa\//i.test(p);
+        },
+        { timeout: 10 * 60_000 },
+      );
       log.info(`page atteinte : ${new URL(s.page.url()).pathname}`);
       if (!(await isLoggedIn(s.page))) {
         throw new AuthRejected(

@@ -32,6 +32,11 @@ export async function openSession(opts: { headed?: boolean } = {}): Promise<Sess
     timezoneId: "America/Toronto",
     viewport: { width: 1440, height: 900 },
   });
+  // tsx compile les callbacks de page.evaluate avec un assistant `__name`
+  // (keepNames d'esbuild) qui n'existe pas côté navigateur : sans ce no-op,
+  // toute évaluation lève « __name is not defined ».
+  await context.addInitScript({ content: "window.__name = window.__name || (f => f);" });
+
   const page = await context.newPage();
 
   return {
