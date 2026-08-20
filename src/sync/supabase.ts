@@ -12,7 +12,7 @@ import { registerSecret } from "../redact.js";
 const URL_ = process.env.SUPABASE_URL || "https://olkbhrbyubejetqygdcy.supabase.co";
 const KEY = process.env.SUPABASE_ANON_KEY || "sb_publishable_3aYnT7wlRlEEzraSpmgbVA_WytRBC3X";
 
-export async function pushSnapshot(payload: unknown): Promise<void> {
+export async function pushSnapshot(payload: unknown, kind: "export" | "horaire" = "export"): Promise<void> {
   const email = process.env.AGENDA_EMAIL, pass = process.env.AGENDA_PASSWORD;
   if (!email || !pass) return; // pas de compte configuré : pur local, rien à faire
   registerSecret(pass);
@@ -38,13 +38,13 @@ export async function pushSnapshot(payload: unknown): Promise<void> {
         "content-type": "application/json",
         prefer: "resolution=merge-duplicates",
       },
-      body: JSON.stringify([{ user_id: user.id, kind: "export", payload }]),
+      body: JSON.stringify([{ user_id: user.id, kind, payload }]),
     });
     if (!up.ok) {
       log.warn(`Supabase : écriture refusée (${up.status}) — ${(await up.text()).slice(0, 120)}`);
       return;
     }
-    log.info("snapshot poussé vers Supabase (compte " + email.replace(/(.).+(@.+)/, "$1***$2") + ")");
+    log.info(`snapshot « ${kind} » poussé vers Supabase (compte ` + email.replace(/(.).+(@.+)/, "$1***$2") + ")");
   } catch (err) {
     log.warn(`Supabase inaccessible : ${err instanceof Error ? err.message : err}`);
   }

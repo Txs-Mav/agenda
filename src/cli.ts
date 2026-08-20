@@ -12,8 +12,10 @@ import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { config, urls, PLACEHOLDER_MSG } from "./config.js";
 import { discover } from "./scrape/discover.js";
 import { collectMios, persist } from "./scrape/collect.js";
-import { summarizeNew } from "./scrape/summarize.js";
+import { fetchBodies } from "./scrape/lire.js";
+import { analyzeNew } from "./scrape/agent.js";
 import { pushSnapshot } from "./sync/supabase.js";
+import { extractHoraire } from "./scrape/horaire.js";
 import { collectEvenements } from "./scrape/evenements.js";
 import { log } from "./log.js";
 
@@ -139,7 +141,8 @@ async function cmdScrape(): Promise<void> {
     log.info(`session ${await ensureSession(s.page, { allowLogin: false })}`);
     const echeances = await collectEvenements(s.page);
     const miosBruts = await collectMios(s.page);
-    const mios = await summarizeNew(miosBruts);   // nouveaux seulement, modèle le moins cher
+    const corps = await fetchBodies(s.page, miosBruts); // nouveaux seulement, 8 max par passage
+    const mios = await analyzeNew(miosBruts, corps);    // résumé + actions, modèle le moins cher
     persist(mios, echeances);
     const { readFileSync: rf } = await import("node:fs");
     await pushSnapshot(JSON.parse(rf(join(config.dataDir, "export.json"), "utf8")));
@@ -147,8 +150,21 @@ async function cmdScrape(): Promise<void> {
   } finally { await s.close(); }
 }
 
+/** Extrait l'horaire d'une capture/photo, l'enregistre et le pousse au nuage. */
+async function cmdHoraire(): Promise<void> {
+  const img = process.argv[3];
+  if (!img) {
+    log.error("Usage : npm run horaire <chemin-de-l-image>");
+    log.error("Astuce : tape « npm run horaire » puis GLISSE l'image dans le Terminal.");
+    process.exit(2);
+  }
+  await extractHoraire(img.trim());
+  const { readFileSync: rf } = await import("node:fs");
+  await pushSnapshot(JSON.parse(rf(join(config.dataDir, "horaire.json"), "utf8")), "horaire");
+}
+
 const commands: Record<string, () => Promise<void>> = {
-  login: cmdLogin, check: cmdCheck, discover: cmdDiscover, scrape: cmdScrape,
+  login: cmdLogin, check: cmdCheck, discover: cmdDiscover, scrape: cmdScrape, horaire: cmdHoraire,
 };
 
 const name = process.argv[2] ?? "";

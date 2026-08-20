@@ -9,6 +9,7 @@
     "check": "tsx src/cli.ts check",
     "discover": "tsx src/cli.ts discover",
     "scrape": "tsx src/cli.ts scrape",
+    "horaire": "tsx src/cli.ts horaire",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

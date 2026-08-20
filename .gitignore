@@ -36,6 +36,7 @@ npm-debug.log*
 # Données scrapées : objets de MIO et échéances. Ne jamais committer, et ne
 # déployer qu'avec la protection Vercel activée (l'URL de prod est publique).
 /public/data.json
+/public/horaire.json
 .vercel/
 .vercel
 apercu-agenda.png

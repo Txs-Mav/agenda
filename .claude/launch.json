@@ -2,10 +2,16 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "agenda-static",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "4173", "-d", "public"],
-      "port": 4173
+      "name": "agenda-static-2",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "4179", "public"],
+      "port": 4179
+    },
+    {
+      "name": "agenda-static-3",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "4183", "public"],
+      "port": 4183
     }
   ]
 }

@@ -41,6 +41,24 @@ export type Deadline = {
   done: boolean;
 };
 
+/**
+ * Une action d'agenda proposée par l'agent à partir d'un MIO. L'interface les
+ * applique automatiquement (échéance, tâche, bloc d'horaire) et retient par
+ * `id` ce qui a déjà été appliqué : supprimer un élément est définitif.
+ */
+export type MioAction = {
+  id: string;
+  type: "echeance" | "tache" | "bloc";
+  t: string;
+  kind?: Deadline["kind"]; // echeance
+  date?: string;           // echeance, bloc — AAAA-MM-JJ
+  time?: string;           // echeance — HH:MM ou ""
+  from?: number;           // bloc — heure entière de début
+  to?: number;             // bloc — heure entière de fin
+  code?: string;           // sigle du cours s'il apparaît dans le message
+  course?: string;         // nom du cours si identifiable
+};
+
 /** Un MIO résumé tel que l'interface l'attend. */
 export type Mio = {
   id: string;
@@ -49,5 +67,5 @@ export type Mio = {
   date: string;
   subject: string;
   summary: string;
-  add: { t: string; date: string; time: string; kind: Deadline["kind"] } | null;
+  actions?: MioAction[];   // propositions de l'agent (souvent vide, et c'est correct)
 };

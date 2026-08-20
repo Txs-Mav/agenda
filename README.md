@@ -32,6 +32,7 @@ Guide illustré et détaillé : https://agenda-five-sigma.vercel.app/guide.html
 |---|---|
 | `npm run login` | Établit la session (fenêtre visible, code MFA saisi par toi) |
 | `npm run scrape` | Une collecte : évènements Léa + MIO, résumés, poussée nuagique |
+| `npm run horaire <image>` | Lit une capture/photo de ton horaire (heures visibles) et remplit la grille |
 | `npm run check` | La session tient-elle encore, et depuis quand |
 | `npm run discover` | Relève la navigation réelle du portail (débogage) |
 

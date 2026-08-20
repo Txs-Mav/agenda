@@ -58,10 +58,9 @@ export async function collectMios(page: Page): Promise<Mio[]> {
       course: "",
       date,
       subject,
-      // Aperçu de la liste. Le vrai résumé en une phrase (ouverture du message
-      // + API Claude) reste à ajouter — cf. src/scrape/summarize.ts à venir.
+      // Aperçu de la liste ; le résumé et les actions viennent de l'agent
+      // (src/scrape/agent.ts) après lecture du corps complet.
       summary: subject,
-      add: null,
     });
   }
   log.info(`${out.length} MIO exploitables`);
@@ -83,9 +82,10 @@ export function merge<T extends { id: string }>(previous: T[], fresh: T[], keep:
 }
 
 export function persist(mios: Mio[], deadlines: Deadline[]): void {
-  const prevM = fileStore.read<Mio[]>("mios", []);
   const prevD = fileStore.read<Deadline[]>("deadlines", []);
-  const nextM = merge(prevM, mios, () => false);
+  // Les MIO n'ont aucun champ modifié par l'utilisateur : le frais remplace
+  // tout — sinon l'ancien enregistrement écraserait résumé et actions neufs.
+  const nextM = mios;
   const nextD = merge(prevD, deadlines, (d) => d.src === "manuel" || d.done);
   fileStore.write("mios", nextM);
   fileStore.write("deadlines", nextD);

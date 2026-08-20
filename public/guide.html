@@ -126,6 +126,17 @@ launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/ca.qc.cegeptr.agenda.scr
   </div>
 
   <div class="card">
+    <h2>Ton horaire par capture d'écran</h2>
+    <p>Pas besoin de saisir ton horaire à la main : <b>photographie-le</b>, l'agent le lit et remplit la grille.</p>
+    <p style="margin-top:.7rem"><b>1 · Prendre la capture (Mac)</b> — ouvre ton horaire dans Omnivox (Léa → Horaire), puis appuie sur <b>Cmd + Maj + 4</b> et trace un rectangle qui couvre <b>toute la grille, colonne des heures comprise</b> — sans elle, l'agent refuse de deviner. Le fichier apparaît sur le Bureau (« Capture d'écran … .png »). Une photo d'iPhone fonctionne aussi (HEIC converti automatiquement).</p>
+    <p style="margin-top:.7rem"><b>2 · La donner à l'agent</b> — dans le Terminal, tape la commande avec une espace à la fin, puis <b>glisse le fichier</b> dans la fenêtre et appuie sur Entrée :</p>
+    <pre>cd ~/AgendaCegep
+npm run horaire <span class="c">(glisse l'image ici)</span></pre>
+    <p>L'agent lit la grille (claude-opus-5, une image, quelques cents), l'enregistre, et si ton compte nuagique est configuré, la pousse dans la base — ton tableau de bord l'affiche partout où tu te connectes.</p>
+    <div class="callout"><span>👁️</span><span><b>Vérifie le résultat</b> : la commande liste chaque cours extrait. Un bloc absent ou décalé = reprends une capture plus nette, colonne des heures bien visible.</span></div>
+  </div>
+
+  <div class="card">
     <h2>Facultatif · Synchroniser vers le nuage</h2>
     <p>Pour retrouver tes échéances et MIO depuis n'importe où : crée un <b>compte d'agenda</b> (bouton « Connexion » dans la barre latérale de l'app), confirme le courriel reçu, puis donne ces deux variables à ton agent local :</p>
     <pre>AGENDA_EMAIL=toi@exemple.com

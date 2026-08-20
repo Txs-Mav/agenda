@@ -364,8 +364,15 @@ li:hover .kill{opacity:1}
 .mio .dt{margin-left:auto;font-family:var(--mono);font-size:.62rem;color:var(--faint);flex:0 0 auto}
 .mio .sm{font-size:.78rem;color:var(--dim);line-height:1.4;margin-top:.15rem}
 .mio .who{font-family:var(--mono);font-size:.62rem;color:var(--faint);margin-top:.2rem}
-.mio .go{margin-top:.4rem;font-size:.74rem;color:var(--ink);background:var(--surface-2);border-radius:8px;padding:.28rem .55rem;transition:background .14s}
-.mio .go:hover{background:var(--surface-3)}
+/* Actions proposées par l'agent : appliquées d'office, la puce en témoigne (✓)
+   et sert à ré-ajouter ce qui a été supprimé (+). */
+.mio .acts{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.45rem}
+.mio .act{display:inline-flex;align-items:center;gap:.4rem;max-width:100%;font-size:.72rem;color:var(--ink);background:var(--surface-2);border-radius:8px;padding:.26rem .55rem;transition:background .14s;text-align:left}
+.mio .act:hover{background:var(--surface-3)}
+.mio .act .k{font-family:var(--mono);font-size:.56rem;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);flex:0 0 auto}
+.mio .act .l{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mio .act.done{background:transparent;box-shadow:inset 0 0 0 1px var(--line);color:var(--dim)}
+.mio .act.off{opacity:.5;cursor:not-allowed}
 /* Un MIO reste une carte de 2 + 2 lignes maximum : l'objet Omnivox embarque
    l'aperçu du message et déborderait sinon. Le clic déplie le texte complet
    — seulement quand quelque chose est réellement tronqué (.clip). */
@@ -448,6 +455,8 @@ li:hover .kill{opacity:1}
 }
 
 /* ── Profil ───────────────────────────────────────────────────── */
+/* [hidden] doit gagner même sur .board{display:flex}. */
+[hidden]{display:none!important}
 button.brand{width:100%;cursor:pointer}
 button.me{transition:transform .15s}
 button.me:hover{transform:translateY(-1px)}
@@ -462,6 +471,86 @@ button.me:hover{transform:translateY(-1px)}
 .prow>div{flex:1 1 auto;display:flex;flex-direction:column;gap:.35rem}
 #p-photo{max-width:100%;max-height:22rem;object-fit:contain;border-radius:14px;border:1px solid var(--line)}
 label.ghost{cursor:pointer}
+
+/* ── Polish : dégradés subtils + effets sur les KPI ─────────────── */
+:root{ --sheen:rgba(255,255,255,.55); --tint:rgba(22,23,26,.03); --glow-a:.05 }
+:root[data-theme="dark"]{ --sheen:rgba(255,255,255,.05); --tint:rgba(0,0,0,.2); --glow-a:.09 }
+
+/* Fond : une lueur froide très discrète en haut, par-dessus les halos gris. */
+body{
+  background-image:
+    radial-gradient(55% 40% at 50% -8%, hsl(222 45% 58% / var(--glow-a)), transparent 70%),
+    radial-gradient(90% 70% at 78% -8%, var(--bg-2) 0%, transparent 60%),
+    radial-gradient(80% 60% at 8% 105%, var(--bg-3) 0%, transparent 65%);
+}
+
+/* Cartes : voile de lumière en haut, assise à peine plus dense en bas. */
+.card:not(.dark),.work,.dl,.side,.pop{
+  background-image:linear-gradient(180deg,var(--sheen),transparent 36%),
+                   linear-gradient(0deg,var(--tint),transparent 42%);
+}
+.card.dark,.course{
+  background-image:radial-gradient(130% 105% at 84% -14%,
+    color-mix(in srgb,var(--on-invert) 10%,transparent), transparent 58%);
+}
+
+/* Boutons pleins et nav active : léger relief. */
+.pill,.btn.solid,.navi.on{
+  background-image:linear-gradient(180deg,color-mix(in srgb,var(--on-invert) 8%,transparent),transparent 55%);
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--on-invert) 12%,transparent);
+}
+button.me,.mk{background-image:linear-gradient(160deg,var(--invert-2),var(--invert))}
+button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--invert) 16%,transparent)}
+
+/* KPI : grands chiffres en dégradé, jauge lumineuse, tuiles vivantes.
+   Le survol lève la tuile via `translate` (propriété distincte) : la révélation
+   fx-rise garde `transform` en fill-mode et écraserait un transform:hover. */
+.fig b{
+  background-image:linear-gradient(180deg,var(--on-invert) 52%,color-mix(in srgb,var(--on-invert) 55%,transparent));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.meter i{background:linear-gradient(90deg,color-mix(in srgb,var(--on-invert) 45%,transparent),var(--on-invert))}
+.tile{
+  position:relative;overflow:hidden;
+  background-image:linear-gradient(180deg,color-mix(in srgb,var(--on-invert) 4%,transparent),transparent 60%);
+  transition:translate .18s ease,box-shadow .18s ease;
+}
+.tile::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 32%,color-mix(in srgb,currentColor 13%,transparent) 50%,transparent 68%);
+  transform:translateX(-130%);transition:transform .55s ease;
+}
+.tile:hover{translate:0 -2px;box-shadow:0 10px 20px -12px rgba(0,0,0,.55)}
+.tile:hover::after{transform:translateX(130%)}
+.tile .ic svg{transition:transform .18s ease}
+.tile:hover .ic svg{transform:scale(1.12)}
+.bar .col{transition:background .15s,height .3s ease,filter .15s}
+.bar:hover .col{filter:brightness(.93)}
+:root[data-theme="dark"] .bar:hover .col{filter:brightness(1.25)}
+.work,.dl,.course,.pgrid>.card{transition:translate .16s ease,box-shadow .16s ease}
+.work:hover,.dl:hover,.course:hover,.pgrid>.card:hover{translate:0 -2px}
+
+/* Profil : cartes d'égale hauteur, avatar plus présent, zone de dépôt. */
+.pgrid{align-items:stretch}
+.pgrid>.card{display:flex;flex-direction:column}
+.pgrid .pbody{flex:1 1 auto}
+#p-avatar{width:3.3rem;height:3.3rem;font-size:.95rem}
+.drop{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;
+  padding:1.5rem 1rem;border:1.5px dashed var(--line-hi);border-radius:16px;text-align:center;
+  color:var(--dim);cursor:pointer;transition:border-color .15s,background .15s,color .15s;
+}
+.drop:hover,.drop.over{border-color:var(--ink);color:var(--ink);background:var(--surface-2)}
+.drop.over{background:color-mix(in srgb,var(--ink) 7%,var(--surface-2))}
+.drop b{font-size:.85rem;font-weight:600}
+.drop span{font-size:.72rem;color:var(--faint)}
+.hint{font-size:.72rem;line-height:1.7;color:var(--faint)}
+.kbd{
+  font-family:var(--mono);font-size:.66rem;color:var(--ink);
+  background:var(--surface-2);border:1px solid var(--line-hi);border-bottom-width:2px;
+  border-radius:6px;padding:.05rem .35rem;white-space:nowrap;
+}
+@media print{.card,.work,.course,.dl,.side,body{background-image:none}}
 </style>
 
 <div class="shell">
@@ -564,7 +653,7 @@ label.ghost{cursor:pointer}
           <div class="emptybox" id="mio-empty">
             <svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 8.2 6 8.2-6"/></svg>
             <b>Aucun message collecté</b>
-            <span>Chaque MIO sera résumé ici en une phrase, avec un bouton pour le transformer en échéance.</span>
+            <span>Chaque MIO est lu en entier puis résumé ici. Les examens, remises, tâches et rencontres qu'il annonce s'ajoutent tout seuls à l'agenda.</span>
           </div>
           <div class="pending"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px;flex:0 0 auto"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3 2"/></svg>
             <span>Collecte à chaque heure. <span id="last-scrape"></span></span></div>
@@ -611,16 +700,22 @@ label.ghost{cursor:pointer}
             <button class="btn solid" id="p-pw-btn" style="align-self:flex-start">Changer le mot de passe</button>
           </div>
         </section>
-        <section class="card fx">
+        <section class="card fx" id="p-photocard">
           <div class="ch"><h3>Photo d'horaire</h3></div>
           <div class="pbody">
-            <p class="dim" style="font-size:.78rem">Téléverse une photo ou une capture de ton horaire : elle reste sur cet appareil.</p>
+            <p class="dim" style="font-size:.78rem">Garde une image de ton horaire sous la main : elle reste sur cet appareil.</p>
             <img id="p-photo" alt="Photo de l'horaire" hidden>
-            <div style="display:flex;gap:.5rem;align-items:center">
-              <label class="ghost" style="flex:0 1 auto;padding:.6rem 1.1rem">Téléverser une photo<input id="p-file" type="file" accept="image/*" hidden></label>
-              <button class="btn quiet" id="p-photo-del" hidden>Retirer</button>
-            </div>
+            <label class="drop" id="p-drop">
+              <svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m5 18 5-5 3 3 2.5-2.5L20 18"/></svg>
+              <b id="p-drop-t">Glisse ton image ici</b>
+              <span>ou clique pour choisir un fichier</span>
+              <input id="p-file" type="file" accept="image/*" hidden>
+            </label>
+            <button class="btn quiet" id="p-photo-del" style="align-self:flex-start" hidden>Retirer la photo</button>
             <p class="dim" id="p-photo-msg" style="font-size:.78rem"></p>
+            <p class="hint">Besoin d'une capture&nbsp;? Mac&nbsp;: <span class="kbd">⌘ ⇧ 4</span> puis encadre l'horaire ·
+              Windows&nbsp;: <span class="kbd">⊞ Maj S</span> ·
+              iPhone&nbsp;: bouton latéral + volume haut, puis glisse l'image ici depuis Photos.</p>
           </div>
         </section>
       </div>
@@ -640,7 +735,7 @@ label.ghost{cursor:pointer}
   const HUES = [150,190,222,264,312,344,22,48];
   const SEMESTER_START = new Date(2026, 7, 24);
 
-  const TT = [
+  const DEFAULT_TT = [
     {d:0,h:[12,14],time:"12:00 – 13:50",t:"Philo. rationnelle",k:"TH",code:"340-113-RI",room:"HA3325",prof:"Cinq-Mars, L"},
     {d:0,h:[14,15],time:"14:00 – 14:50",t:"Philo. rationnelle",k:"LA",code:"340-113-RI",room:"HA3325",prof:"Cinq-Mars, L"},
     {d:0,h:[16,18],time:"16:00 – 17:45",t:"Calcul différentiel",k:"TH",code:"201-124-RI",room:"HC1165",prof:"Gagnon, F"},
@@ -660,18 +755,33 @@ label.ghost{cursor:pointer}
     {d:4,h:[14,15],time:"14:00 – 14:50",t:"Enj. géogr. aujourd'hui",k:"LA",code:"320-123-RI",room:"HA3380",prof:"Mathis, M"},
     {d:4,h:[15,17],time:"15:00 – 16:50",t:"Bio. molécu. écosys.",k:"AP",code:"101-115-RI",room:"",prof:"Alexander, E · Colbert, M"},
   ];
-  const byDay = new Map();
-  for (const e of TT) { let m = byDay.get(e.d); if (!m) { m = new Map(); byDay.set(e.d, m); }
-    for (let h = e.h[0]; h < e.h[1]; h++) m.set(h, { e, head: h === e.h[0] }); }
-
-  const COURSES = [...new Set(TT.map(e => e.t))].sort((a,b) => a.localeCompare(b,"fr"));
-  const hues = new Map(COURSES.map((t,i) => [t, HUES[i % HUES.length]]));
+  /* L'horaire est une donnée, plus une constante : il peut venir d'une photo
+     lue par l'agent (npm run horaire), du nuage, ou du repli intégré. */
+  let TT = DEFAULT_TT, byDay = new Map(), COURSES = [], hues = new Map();
+  function rebuildTT() {
+    byDay = new Map();
+    for (const e of TT) { let m = byDay.get(e.d); if (!m) { m = new Map(); byDay.set(e.d, m); }
+      for (let h = e.h[0]; h < e.h[1]; h++) m.set(h, { e, head: h === e.h[0] }); }
+    COURSES = [...new Set(TT.map(e => e.t))].sort((a,b) => a.localeCompare(b,"fr"));
+    hues = new Map(COURSES.map((t,i) => [t, HUES[i % HUES.length]]));
+  }
+  rebuildTT();
   const hueOf = t => hues.get(t) ?? HUES[((t||"").length * 7) % HUES.length];
+  const looksLikeTT = x => Array.isArray(x) && x.length > 0 &&
+    x.every(r => Number.isInteger(r.d) && Array.isArray(r.h) && typeof r.t === "string");
+  function setTimetable(tt, origin) {
+    if (!looksLikeTT(tt)) return;
+    TT = tt; rebuildTT();
+    if (state.filter && !COURSES.includes(state.filter)) state.filter = null;
+    renderWeeks(); renderSubjects(); renderOverview(); renderChart(); renderRings(); renderCourses();
+  }
   /* Omnivox nomme les cours autrement que le relevé d'horaire
      (« Philosophie et rationalité » vs « Philo. rationnelle »). Le sigle, lui,
      est identique des deux côtés : c'est par lui qu'on retrouve la teinte. */
-  const byCode = new Map(TT.map(e => [e.code, e.t]).filter(([c]) => c));
-  const courseOf = d => byCode.get(d.code) || d.course || "";
+  const courseOf = d => {
+    const hit = TT.find(e => e.code && e.code === d.code);
+    return hit?.t || d.course || "";
+  };
   const courseInfo = t => { const rows = TT.filter(e => e.t === t);
     return { hours: rows.reduce((s,e) => s + (e.h[1]-e.h[0]), 0), blocks: rows.length,
              code: rows[0]?.code || "", prof: rows[0]?.prof || "" }; };
@@ -723,11 +833,16 @@ label.ghost{cursor:pointer}
     deadlines: [],
     mios: [],
     lastScrape: null,
+    /* Actions de l'agent MIO déjà traitées (appliquées ou écartées), par id :
+       une action ne s'applique automatiquement qu'UNE fois — ce que tu
+       supprimes ensuite ne revient jamais tout seul. */
+    acted: {},
   });
   let state;
   try { state = { ...seed(), ...(JSON.parse(localStorage.getItem(KEY)) || {}) }; }
   catch { state = seed(); }
   if (!Array.isArray(state.wks) || !state.wks.length) state.wks = [0];
+  if (!state.acted || typeof state.acted !== "object") state.acted = {};
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} };
   const uid = () => "x" + Math.random().toString(36).slice(2,9);
 
@@ -930,10 +1045,16 @@ label.ghost{cursor:pointer}
   document.addEventListener("pointerup", () => {
     if (!sel) return;
     const lo = Math.min(sel.a, sel.b), hi = Math.max(sel.a, sel.b);
-    const d = sel.d, single = lo === hi;
+    const d = sel.d, single = lo === hi, onBlock = sel.onBlock;
+    /* Le composeur prend le relais : on relâche la sélection ici même. Sinon
+       le prochain pointerup — celui d'un clic sur une pastille ou sur
+       « Ajouter » — repasse par ce gestionnaire, rouvre le composeur et
+       détruit le bouton avant que son clic ne soit livré. Les cases restent
+       surlignées (classes CSS) jusqu'à closePop(). */
+    sel = null;
     const cell = document.querySelector(`.cell[data-d="${d}"][data-h="${lo}"]`);
     const covered = dayBlocks(d).filter(b => b.from < hi+1 && b.to > lo);
-    if (single && sel.onBlock && covered[0]) { openBlock(cell, d, covered[0], false); return; }
+    if (single && onBlock && covered[0]) { openBlock(cell, d, covered[0], false); return; }
     const from = covered.length ? Math.min(lo, ...covered.map(b => b.from)) : lo;
     const to   = covered.length ? Math.max(hi+1, ...covered.map(b => b.to)) : hi+1;
     openBlock(cell, d, {
@@ -1026,6 +1147,11 @@ label.ghost{cursor:pointer}
       closePop(); renderWeeks();
     };
     ok.addEventListener("click", commit);
+    /* Un titre vide n'enregistre rien : on le dit avec le bouton plutôt que
+       de fermer le composeur sans explication. */
+    const syncOk = () => { ok.disabled = !input.value.trim(); };
+    input.addEventListener("input", syncOk);
+    syncOk();
     input.addEventListener("keydown", ev => {
       if (ev.key === "Enter") { ev.preventDefault(); commit(); }
       if (ev.key === "Escape") { ev.preventDefault(); closePop(); }
@@ -1249,6 +1375,93 @@ label.ghost{cursor:pointer}
     pop = box; place(box, anchorEl); t.focus();
   }
 
+  /* ── Agent MIO : les actions extraites s'appliquent toutes seules ─
+     Le scraper attache à chaque MIO des actions typées (echeance, tache,
+     bloc). À l'arrivée des données, chaque action encore jamais vue est
+     appliquée UNE fois puis consignée dans state.acted : supprimer l'élément
+     créé est donc définitif, et la puce de la carte MIO permet de le
+     ré-ajouter à la main. */
+  function actionExists(a) {
+    if (a.type === "echeance") return state.deadlines.some(d => d.id === a.id);
+    if (a.type === "tache")    return state.todos.some(t => t.id === a.id);
+    if (a.type === "bloc")     return (state.blocks[a.date] || []).some(b => b.id === a.id);
+    return false;
+  }
+  /* Un bloc ne s'installe jamais par-dessus un cours ou un bloc existant. */
+  function blockConflict(a) {
+    const from = Math.max(START_HOUR, a.from), to = Math.min(END_HOUR + 1, a.to);
+    if (to <= from) return true;
+    for (let h = from; h < to; h++) if (courseAt(a.date, h)) return true;
+    return dayBlocks(a.date).some(b => b.from < to && b.to > from && b.id !== a.id);
+  }
+  /* Le MIO annonce souvent ce que Léa affiche déjà : même date, même genre,
+     même sigle → on n'empile pas une seconde échéance automatiquement. */
+  function dupEcheance(a) {
+    return state.deadlines.some(d => d.id !== a.id && !d.done &&
+      d.date === a.date && d.kind === a.kind && (!a.code || !d.code || d.code === a.code));
+  }
+  function applyAction(a) {
+    if (actionExists(a)) return true;
+    if (a.type === "echeance") {
+      state.deadlines.push({ id:a.id, t:a.t, course:a.course || "", code:a.code || "",
+        date:a.date, time:a.time || "", kind:a.kind || "autre", src:"mio", done:false });
+      return true;
+    }
+    if (a.type === "tache") {
+      state.todos.push({ id:a.id, t:a.t, done:false, lvl:0 });
+      return true;
+    }
+    if (a.type === "bloc") {
+      if (blockConflict(a)) return false;
+      const from = Math.max(START_HOUR, a.from), to = Math.min(END_HOUR + 1, a.to);
+      const list = dayBlocks(a.date).slice();
+      list.push({ id:a.id, from, to, t:a.t, h:hueOf(byCode.get(a.code) || a.course || a.t) });
+      state.blocks[a.date] = list.sort((x,y) => x.from - y.from);
+      return true;
+    }
+    return false;
+  }
+  function autoApply() {
+    let n = 0;
+    for (const m of state.mios) for (const a of (m.actions || [])) {
+      if (state.acted[a.id]) continue;
+      state.acted[a.id] = true;
+      if (a.type === "echeance" && dupEcheance(a)) continue; // déjà couvert par Léa
+      if (applyAction(a)) n++;
+    }
+    if (n) save();
+    return n;
+  }
+  const refreshAll = () => { renderDeadlines(); renderTodos(); renderWeeks();
+    renderOverview(); renderRings(); renderMios(); };
+
+  const ACT_LBL = { examen:"examen", remise:"remise", autre:"date" };
+  function actionChip(a) {
+    const on = actionExists(a);
+    const off = !on && a.type === "bloc" && blockConflict(a);
+    const chip = mk("button","act" + (on ? " done" : off ? " off" : ""));
+    const k = a.type === "echeance" ? (ACT_LBL[a.kind] || "date")
+            : a.type === "bloc" ? "bloc" : "tâche";
+    chip.append(mk("span","k", (on ? "✓ " : "+ ") + k));
+    const when = a.type === "echeance" ? ` · ${frDate(a.date)}${a.time ? " " + a.time : ""}`
+               : a.type === "bloc" ? ` · ${frDate(a.date)} ${pad(a.from)}–${pad(a.to)} h` : "";
+    chip.append(mk("span","l", a.t + when));
+    if (on) {
+      chip.title = "Déjà dans l'agenda — cliquer pour y aller";
+      chip.addEventListener("click", () =>
+        goto(a.type === "echeance" ? "echeances" : a.type === "bloc" ? "horaire" : "todocard"));
+    } else if (off) {
+      chip.title = "Chevauche un cours ou un bloc existant";
+    } else {
+      chip.title = "Ajouter à l'agenda";
+      chip.addEventListener("click", () => {
+        state.acted[a.id] = true;
+        if (applyAction(a)) refreshAll(); else renderMios();
+      });
+    }
+    return chip;
+  }
+
   /* ── Résumés MIO ──────────────────────────────────────────────── */
   function renderMios() {
     const box = el("miolist"); box.textContent = "";
@@ -1269,11 +1482,10 @@ label.ghost{cursor:pointer}
       bd.append(hd);
       if (!dupe) bd.append(mk("p","sm", m.summary));
       bd.append(mk("p","who", [m.from, m.course].filter(Boolean).join(" · ")));
-      if (m.add) {
-        const go = mk("button","go","+ Créer l'échéance");
-        go.addEventListener("click", ev => openDeadline(ev.currentTarget,
-          { ...m.add, course:m.course, src:"mio" }));
-        bd.append(go);
+      if ((m.actions || []).length) {
+        const acts = mk("div","acts");
+        for (const a of m.actions) acts.append(actionChip(a));
+        bd.append(acts);
       }
       row.append(av, bd);
       row.addEventListener("click", ev => {
@@ -1522,6 +1734,8 @@ label.ghost{cursor:pointer}
   applyTheme(); renderWeeks(); renderSubjects(); renderOverview(); renderChart();
   renderRings(); renderCourses(); renderTodos(); renderDeadlines(); renderMios();
   observeCards();
+  // Hors-ligne aussi : les actions déjà en mémoire locale s'appliquent.
+  if (autoApply()) refreshAll();
 
   /* ── Compte nuagique (Supabase) ──────────────────────────────────
      Le compte d'agenda (courriel + mot de passe) n'a RIEN à voir avec les
@@ -1550,7 +1764,7 @@ label.ghost{cursor:pointer}
   async function sbFetchSnapshot(retry = true) {
     const s0 = sbSession();
     if (!s0) return null;
-    const r = await fetch(`${SB_URL}/rest/v1/agenda_snapshots?kind=eq.export&select=payload,updated_at`, {
+    const r = await fetch(`${SB_URL}/rest/v1/agenda_snapshots?kind=in.(export,horaire)&select=kind,payload,updated_at`, {
       headers: { apikey: SB_KEY, authorization: `Bearer ${s0.at}` },
     });
     if (r.status === 401 && retry && s0.rt) {
@@ -1559,14 +1773,16 @@ label.ghost{cursor:pointer}
       return sbFetchSnapshot(false);
     }
     if (!r.ok) return null;
-    const rows = await r.json();
-    return rows[0] || null;
+    return await r.json();   // [{kind, payload}, …]
   }
 
-  function applyCloud(row) {
-    if (!row?.payload) return;
-    const d = row.payload;
-    const kept = state.deadlines.filter(x => x.src === "manuel");
+  /* Un seul point d'entrée pour les données du scraper (data.json ou nuage).
+     Le scrapé remplace le scrapé ; ce qui n'en vient pas — saisi à la main
+     (manuel) ou appliqué depuis un MIO (mio) — survit, tout comme les cases
+     cochées « fait ». Puis l'agent applique les actions encore jamais vues. */
+  function ingest(d) {
+    if (!d || (!d.deadlines && !d.mios)) return;
+    const kept = state.deadlines.filter(x => x.src !== "lea");
     const doneIds = new Set(state.deadlines.filter(x => x.done).map(x => x.id));
     state.deadlines = [...kept, ...(d.deadlines || []).map(x => ({ ...x, done: x.done || doneIds.has(x.id) }))];
     state.mios = d.mios || [];
@@ -1574,8 +1790,10 @@ label.ghost{cursor:pointer}
       const t = new Date(d.lastScrape);
       state.lastScrape = `${DOW[(t.getDay()+6)%7]}. ${t.getDate()} ${MONTH[t.getMonth()].slice(0,4)} ${pad(t.getHours())}:${pad(t.getMinutes())}`;
     }
-    renderDeadlines(); renderMios(); renderWeeks(); renderOverview(); renderRings();
+    autoApply();
+    refreshAll();
   }
+  const applyCloud = row => ingest(row?.payload);
 
   function renderAccount() {
     const s0 = sbSession();
@@ -1698,18 +1916,17 @@ label.ghost{cursor:pointer}
   });
 
   /* Photo d'horaire : compressée en JPEG (côté long ≤ 1600 px) pour tenir
-     dans localStorage — elle ne quitte jamais l'appareil. */
+     dans localStorage — elle ne quitte jamais l'appareil. Accepte le clic
+     comme le glisser-déposer (fichier ou image tirée d'une autre app). */
   const PHOTO_KEY = "agenda.photo";
   function renderPhoto() {
     const src = localStorage.getItem(PHOTO_KEY);
     el("p-photo").hidden = !src;
     if (src) el("p-photo").src = src; else el("p-photo").removeAttribute("src");
     el("p-photo-del").hidden = !src;
+    el("p-drop-t").textContent = src ? "Glisse une nouvelle image ici" : "Glisse ton image ici";
   }
-  el("p-file").addEventListener("change", () => {
-    const f = el("p-file").files[0];
-    el("p-file").value = "";
-    if (!f) return;
+  function readPhotoFile(f) {
     const msg = el("p-photo-msg"); msg.textContent = "…";
     const img = new Image();
     img.onload = () => {
@@ -1723,7 +1940,26 @@ label.ghost{cursor:pointer}
     };
     img.onerror = () => { URL.revokeObjectURL(img.src); msg.textContent = "Impossible de lire cette image."; };
     img.src = URL.createObjectURL(f);
+  }
+  el("p-file").addEventListener("change", () => {
+    const f = el("p-file").files[0];
+    el("p-file").value = "";
+    if (f) readPhotoFile(f);
   });
+  {
+    const zone = el("p-photocard");
+    for (const t of ["dragover","dragenter"])
+      zone.addEventListener(t, e => { e.preventDefault(); el("p-drop").classList.add("over"); });
+    for (const t of ["dragleave","dragend"])
+      zone.addEventListener(t, () => el("p-drop").classList.remove("over"));
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      el("p-drop").classList.remove("over");
+      const f = [...(e.dataTransfer?.files || [])].find(x => x.type.startsWith("image/"));
+      if (f) readPhotoFile(f);
+      else el("p-photo-msg").textContent = "Dépose une image (PNG, JPG, capture d'écran…).";
+    });
+  }
   el("p-photo-del").addEventListener("click", () => {
     localStorage.removeItem(PHOTO_KEY); el("p-photo-msg").textContent = ""; renderPhoto();
   });
@@ -1732,23 +1968,13 @@ label.ghost{cursor:pointer}
   /* Contrat avec le scraper : il écrit data/export.json, tu le copies en
      public/data.json. Ce qui vient d'Omnivox remplace le scrapé ; ce que tu as
      saisi à la main ou coché « fait » survit. */
+  if (location.protocol.startsWith("http")) fetch("./horaire.json", { cache: "no-store" })
+    .then(r => (r.ok ? r.json() : null))
+    .then(h => { if (h?.tt) setTimetable(h.tt, "importé"); })
+    .catch(() => {});
   if (location.protocol.startsWith("http")) fetch("./data.json", { cache: "no-store" })
     .then(r => (r.ok ? r.json() : null))
-    .then(d => {
-      if (!d || (!d.deadlines && !d.mios)) return;
-      const kept = state.deadlines.filter(x => x.src === "manuel");
-      const doneIds = new Set(state.deadlines.filter(x => x.done).map(x => x.id));
-      state.deadlines = [
-        ...kept,
-        ...(d.deadlines || []).map(x => ({ ...x, done: x.done || doneIds.has(x.id) })),
-      ];
-      state.mios = d.mios || [];
-      if (d.lastScrape) {
-        const t = new Date(d.lastScrape);
-        state.lastScrape = `${DOW[(t.getDay()+6)%7]}. ${t.getDate()} ${MONTH[t.getMonth()].slice(0,4)} ${pad(t.getHours())}:${pad(t.getMinutes())}`;
-      }
-      renderDeadlines(); renderMios(); renderWeeks(); renderOverview(); renderRings();
-    })
+    .then(ingest)
     .catch(() => {});
 })();
 </script>
