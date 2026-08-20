@@ -129,7 +129,10 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
   gap:.45rem .7rem;padding:.9rem 1.25rem 1.25rem;flex:1 1 auto;min-height:11rem}
 .yax{grid-area:1/1;display:flex;flex-direction:column;justify-content:space-between;font-family:var(--mono);font-size:.62rem;color:var(--faint);text-align:right}
 .bars{grid-area:1/2;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:.5rem;min-width:0}
-.bar{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;min-width:0;position:relative}
+.bar{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;min-width:0;position:relative;background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;-webkit-appearance:none}
+.bar[aria-expanded="true"] .col{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px var(--ink)}
+.bar:focus-visible{outline:none}
+.bar:focus-visible .col{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px var(--ink)}
 .bar .col{position:relative;width:100%;max-width:2rem;border-radius:7px;background:var(--surface-3);transition:background .15s,height .3s ease}
 .bar.on .col{background:var(--invert)}
 .bubble{position:absolute;bottom:100%;left:50%;transform:translate(-50%,-7px);background:var(--invert);color:var(--on-invert);border-radius:8px;padding:.16rem .45rem;font-family:var(--mono);font-size:.66rem;white-space:nowrap}
@@ -241,6 +244,10 @@ li:hover .kill{opacity:1}
 .cell.sel.mid::before{border-radius:0;inset:-1px 2px}
 .cell.sel.top::before{border-radius:11px 11px 0 0;inset:2px 2px -1px}
 .cell.sel.bot::before{border-radius:0 0 11px 11px;inset:-1px 2px 2px}
+/* Un bloc déjà posé garde sa couleur sous le contour : le voile ne teinte que
+   le temps libre pris dans la sélection, jamais la carte qu'on est en train
+   de modifier. */
+.cell.sel.run::before,.cell.sel.under::before{background:transparent}
 .selhint{
   position:absolute;z-index:9;transform:translate(-50%,-115%);
   background:var(--invert);color:var(--on-invert);border-radius:9px;
@@ -271,6 +278,7 @@ li:hover .kill{opacity:1}
   box-shadow:0 8px 20px -6px rgba(16,18,20,.22),0 30px 60px -30px rgba(16,18,20,.5);
   border:1px solid var(--line);padding:1rem 1rem .85rem;
 }
+.pop.wide{width:23rem;max-width:calc(100vw - 2rem)}
 :root[data-theme="dark"] .pop{box-shadow:0 8px 20px -6px rgba(0,0,0,.5),0 30px 60px -30px rgba(0,0,0,.9)}
 .pop h4{font-size:.92rem;font-weight:650;letter-spacing:-.015em}
 .pop .when{font-family:var(--mono);font-size:.7rem;color:var(--dim);margin-top:.15rem}
@@ -280,9 +288,11 @@ li:hover .kill{opacity:1}
 .sw-c{width:1.55rem;height:1.55rem;border-radius:50%;background:hsl(var(--h) 62% 52%);transition:transform .12s,box-shadow .12s}
 .sw-c:hover{transform:scale(1.1)}
 .sw-c.on{box-shadow:0 0 0 2px var(--surface),0 0 0 3.6px hsl(var(--h) 62% 52%)}
-.pop .acts{display:flex;gap:.5rem;margin-top:.85rem;align-items:center}
+/* Un libellé de bouton ne se coupe jamais en deux lignes : si la rangée est
+   vraiment trop étroite, c'est le bouton entier qui passe à la ligne. */
+.pop .acts{display:flex;gap:.4rem .5rem;margin-top:.85rem;align-items:center;flex-wrap:wrap}
 .pop .acts .grow{flex:1 1 auto}
-.btn{border-radius:999px;padding:.5rem .95rem;font-size:.82rem;font-weight:550;transition:opacity .15s,background .15s}
+.btn{border-radius:999px;padding:.5rem .95rem;font-size:.82rem;font-weight:550;white-space:nowrap;transition:opacity .15s,background .15s}
 .btn.solid{background:var(--invert);color:var(--on-invert)}
 .btn.solid:hover{opacity:.85}
 .btn.quiet{background:var(--surface-2);color:var(--dim)}
@@ -310,7 +320,7 @@ li:hover .kill{opacity:1}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{
   body{background:#fff;padding:0}
-  .side,.head,.sect .link,.newrow,.kill,.ghostcard,.pop{display:none}
+  .side,.head,.sect .link,.wnav,.fchip,.newrow,.kill,.ghostcard,.pop{display:none}
   .shell{display:block}
   .card,.work,.course{box-shadow:none;border:1px solid #bbb}
   .course{background:#fff;color:#000}
@@ -379,7 +389,9 @@ li:hover .kill{opacity:1}
 .mio h5,.mio .sm{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .mio.open h5,.mio.open .sm{display:block;-webkit-line-clamp:unset;overflow:visible}
 .mio.clip{cursor:pointer}
-.pending{display:flex;gap:.5rem;align-items:center;margin:.2rem 1.25rem 1.15rem;padding:.6rem .75rem;border:1px dashed var(--line-hi);border-radius:13px;color:var(--faint);font-size:.75rem;line-height:1.35}
+/* Même respiration sous le dernier élément que le bouton « Ajouter » (.9rem) :
+   les trois cartes de la rangée terminent au même rythme. */
+.pending{display:flex;gap:.5rem;align-items:center;margin:.2rem 1.25rem .9rem;padding:.6rem .75rem;border:1px dashed var(--line-hi);border-radius:13px;color:var(--faint);font-size:.75rem;line-height:1.35}
 
 /* Pastilles d'échéance sur l'en-tête de jour */
 .dh{position:relative}
@@ -391,6 +403,26 @@ li:hover .kill{opacity:1}
 .card:hover .xweek{opacity:1}
 .xweek:hover{background:var(--surface-2);color:var(--p3t)}
 .xweek:focus-visible{opacity:1}
+
+/* Navigation d'une semaine à l'autre (mode « une semaine à la fois ») */
+.wnav{display:inline-flex;align-items:center;gap:.1rem;background:var(--surface);
+  box-shadow:var(--shadow);border-radius:999px;padding:.2rem}
+.wnav .wn{height:1.8rem;min-width:1.8rem;border-radius:999px;display:grid;place-items:center;
+  color:var(--dim);font-size:.78rem;transition:background .14s,color .14s}
+.wnav .wn.lab{padding:0 .7rem;font-weight:550}
+.wnav .wn:hover{background:var(--surface-2);color:var(--ink)}
+.wnav .wn:disabled{opacity:.32;pointer-events:none}
+.wnav .wn svg{width:15px;height:15px}
+
+/* Filtre de matière : sans étiquette visible, l'horaire pâli passe pour un bug. */
+.fchip{display:inline-flex;align-items:center;gap:.4rem;font-size:.76rem;color:var(--dim);
+  background:var(--surface);box-shadow:var(--shadow);border-radius:999px;padding:.32rem .5rem .32rem .7rem;
+  transition:color .14s}
+.fchip:hover{color:var(--ink)}
+.fchip i{width:.45rem;height:.45rem;border-radius:50%;flex:0 0 auto}
+.fchip b{font-weight:550;max-width:11rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fchip span{width:1.15rem;height:1.15rem;border-radius:50%;display:grid;place-items:center;
+  background:var(--surface-2);font-size:.8rem;line-height:1}
 
 /* Trois colonnes de hauteur égale, mais plafonnées : quand les échéances ou
    les MIO s'accumulent, la liste défile DANS sa carte au lieu d'étirer toute
@@ -428,10 +460,21 @@ li:hover .kill{opacity:1}
 .nrow{transition:background .12s ease}
 .dl,.work,.course{transition:transform .16s ease,box-shadow .16s ease}
 .course:hover{transform:translateY(-2px)}
-@media (prefers-reduced-motion:reduce){.fx,.pop.fx{animation:none}}
+@keyframes fx-slide-r{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+@keyframes fx-slide-l{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:none}}
+.card.wr{animation:fx-slide-r .28s cubic-bezier(.2,.7,.3,1) both}
+.card.wl{animation:fx-slide-l .28s cubic-bezier(.2,.7,.3,1) both}
+@media (prefers-reduced-motion:reduce){.fx,.pop.fx,.card.wr,.card.wl{animation:none}}
 
 @media (max-width:1180px){ .r2{grid-template-columns:repeat(2,minmax(0,1fr))} #mios{grid-column:span 2} }
 @media (max-width:820px){ .r2{grid-template-columns:minmax(0,1fr)} #mios{grid-column:auto} }
+/* Écran étroit : plutôt que d'écraser les commandes contre le titre, on les
+   renvoie à la ligne — l'espaceur devient la cassure. */
+@media (max-width:700px){
+  .sect{flex-wrap:wrap;row-gap:.4rem}
+  .sect .grow{flex:0 0 100%;height:0}
+  .fchip b{max-width:8rem}
+}
 
 /* Une échéance horodatée s'affiche dans la grille, marquée par l'urgence. */
 .ev.dlblk{border-left:3px solid var(--p);border-style:solid;box-shadow:inset 0 0 0 1px var(--p)}
@@ -551,6 +594,73 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
   border-radius:6px;padding:.05rem .35rem;white-space:nowrap;
 }
 @media print{.card,.work,.course,.dl,.side,body{background-image:none}}
+
+/* ── Page d'accueil (landing) ───────────────────────────────────── */
+#landing{display:flex;flex-direction:column;gap:.85rem;padding-top:.6rem}
+.hero{padding:3rem 2.4rem 2.6rem;display:flex;flex-direction:column;gap:1rem;align-items:flex-start}
+.hero h2{font-size:clamp(2rem,4.4vw,3.1rem);font-weight:650;letter-spacing:-.045em;line-height:1.04}
+.hero .grad{
+  background-image:linear-gradient(180deg,var(--on-invert) 45%,color-mix(in srgb,var(--on-invert) 45%,transparent));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero p{max-width:36rem;font-size:.95rem;line-height:1.55}
+.ctas{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem}
+.cta{
+  display:inline-flex;align-items:center;gap:.5rem;border-radius:999px;padding:.72rem 1.3rem;
+  font-size:.9rem;font-weight:600;text-decoration:none;
+  background:var(--on-invert);color:var(--invert);
+  transition:translate .15s ease,opacity .15s;
+}
+.cta:hover{translate:0 -1px;opacity:.92}
+.cta.ghosty{background:color-mix(in srgb,var(--on-invert) 13%,transparent);color:var(--on-invert)}
+.cta.dark-cta{background:var(--invert);color:var(--on-invert);margin-left:auto;flex:0 0 auto}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:.85rem}
+.step{padding:1.2rem 1.25rem 1.35rem;display:flex;flex-direction:column;gap:.55rem}
+.step .no{
+  width:2.1rem;height:2.1rem;border-radius:11px;display:grid;place-items:center;
+  background:var(--invert);color:var(--on-invert);font-weight:650;font-size:.95rem;
+  background-image:linear-gradient(160deg,var(--invert-2),var(--invert));
+}
+.step h4,.feat h4{font-size:.97rem;font-weight:600;letter-spacing:-.015em}
+.step p,.feat p{font-size:.82rem;line-height:1.5}
+.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(13.5rem,1fr));gap:.85rem}
+.feat{
+  background:var(--surface);border-radius:20px;box-shadow:var(--shadow);
+  padding:1.05rem 1.1rem;display:flex;flex-direction:column;gap:.45rem;
+  background-image:linear-gradient(180deg,var(--sheen),transparent 36%),linear-gradient(0deg,var(--tint),transparent 42%);
+  transition:translate .16s ease,box-shadow .16s ease;
+}
+.feat:hover,.step:hover{translate:0 -2px}
+.feat .fic{
+  width:2.1rem;height:2.1rem;border-radius:11px;display:grid;place-items:center;
+  background:hsl(var(--h,222) 62% 55% / .16);color:hsl(var(--h,222) 62% var(--evt-tx));
+}
+.priv{display:flex;align-items:center;gap:.9rem;padding:1.15rem 1.3rem;flex-direction:row}
+.priv p{flex:1 1 auto;font-size:.82rem;line-height:1.5;min-width:14rem}
+.priv .i{color:var(--faint)}
+@media (max-width:720px){.hero{padding:2.2rem 1.4rem 2rem}.priv{flex-wrap:wrap}.cta.dark-cta{margin-left:0}}
+
+/* ── Création de compte au premier passage ──────────────────────── */
+#onboard{display:flex;justify-content:center;padding:2.6rem 0 1.2rem}
+.joinbox{width:min(26rem,100%);padding:1.9rem 1.8rem 1.5rem;display:flex;flex-direction:column}
+.joinbox .jic{
+  width:2.6rem;height:2.6rem;border-radius:13px;display:grid;place-items:center;
+  background:var(--invert);color:var(--on-invert);margin-bottom:.85rem;
+  background-image:linear-gradient(160deg,var(--invert-2),var(--invert));
+}
+.joinbox h2{font-size:1.32rem;font-weight:650;letter-spacing:-.03em}
+.joinbox .jsub{font-size:.83rem;line-height:1.5;margin-top:.5rem}
+.joinbox input{
+  width:100%;margin-top:.6rem;background:var(--surface-2);border:1px solid transparent;
+  border-radius:13px;padding:.72rem .85rem;color:var(--ink);font:inherit;font-size:.9rem;
+}
+.joinbox input:focus{outline:none;border-color:var(--ink)}
+.joinbox .jmsg{font-family:var(--mono);font-size:.7rem;line-height:1.45;color:var(--dim);margin-top:.55rem;min-height:1rem}
+.joinbox .jmsg.bad{color:var(--p3)}
+.join-cta{justify-content:center;margin-top:.6rem;background:var(--invert);color:var(--on-invert)}
+.join-cta:disabled{opacity:.55;translate:none}
+.jalt{display:flex;align-items:center;gap:.6rem;margin-top:1rem;flex-wrap:wrap}
+.jalt .grow{flex:1 1 auto}
 </style>
 
 <div class="shell">
@@ -579,7 +689,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
   </aside>
 
   <div class="main">
-    <header class="head">
+    <header class="head" id="apphead">
       <h1 class="hi">Salut, <span id="hi-name">Maverick</span>&nbsp;!<small id="stamp"></small></h1>
       <span class="grow"></span>
       <button class="pill" id="add-week"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Semaine</button>
@@ -662,7 +772,14 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
 
       <div id="horaire">
         <div class="sect"><h2>Horaire</h2><span class="dim mono" style="font-size:.75rem" id="h-sub"></span><span class="grow"></span>
-          <button class="link" id="add-week2">Ajouter une semaine <svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button></div>
+          <button class="fchip" id="h-unfilter" hidden><i></i><b></b><span>&times;</span></button>
+          <div class="wnav" id="wnav">
+            <button class="wn" id="w-prev" title="Semaine précédente" aria-label="Semaine précédente"><svg class="i" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></button>
+            <button class="wn lab" id="w-now">Aujourd'hui</button>
+            <button class="wn" id="w-next" title="Semaine suivante" aria-label="Semaine suivante"><svg class="i" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button>
+          </div>
+          <button class="link" id="add-week2" hidden>Ajouter une semaine <svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button>
+          <button class="link" id="h-mode"></button></div>
         <div class="stack" id="weeks"></div>
       </div>
 
@@ -720,6 +837,100 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
         </section>
       </div>
     </div>
+
+    <div id="landing" hidden>
+      <section class="card dark hero fx">
+        <h2>Ton cégep,<br><span class="grad">sans surprise.</span></h2>
+        <p class="dim">Un agent installé sur ta machine lit Léa et MIO à ta place, résume ce qui compte
+          et remplit ton agenda tout seul — échéances datées, urgences en couleur, messages en une phrase.</p>
+        <div class="ctas">
+          <button class="cta" id="cta-open">Ouvrir mon agenda
+            <svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button>
+          <a class="cta ghosty" href="guide.html">Guide d'installation</a>
+        </div>
+      </section>
+
+      <div class="sect" style="padding-top:1.4rem"><h2>Comment ça marche</h2></div>
+      <div class="steps">
+        <section class="card step fx">
+          <span class="no">1</span>
+          <h4>Installe l'agent local</h4>
+          <p class="dim">Une seule commande dans le Terminal. Tes identifiants Omnivox restent sur ta
+            machine — ils ne sont jamais envoyés ailleurs, à personne.</p>
+        </section>
+        <section class="card step fx">
+          <span class="no">2</span>
+          <h4>Il collecte à chaque heure</h4>
+          <p class="dim">Léa (échéances, événements) et MIO (messages) sont relevés automatiquement.
+            Chaque nouveau MIO est résumé en une phrase par l'IA, avec l'action à en tirer.</p>
+        </section>
+        <section class="card step fx">
+          <span class="no">3</span>
+          <h4>Ton agenda se remplit</h4>
+          <p class="dim">Les échéances arrivent classées par urgence, des pastilles marquent les journées
+            chargées sur l'horaire, et tu ajoutes tes propres blocs et tâches par-dessus.</p>
+        </section>
+      </div>
+
+      <div class="sect" style="padding-top:1.4rem"><h2>Ce que tu retrouves ici</h2></div>
+      <div class="feats">
+        <section class="feat fx" style="--h:190">
+          <span class="fic"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4"/></svg></span>
+          <h4>Horaire vivant</h4>
+          <p class="dim">Tes cours sur la grille, tes blocs perso au glisser, export .ics pour Calendrier.</p>
+        </section>
+        <section class="feat fx" style="--h:344">
+          <span class="fic"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg></span>
+          <h4>Échéances triées</h4>
+          <p class="dim">L'urgence se calcule toute seule : en retard, aujourd'hui, demain, cette semaine.</p>
+        </section>
+        <section class="feat fx" style="--h:264">
+          <span class="fic"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 8.2 6 8.2-6"/></svg></span>
+          <h4>MIO résumés</h4>
+          <p class="dim">Fini les pavés : chaque message tient en une phrase, transformable en échéance d'un clic.</p>
+        </section>
+        <section class="feat fx" style="--h:150">
+          <span class="fic"><svg class="i" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"/></svg></span>
+          <h4>À faire, façon Notion</h4>
+          <p class="dim">Des lignes éditables en place, réordonnables, avec sous-tâches au Tab.</p>
+        </section>
+        <section class="feat fx" style="--h:222">
+          <span class="fic"><svg class="i" viewBox="0 0 24 24"><path d="M7 17.5a4.5 4.5 0 1 1 .8-8.93 5.5 5.5 0 0 1 10.7 1.43h.25a3.75 3.75 0 0 1 0 7.5z"/></svg></span>
+          <h4>Compte optionnel</h4>
+          <p class="dim">Un courriel + mot de passe pour retrouver tes données ailleurs. Rien d'Omnivox n'y transite.</p>
+        </section>
+        <section class="feat fx" style="--h:48">
+          <span class="fic"><svg class="i" viewBox="0 0 24 24"><rect x="4.5" y="3.5" width="15" height="17" rx="3"/><path d="M9 20.5v-3h6v3"/></svg></span>
+          <h4>Installable</h4>
+          <p class="dim">Ajoute-la comme app sur ton Mac — thème sombre et impression compris.</p>
+        </section>
+      </div>
+
+      <section class="card fx priv">
+        <svg class="i" viewBox="0 0 24 24" style="width:20px;height:20px;flex:0 0 auto"><rect x="5" y="10.5" width="14" height="10" rx="3"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>
+        <p class="dim">Tes identifiants Omnivox ne quittent <b>jamais</b> ta machine : l'agent tourne chez toi,
+          et seul le résultat (échéances, résumés) est affiché ici. Le compte d'agenda est optionnel et n'y donne accès qu'à toi.</p>
+        <button class="cta dark-cta" id="cta-open2">C'est parti</button>
+      </section>
+    </div>
+
+    <div id="onboard" hidden>
+      <section class="card fx joinbox">
+        <span class="jic"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></span>
+        <h2 id="jo-title">Crée ton compte d'agenda</h2>
+        <p class="dim jsub" id="jo-sub">Un courriel et un mot de passe, rien de plus : ils servent à retrouver
+          tes échéances et tes résumés sur tes autres appareils. Tes identifiants Omnivox n'y transitent jamais.</p>
+        <input id="jo-email" type="email" autocomplete="email" placeholder="Courriel">
+        <input id="jo-pw" type="password" autocomplete="new-password" placeholder="Mot de passe (8+ caractères)">
+        <p class="jmsg" id="jo-msg"></p>
+        <button class="cta join-cta" id="jo-go">Créer mon compte</button>
+        <div class="jalt">
+          <button class="link" id="jo-swap">J'ai déjà un compte</button>
+          <span class="grow"></span>
+          <button class="link" id="jo-skip">Continuer sans compte</button>
+        </div>
+      </section>
+    </div>
   </div>
 </div>
 
@@ -731,6 +942,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
   const KEY = "agenda.v5";
   const DOW = ["lun","mar","mer","jeu","ven","sam","dim"];
   const DL  = ["L","M","M","J","V","S","D"];
+  const DOW_FULL = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
   const MONTH = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
   const HUES = [150,190,222,264,312,344,22,48];
   const SEMESTER_START = new Date(2026, 7, 24);
@@ -785,6 +997,45 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
   const courseInfo = t => { const rows = TT.filter(e => e.t === t);
     return { hours: rows.reduce((s,e) => s + (e.h[1]-e.h[0]), 0), blocks: rows.length,
              code: rows[0]?.code || "", prof: rows[0]?.prof || "" }; };
+  /* Omnivox abrège le type de séance ; on le dit en toutes lettres, sans
+     inventer ce qu'on ne connaît pas : un sigle inconnu reste tel quel. */
+  const KIND = { TH:"Théorie", LA:"Laboratoire", AP:"Activité pratique" };
+  const kindLabel = k => KIND[k] || k || "";
+  const hm = s => s.split(":").map(Number);
+  /* Prochaine séance d'un cours. On balaie deux semaines à partir
+     d'aujourd'hui (ou de la rentrée si le semestre n'a pas commencé) et on
+     retient le premier bloc qui n'est pas déjà terminé — un cours commencé
+     mais pas fini compte comme « en cours », pas comme passé. */
+  function nextSession(t) {
+    const rows = TT.filter(e => e.t === t);
+    if (!rows.length) return null;
+    const base = now0 >= SEMESTER_START ? today0
+      : new Date(SEMESTER_START.getFullYear(), SEMESTER_START.getMonth(), SEMESTER_START.getDate());
+    for (let i = 0; i < 14; i++) {
+      const day = addDays(base, i);
+      if (!inSem(day)) continue;
+      const wd = (day.getDay()+6)%7;
+      for (const e of rows.filter(x => x.d === wd).sort((a,b) => a.h[0] - b.h[0])) {
+        const [h1,m1] = hm(e.time.split(" – ")[0]);
+        const [h2,m2] = hm(e.time.split(" – ")[1]);
+        const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h1, m1);
+        const end   = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h2, m2);
+        if (end <= now0) continue;
+        return { e, day, start, live: start <= now0 };
+      }
+    }
+    return null;
+  }
+  /* « En cours », « Aujourd'hui », « Demain », puis la date : la même échelle
+     que le compte à rebours des échéances. */
+  function sessionWhen(s) {
+    const end = s.e.time.split(" – ")[1];
+    if (s.live) return `En cours · jusqu'à ${end}`;
+    const days = Math.round((new Date(s.day.getFullYear(), s.day.getMonth(), s.day.getDate()) - today0) / 864e5);
+    const when = days === 0 ? "Aujourd'hui" : days === 1 ? "Demain"
+      : `${DOW[(s.day.getDay()+6)%7]}. ${s.day.getDate()} ${MONTH[s.day.getMonth()].slice(0,4)}`;
+    return `${when} · ${s.e.time}`;
+  }
 
   /* ── Dates ────────────────────────────────────────────────────── */
   const pad = n => String(n).padStart(2,"0");
@@ -821,6 +1072,10 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
   /* ── État ─────────────────────────────────────────────────────── */
   const seed = () => ({
     wks: [0], theme:"light", weekend:true, chart:"jour", filter:null,
+    /* wview : "une" = une semaine à la fois, qu'on fait défiler ; "pile" =
+       les semaines empilées les unes sous les autres. wcur = le décalage
+       affiché en mode « une ». */
+    wview: "une", wcur: 0,
     name:"Maverick Menard",
     blocks: {},
     todos: [
@@ -843,6 +1098,12 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
   catch { state = seed(); }
   if (!Array.isArray(state.wks) || !state.wks.length) state.wks = [0];
   if (!state.acted || typeof state.acted !== "object") state.acted = {};
+  if (state.wview !== "pile") state.wview = "une";
+  if (!Number.isInteger(state.wcur)) state.wcur = 0;
+  /* Le filtre de matière est une loupe, pas un réglage. Le retrouver actif au
+     chargement suivant, c'est rouvrir l'horaire délavé sans savoir pourquoi :
+     il repart donc à zéro à chaque ouverture. */
+  state.filter = null;
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} };
   const uid = () => "x" + Math.random().toString(36).slice(2,9);
 
@@ -904,7 +1165,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
       state.wks = state.wks.filter(o => o !== off);
       renderWeeks();
     });
-    if (state.wks.length > 1) head.append(x);
+    if (state.wview === "pile" && state.wks.length > 1) head.append(x);
 
     const grid = mk("div","grid");
     grid.style.setProperty("--cols", n);
@@ -1024,16 +1285,23 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
     document.querySelectorAll(".cell.sel").forEach(c => c.classList.remove("sel","top","mid","bot"));
     document.querySelectorAll(".selhint").forEach(n => n.remove());
   }
-  function paintSel() {
+  /* Surligner une plage d'heures, indépendamment de la sélection en cours :
+     le composeur s'en sert pour cadrer le bloc réellement ouvert — 2 h de
+     bloc, 2 h de contour — au lieu de la seule case cliquée. */
+  function markRange(d, lo, hi) {
     clearSel();
-    if (!sel) return;
-    const lo = Math.min(sel.a, sel.b), hi = Math.max(sel.a, sel.b);
     for (let h = lo; h <= hi; h++) {
-      const c = document.querySelector(`.cell[data-d="${sel.d}"][data-h="${h}"]`);
+      const c = document.querySelector(`.cell[data-d="${d}"][data-h="${h}"]`);
       if (!c) continue;
       c.classList.add("sel");
       if (lo !== hi) c.classList.add(h === lo ? "top" : h === hi ? "bot" : "mid");
     }
+  }
+  function paintSel() {
+    clearSel();
+    if (!sel) return;
+    const lo = Math.min(sel.a, sel.b), hi = Math.max(sel.a, sel.b);
+    markRange(sel.d, lo, hi);
     const first = document.querySelector(`.cell[data-d="${sel.d}"][data-h="${lo}"]`);
     if (first && lo !== hi) {
       const joined = dayBlocks(sel.d).filter(b => b.from < hi+1 && b.to > lo).length;
@@ -1054,7 +1322,10 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
     sel = null;
     const cell = document.querySelector(`.cell[data-d="${d}"][data-h="${lo}"]`);
     const covered = dayBlocks(d).filter(b => b.from < hi+1 && b.to > lo);
-    if (single && onBlock && covered[0]) { openBlock(cell, d, covered[0], false); return; }
+    if (single && onBlock && covered[0]) {
+      markRange(d, covered[0].from, covered[0].to - 1);
+      openBlock(cell, d, covered[0], false); return;
+    }
     const from = covered.length ? Math.min(lo, ...covered.map(b => b.from)) : lo;
     const to   = covered.length ? Math.max(hi+1, ...covered.map(b => b.to)) : hi+1;
     openBlock(cell, d, {
@@ -1063,11 +1334,14 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
       h: covered.length ? covered[0].h : HUES[0],
       merge: covered.map(b => b.id),
     }, !covered.length);
+    markRange(d, from, to - 1);
   });
 
   /* ── Composeur ────────────────────────────────────────────────── */
   let pop = null, popAnchor = null, popSide = false;
-  const closePop = () => { pop?.remove(); pop = null; popAnchor = null; clearSel(); sel = null; };
+  const restBars = () => document.querySelectorAll('.bar[aria-expanded="true"]')
+    .forEach(b => b.removeAttribute("aria-expanded"));
+  const closePop = () => { pop?.remove(); pop = null; popAnchor = null; restBars(); clearSel(); sel = null; };
 
   /* position:fixed : sans repositionnement, le composeur reste collé à l'écran
      pendant que sa case défile — il flotte orphelin par-dessus le reste. On le
@@ -1082,6 +1356,8 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
   }, { capture: true, passive: true });
 
   function place(node, anchorEl, side) {
+    restBars();
+    if (anchorEl.classList?.contains("bar")) anchorEl.setAttribute("aria-expanded","true");
     popAnchor = anchorEl; popSide = !!side;
     const r = anchorEl.getBoundingClientRect();
     node.style.visibility = "hidden";
@@ -1129,7 +1405,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
         const ids = new Set(blk.merge?.length ? blk.merge : [blk.id]);
         state.blocks[d] = dayBlocks(d).filter(b => !ids.has(b.id));
         if (!state.blocks[d].length) delete state.blocks[d];
-        closePop(); renderWeeks();
+        closePop(); renderWeeks(); renderMios(); // une puce d'agent peut repasser à « + »
       });
       acts.append(del);
     }
@@ -1160,7 +1436,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
     pop = box; place(box, cell, true); input.focus(); input.select();
   }
   document.addEventListener("pointerdown", ev => {
-    if (pop && !pop.contains(ev.target) && !ev.target.closest(".cell")) closePop();
+    if (pop && !pop.contains(ev.target) && !ev.target.closest(".cell,.bar")) closePop();
   });
 
   function openCourse(cell, e) {
@@ -1190,11 +1466,137 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
     pop = box; place(box, cell, true);
   }
 
-  function renderWeeks() {
+  /* ── Fiche d'une bande du graphique ───────────────────────────── */
+  /* Une bande sans réponse au clic n'est qu'un dessin : celle-ci dit de quel
+     cours il s'agit, quand il revient, où et avec qui. */
+  const popRow = (k, v) => {
+    const r = mk("div"); r.style.cssText = "display:flex;gap:.6rem;font-size:.82rem;align-items:baseline";
+    const a = mk("span","dim", k); a.style.cssText = "width:6.2rem;flex:0 0 auto";
+    const b = mk("span", null, v); b.style.cssText = "min-width:0";
+    r.append(a, b); return r;
+  };
+  const popList = () => { const d = mk("div");
+    d.style.cssText = "margin-top:.7rem;display:flex;flex-direction:column;gap:.35rem"; return d; };
+
+  function openBarCourse(anchor, t) {
+    pop?.remove();
+    const info = courseInfo(t), nx = nextSession(t);
+    /* Le local change d'un bloc à l'autre (théorie en classe, labo ailleurs) :
+       on montre celui de la séance qui s'en vient, jamais celui d'un autre
+       bloc. Le professeur et le sigle, eux, tiennent au cours entier — d'où
+       le repli, l'horaire lu sur photo laissant des cases vides. */
+    const src = nx?.e || TT.find(e => e.t === t) || {};
+    const firstOf = key => (TT.find(e => e.t === t && e[key]) || {})[key] || "";
+    const box = mk("div","pop wide fx");
+    const h = mk("h4", null, t);
+    const pip = mk("i");
+    pip.style.cssText = `display:inline-block;width:.5rem;height:.5rem;border-radius:50%;margin-right:.45rem;vertical-align:middle;background:hsl(${hueOf(t)} 62% 52%)`;
+    h.prepend(pip);
+    box.append(h);
+    box.append(mk("p","when", [firstOf("code"), `${info.hours} h par semaine`,
+      `${info.blocks} bloc${info.blocks>1?"s":""}`].filter(Boolean).join(" · ")));
+    const list = popList();
+    for (const [k,v] of [
+      ["Prochain cours", nx ? sessionWhen(nx) : "Aucune séance à venir"],
+      ["Type", nx ? kindLabel(src.k) : ""],
+      ["Local", src.room || "Non inscrit"],
+      ["Professeur", src.prof || firstOf("prof") || "Non inscrit"],
+    ]) if (v) list.append(popRow(k, v));
+    box.append(list);
+    const acts = mk("div","acts"); acts.append(mk("span","grow"));
+    const close = mk("button","btn quiet","Fermer"); close.addEventListener("click", closePop);
+    /* « Voir à l'horaire » amène à la grille, sans rien y éteindre : filtrer
+       reste un geste explicite, depuis la matière ou la fiche du cours. */
+    const go = mk("button","btn solid","Voir à l'horaire");
+    go.addEventListener("click", () => { closePop(); goto("horaire"); });
+    acts.append(close, go); box.append(acts);
+    pop = box; place(box, anchor);
+  }
+
+  function openBarDay(anchor, d) {
+    pop?.remove();
+    const rows = TT.filter(e => e.d === d).sort((a,b) => a.h[0] - b.h[0]);
+    const hrs = rows.reduce((s,e) => s + (e.h[1]-e.h[0]), 0);
+    const box = mk("div","pop wide fx");
+    box.append(mk("h4", null, DOW_FULL[d]));
+    box.append(mk("p","when", rows.length
+      ? `${hrs} h · ${rows.length} bloc${rows.length>1?"s":""}`
+      : "Aucun cours ce jour-là"));
+    if (rows.length) {
+      const list = popList();
+      for (const e of rows) {
+        const r = mk("div"); r.style.cssText = "display:flex;gap:.55rem;font-size:.82rem;align-items:baseline";
+        const tm = mk("span","mono dim", e.time.split(" – ")[0]);
+        tm.style.cssText = "flex:0 0 auto;font-size:.7rem";
+        const i = mk("i");
+        i.style.cssText = `flex:0 0 auto;width:.5rem;height:.5rem;border-radius:50%;background:hsl(${hueOf(e.t)} 62% 52%)`;
+        const nm = mk("span", null, e.t); nm.style.cssText = "min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap";
+        const rm = mk("span","dim", e.room || "—");
+        rm.style.cssText = "margin-left:auto;flex:0 0 auto;font-size:.74rem";
+        r.append(tm, i, nm, rm); list.append(r);
+      }
+      box.append(list);
+    }
+    const acts = mk("div","acts"); acts.append(mk("span","grow"));
+    const close = mk("button","btn quiet","Fermer"); close.addEventListener("click", closePop);
+    const go = mk("button","btn solid","Voir à l'horaire");
+    go.addEventListener("click", () => { closePop(); goto("horaire"); });
+    acts.append(close, go); box.append(acts);
+    pop = box; place(box, anchor);
+  }
+
+  /* Les semaines à l'écran : une seule qu'on fait défiler, ou la pile. Tout ce
+     qui parcourt l'horaire (export .ics, ajout de bloc) passe par ici. */
+  const shownWeeks = () => state.wview === "pile" ? state.wks : [state.wcur];
+
+  /* dir : -1 vers le passé, +1 vers l'avenir, 0 (ou rien) sans glissement. */
+  function renderWeeks(dir) {
     host.textContent = "";
-    for (const off of state.wks) host.append(buildWeek(off));
-    el("h-sub").textContent = `${state.wks.length} semaine${state.wks.length>1?"s":""} affichée${state.wks.length>1?"s":""}`;
+    for (const off of shownWeeks()) {
+      const card = buildWeek(off);
+      if (state.wview !== "pile" && dir) card.classList.add(dir > 0 ? "wr" : "wl");
+      host.append(card);
+    }
+    syncWeekBar();
     placeNow(); save();
+  }
+
+  /* « Cette semaine », « La semaine prochaine », puis le compte : de quoi
+     savoir où l'on est sans relire les dates de l'en-tête. */
+  const weekLabel = off => off === 0 ? "Cette semaine"
+    : off === 1 ? "La semaine prochaine" : off === -1 ? "La semaine dernière"
+    : off > 0 ? `Dans ${off} semaines` : `Il y a ${-off} semaines`;
+
+  function syncWeekBar() {
+    const one = state.wview !== "pile";
+    el("wnav").hidden = !one;
+    el("add-week2").hidden = one;
+    el("w-now").disabled = state.wcur === 0;
+    el("h-mode").textContent = one ? "Empiler les semaines" : "Une semaine à la fois";
+    el("h-sub").textContent = one ? weekLabel(state.wcur)
+      : `${state.wks.length} semaine${state.wks.length>1?"s":""} affichée${state.wks.length>1?"s":""}`;
+    const pill = el("add-week");
+    pill.innerHTML = one
+      ? `<svg class="i" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg> Semaine suivante`
+      : `<svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Semaine`;
+    const chip = el("h-unfilter");
+    chip.hidden = !state.filter;
+    if (state.filter) {
+      chip.querySelector("i").style.background = `hsl(${hueOf(state.filter)} 62% 52%)`;
+      chip.querySelector("b").textContent = state.filter;
+      chip.title = "Afficher de nouveau tous les cours";
+    }
+  }
+
+  const goWeek = off => { const dir = Math.sign(off - state.wcur); state.wcur = off; renderWeeks(dir); };
+  const stepWeek = n => goWeek(state.wcur + n);
+  function setWView(v) {
+    if (state.wview === v) return;
+    state.wview = v;
+    // On garde sous les yeux la semaine qu'on regardait déjà.
+    if (v === "pile") { if (!state.wks.includes(state.wcur)) state.wks = [...state.wks, state.wcur].sort((a,b) => a-b); }
+    else if (!state.wks.includes(state.wcur)) state.wcur = state.wks.includes(0) ? 0 : state.wks[0];
+    renderWeeks(); save();
   }
 
   function placeNow() {
@@ -1285,7 +1687,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
       kill.addEventListener("click", () => {
         state.todos.splice(i,1);
         if (!state.todos.length) state.todos.push({ id:uid(), t:"", done:false, lvl:0 });
-        renderTodos(); renderRings();
+        renderTodos(); renderRings(); renderMios(); // une puce d'agent peut repasser à « + »
       });
       li.append(grab, bx, tx, kill);
       ul.append(li);
@@ -1329,6 +1731,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
       kill.addEventListener("click", () => {
         state.deadlines = state.deadlines.filter(x => x.id !== d.id);
         renderDeadlines(); renderWeeks(); renderOverview(); renderRings();
+        renderMios(); // une puce d'agent peut repasser à « + »
       });
       li.append(bar, bd, bx, kill);
       box.append(li);
@@ -1415,8 +1818,18 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
       if (blockConflict(a)) return false;
       const from = Math.max(START_HOUR, a.from), to = Math.min(END_HOUR + 1, a.to);
       const list = dayBlocks(a.date).slice();
-      list.push({ id:a.id, from, to, t:a.t, h:hueOf(byCode.get(a.code) || a.course || a.t) });
+      list.push({ id:a.id, from, to, t:a.t,
+        h:hueOf(courseOf({ code:a.code || "", course:a.course || "" }) || a.t) });
       state.blocks[a.date] = list.sort((x,y) => x.from - y.from);
+      // Un bloc à venir posé hors des semaines affichées serait invisible : on
+      // ouvre sa semaine (la grille accepte les décalages négatifs).
+      const d0 = new Date(a.date + "T00:00:00");
+      if (d0 >= today0) {
+        const off = Math.round((monday(d0) - anchor) / (7 * 864e5));
+        if (state.wview === "pile") {
+          if (!state.wks.includes(off)) state.wks = [...state.wks, off].sort((x,y) => x-y);
+        } else state.wcur = off;
+      }
       return true;
     }
     return false;
@@ -1548,6 +1961,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
     return Array.from({length: cols()}, (_,d) => ({ label:DOW[d], value:byDay.get(d)?.size ?? 0, full:DOW[d], day:d }));
   }
   function renderChart() {
+    if (popAnchor?.classList?.contains("bar")) closePop();
     const data = chartData(), byCourse = state.chart === "cours";
     el("chart-title").textContent = byCourse ? "Charge par cours" : "Cette semaine";
     el("chart-flip").firstChild.textContent = byCourse ? "Par jour " : "Par cours ";
@@ -1571,12 +1985,20 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
     if (!byCourse && data[todayIdx]?.value > 0) hi = todayIdx;
     const bars = el("bars"); bars.textContent = "";
     data.forEach((x,i) => {
-      const b = mk("div","bar" + (i === hi ? " on" : ""));
-      b.title = `${x.full} — ${x.value} h`;
+      const b = mk("button","bar" + (i === hi ? " on" : ""));
+      b.type = "button";
+      b.title = `${x.full} — ${x.value} h · voir les détails`;
+      b.setAttribute("aria-label", `${x.full}, ${x.value} heures — voir les détails`);
       const col = mk("div","col");
       col.style.height = `calc((100% - 1.6rem) * ${top ? x.value/top : 0})`;
       if (byCourse) col.style.background = `hsl(${x.hue} 62% ${i === hi ? "48%" : "72%"})`;
       if (i === hi && x.value > 0) col.append(mk("div","bubble", `${x.value} h`));
+      /* Deuxième clic sur la même bande : on referme, plutôt que de rejouer
+         l'ouverture d'une fiche déjà à l'écran. */
+      b.addEventListener("click", () => {
+        if (pop && popAnchor === b) { closePop(); return; }
+        byCourse ? openBarCourse(b, x.full) : openBarDay(b, x.day);
+      });
       b.append(col); bars.append(b);
     });
     const days = el("days"); days.textContent = "";
@@ -1649,6 +2071,9 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
   const flipTheme = () => { state.theme = state.theme === "dark" ? "light" : "dark"; applyTheme(); };
   const addWeek = () => { state.wks.push(Math.max(...state.wks) + 1); renderWeeks();
     host.lastElementChild?.scrollIntoView({ behavior:"smooth", block:"start" }); };
+  /* Le bouton de l'en-tête suit le mode : il ajoute une semaine à la pile, ou
+     avance d'une semaine quand on les fait défiler. */
+  const weekPill = () => state.wview === "pile" ? addWeek() : (stepWeek(1), goto("horaire"));
   /* Toute navigation vers une section referme d'abord la vue profil. */
   const goto = id => { showProfile(false); el(id)?.scrollIntoView({ behavior:"smooth", block:"start" }); };
 
@@ -1660,8 +2085,47 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
     }
     t === "top" ? (showProfile(false), scrollTo({ top:0, behavior:"smooth" })) : goto(t);
   }));
-  el("add-week").addEventListener("click", addWeek);
+  el("add-week").addEventListener("click", weekPill);
   el("add-week2").addEventListener("click", addWeek);
+  el("w-prev").addEventListener("click", () => stepWeek(-1));
+  el("w-next").addEventListener("click", () => stepWeek(1));
+  el("w-now").addEventListener("click", () => goWeek(0));
+  el("h-mode").addEventListener("click", () => setWView(state.wview === "pile" ? "une" : "pile"));
+  el("h-unfilter").addEventListener("click", () => {
+    state.filter = null; renderSubjects(); renderWeeks(); renderCourses(); save();
+  });
+
+  /* Flèches ← → : on ne feuillette que si l'horaire est bien à l'écran et
+     qu'on n'est pas en train d'écrire ailleurs. */
+  addEventListener("keydown", ev => {
+    if (state.wview === "pile" || pop) return;
+    if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
+    if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    const t = ev.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    const r = el("horaire").getBoundingClientRect();
+    if (r.bottom < 90 || r.top > innerHeight - 90) return;
+    ev.preventDefault(); stepWeek(ev.key === "ArrowRight" ? 1 : -1);
+  });
+
+  /* Balayage horizontal du trackpad. On laisse passer le geste quand la
+     grille déborde vraiment (petit écran) : c'est alors elle qu'on défile. */
+  let swAcc = 0, swLast = 0, swLock = 0;
+  host.addEventListener("wheel", ev => {
+    if (state.wview === "pile") return;
+    if (Math.abs(ev.deltaX) <= Math.abs(ev.deltaY)) return;
+    const wrap = ev.target.closest?.(".gwrap");
+    if (wrap && wrap.scrollWidth > wrap.clientWidth + 2) return;
+    ev.preventDefault();
+    const now = ev.timeStamp;
+    if (now - swLast > 220) swAcc = 0;
+    swLast = now;
+    if (now < swLock) return;
+    swAcc += ev.deltaX;
+    if (Math.abs(swAcc) < 55) return;
+    stepWeek(swAcc > 0 ? 1 : -1);
+    swAcc = 0; swLock = now + 340;
+  }, { passive:false });
   el("go-alerts").addEventListener("click", () => goto("echeances"));
   el("go-theme").addEventListener("click", flipTheme);
   el("t-theme").addEventListener("click", flipTheme);
@@ -1673,7 +2137,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
   el("dl-ics").addEventListener("click", async () => {
     const lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Agenda Cegep//FR"];
     const st = d => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
-    for (const off of state.wks) {
+    for (const off of shownWeeks()) {
       const start = addDays(anchor, off*7);
       for (let i = 0; i < 7; i++) {
         const day = addDays(start, i), dI = iso(day);
@@ -1793,7 +2257,15 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
     autoApply();
     refreshAll();
   }
-  const applyCloud = row => ingest(row?.payload);
+  /* sbFetchSnapshot rend une liste [{kind, payload}] : l'export nourrit
+     échéances et MIO, l'horaire remplit la grille. */
+  function applyCloud(rows) {
+    if (!Array.isArray(rows)) return;
+    const of = k => rows.find(r => r.kind === k)?.payload;
+    const h = of("horaire");
+    if (h?.tt) setTimetable(h.tt, "nuage");
+    ingest(of("export"));
+  }
 
   function renderAccount() {
     const s0 = sbSession();
@@ -1804,7 +2276,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
   function openAccount(anchorEl) {
     pop?.remove();
     const s0 = sbSession();
-    const box = mk("div","pop fx");
+    const box = mk("div","pop fx wide");
     if (s0) {
       box.append(mk("h4", null, "Compte"));
       box.append(mk("p","when", s0.email || ""));
@@ -1851,10 +2323,17 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
   /* ── Profil ──────────────────────────────────────────────────────
      L'avatar ouvre la vue profil (infos, mot de passe du compte
      d'agenda, photo d'horaire) ; le logo « Agenda » ramène à l'accueil. */
+  /* Trois vues exclusives : le tableau de bord (l'app), le profil, et la
+     page d'accueil qui explique le fonctionnement. L'en-tête « Salut » ne
+     vaut que dans l'app : la landing se présente seule. */
+  function showView(name) {
+    for (const v of ["board","profil","landing","onboard"]) el(v).hidden = v !== name;
+    el("apphead").hidden = name === "landing" || name === "onboard";
+    if (name !== "board") scrollTo({ top:0, behavior:"smooth" });
+  }
   function showProfile(on) {
-    el("profil").hidden = !on;
-    el("board").hidden = on;
-    if (on) { refreshProfile(); scrollTo({ top:0, behavior:"smooth" }); }
+    if (on) { showView("profil"); refreshProfile(); }
+    else if (el("board").hidden) showView("board");
   }
   const initials = n => (n || "").trim().split(/\s+/).map(w => w[0]).slice(0,2).join("").toUpperCase() || "?";
   function renderIdentity() {
@@ -1878,10 +2357,82 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
     showProfile(false); scrollTo({ top:0, behavior:"smooth" });
   });
   el("go-home").addEventListener("click", () => {
-    showProfile(false);
+    showView("landing");
+    document.querySelectorAll(".navi[data-go]").forEach(x => x.classList.remove("on"));
+  });
+  /* ── Premier passage ─────────────────────────────────────────────
+     Un témoin (cookie) retient que cet appareil a déjà franchi l'accueil.
+     Absent : on atterrit sur la page d'accueil, puis sur la création de
+     compte. Présent : le tableau de bord s'ouvre directement. Le cookie
+     suffit — la session, elle, reste dans localStorage. */
+  const VU = "agenda_vu";
+  const cookie = n => document.cookie.split("; ").find(c => c.startsWith(n + "="))?.slice(n.length + 1) || "";
+  const markVu = () => {
+    document.cookie = `${VU}=1;path=/;max-age=${400 * 86400};samesite=lax`
+      + (location.protocol === "https:" ? ";secure" : "");
+  };
+  const firstVisit = () => !cookie(VU);
+
+  const enterBoard = () => {
+    showView("board");
     document.querySelectorAll(".navi[data-go]").forEach(x => x.classList.toggle("on", x.dataset.go === "top"));
     scrollTo({ top:0, behavior:"smooth" });
+  };
+  /* Depuis l'accueil : un appareil neuf et sans compte passe d'abord par
+     l'inscription ; tous les autres entrent directement. */
+  const openApp = () => {
+    if (firstVisit() && !sbSession()) { showJoin("signup"); return; }
+    markVu(); enterBoard();
+  };
+  el("cta-open").addEventListener("click", openApp);
+  el("cta-open2").addEventListener("click", openApp);
+
+  let joMode = "signup";
+  function showJoin(mode) {
+    joMode = mode;
+    const up = joMode === "signup";
+    el("jo-title").textContent = up ? "Crée ton compte d'agenda" : "Connecte-toi";
+    el("jo-sub").textContent = up
+      ? "Un courriel et un mot de passe, rien de plus : ils servent à retrouver tes échéances et tes résumés sur tes autres appareils. Tes identifiants Omnivox n'y transitent jamais."
+      : "Le compte d'agenda, pas Omnivox. Tes échéances et tes résumés reviennent tels que l'agent les a laissés.";
+    el("jo-go").textContent = up ? "Créer mon compte" : "Se connecter";
+    el("jo-swap").textContent = up ? "J'ai déjà un compte" : "Créer un compte plutôt";
+    el("jo-pw").autocomplete = up ? "new-password" : "current-password";
+    joSay("");
+    showView("onboard");
+    el("jo-email").focus();
+  }
+  function joSay(txt, bad) {
+    const m = el("jo-msg"); m.textContent = txt; m.classList.toggle("bad", !!bad);
+  }
+  async function joSubmit() {
+    const email = el("jo-email").value.trim(), pw = el("jo-pw").value;
+    if (!email) { joSay("Il manque le courriel.", true); return; }
+    if (pw.length < 8) { joSay("Mot de passe : au moins 8 caractères.", true); return; }
+    el("jo-go").disabled = true; joSay("…");
+    try {
+      const path = joMode === "signup" ? "signup" : "token?grant_type=password";
+      const d = await sbAuth(path, { email, password: pw });
+      if (d.access_token) {
+        sbKeep(d); renderAccount(); markVu(); enterBoard();
+        applyCloud(await sbFetchSnapshot());
+      } else {
+        joSay("Compte créé : confirme le lien reçu par courriel, puis connecte-toi ici.");
+      }
+    } catch (e2) { joSay(String(e2.message || e2), true); }
+    finally { el("jo-go").disabled = false; }
+  }
+  el("jo-go").addEventListener("click", joSubmit);
+  el("jo-swap").addEventListener("click", () => showJoin(joMode === "signup" ? "signin" : "signup"));
+  el("jo-skip").addEventListener("click", () => { markVu(); enterBoard(); });
+  el("onboard").addEventListener("keydown", ev => {
+    if (ev.key === "Enter" && ev.target.tagName === "INPUT") joSubmit();
   });
+
+  /* Vue de départ. Un compte déjà connecté vaut témoin : l'appareil n'est
+     pas neuf, même si le cookie a été effacé. */
+  if (firstVisit() && !sbSession()) showView("landing");
+  else { markVu(); enterBoard(); }
   el("p-name").addEventListener("input", () => { state.name = el("p-name").value; renderIdentity(); save(); });
   el("p-account").addEventListener("click", ev => openAccount(ev.currentTarget));
 
@@ -1975,6 +2526,6 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
   if (location.protocol.startsWith("http")) fetch("./data.json", { cache: "no-store" })
     .then(r => (r.ok ? r.json() : null))
     .then(ingest)
-    .catch(() => {});
+    .catch(err => console.warn("data.json indisponible ou illisible :", err));
 })();
 </script>

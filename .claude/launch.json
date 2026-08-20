@@ -12,6 +12,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["serve", "-l", "4183", "public"],
       "port": 4183
+    },
+    {
+      "name": "agenda-static-4",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "4191", "public"],
+      "port": 4191
     }
   ]
 }
