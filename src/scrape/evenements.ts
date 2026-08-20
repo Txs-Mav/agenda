@@ -1,7 +1,7 @@
 import type { Page } from "playwright";
 import { urls } from "../config.js";
 import { log } from "../log.js";
-import type { Deadline } from "../store.js";
+import { fileStore, type Deadline } from "../store.js";
 
 /**
  * Les évènements de l'accueil Omnivox sont des cartes `.carte-evenement`. La
@@ -17,9 +17,8 @@ const strip = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerC
 
 export type RawCard = { lines: string[] };
 
-export async function readEventCards(page: Page): Promise<RawCard[]> {
-  await page.goto(urls.intranet, { waitUntil: "domcontentloaded" });
-  await page.waitForLoadState("networkidle").catch(() => {});
+/** Lit les cartes d'évènement de la page COURANTE, sans naviguer. */
+async function readCardsHere(page: Page): Promise<RawCard[]> {
   return page.evaluate(() => {
     const clean = (el: HTMLElement) =>
       (el.innerText || "").split("\n").map((l) => l.trim()).filter(Boolean);
@@ -40,6 +39,52 @@ export async function readEventCards(page: Page): Promise<RawCard[]> {
     }
     return out.map((el) => ({ lines: clean(el) }));
   });
+}
+
+export async function readEventCards(page: Page): Promise<RawCard[]> {
+  await page.goto(urls.intranet, { waitUntil: "domcontentloaded" });
+  await page.waitForLoadState("networkidle").catch(() => {});
+  return readCardsHere(page);
+}
+
+/**
+ * Couverture : l'accueil pourrait n'être qu'une fenêtre glissante sur les
+ * évènements. La « Vue par mois » (vue dans la capture de l'utilisateur) est
+ * candidate à la liste complète. Meilleur effort : si le lien existe, on lit
+ * aussi cette page ; si sa structure diffère, on la consigne dans
+ * data/couverture.json pour ajuster le parseur, sans rien casser.
+ */
+async function readMonthViewCards(page: Page): Promise<RawCard[]> {
+  try {
+    const href = await page.evaluate(() => {
+      const a = [...document.querySelectorAll("a")]
+        .find((x) => /vue par mois|voir tout/i.test((x.textContent || "").trim()));
+      return a?.getAttribute("href") || null;
+    });
+    if (!href) {
+      log.info("« Vue par mois » introuvable sur l'accueil — couverture non vérifiée.");
+      return [];
+    }
+    await page.goto(new URL(href, urls.intranet).href, { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("networkidle").catch(() => {});
+    const cards = await readCardsHere(page);
+    if (!cards.length) {
+      // Page atteinte mais aucune carte reconnue : garder une trace structurelle
+      // (chemins et comptes seulement, aucun contenu) pour ajuster le parseur.
+      const dump = await page.evaluate(() => ({
+        path: location.pathname,
+        tables: [...document.querySelectorAll("table")].map((t) => t.querySelectorAll("tr").length),
+        classes: [...new Set([...document.querySelectorAll("[class*='vent'],[class*='cours'],[class*='carte']")]
+          .map((e) => (e.className || "").toString().slice(0, 60)))].slice(0, 12),
+      }));
+      fileStore.write("couverture", { relevé: new Date().toISOString(), ...dump });
+      log.warn("« Vue par mois » atteinte mais structure inconnue — relevé dans data/couverture.json.");
+    }
+    return cards;
+  } catch (err) {
+    log.warn(`« Vue par mois » illisible : ${err instanceof Error ? err.message : err}`);
+    return [];
+  }
 }
 
 /** Une carte → une échéance, ou null si la structure ne s'y prête pas. */
@@ -84,14 +129,28 @@ export function parseCard(lines: string[], today = new Date()): Deadline | null 
 export async function collectEvenements(page: Page): Promise<Deadline[]> {
   log.step("Collecte des évènements (accueil Omnivox)");
   const cards = await readEventCards(page);
-  log.info(`${cards.length} cartes repérées`);
+  log.info(`${cards.length} cartes repérées sur l'accueil`);
+
   const out: Deadline[] = [];
   const seen = new Set<string>();
-  for (const c of cards) {
-    const d = parseCard(c.lines);
-    if (d && !seen.has(d.id)) { seen.add(d.id); out.push(d); }
-  }
-  log.info(`${out.length} échéances exploitables`);
+  const absorb = (liste: RawCard[]) => {
+    let n = 0;
+    for (const c of liste) {
+      const d = parseCard(c.lines);
+      if (d && !seen.has(d.id)) { seen.add(d.id); out.push(d); n++; }
+    }
+    return n;
+  };
+  const nAccueil = absorb(cards);
+
+  const moisCards = await readMonthViewCards(page);
+  const nMois = absorb(moisCards);
+  if (moisCards.length)
+    log.info(`couverture : ${nAccueil} échéances via l'accueil, +${nMois} de plus via « Vue par mois »`);
+  if (nMois > 0)
+    log.warn(`l'accueil ne montrait PAS tout : ${nMois} échéance(s) supplémentaire(s) trouvée(s).`);
+
+  log.info(`${out.length} échéances exploitables au total`);
   if (cards.length && !out.length)
     log.warn("Des cartes ont été vues mais aucune n'a pu être lue — le gabarit a changé.");
   return out;

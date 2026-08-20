@@ -86,7 +86,13 @@ export function persist(mios: Mio[], deadlines: Deadline[]): void {
   // Les MIO n'ont aucun champ modifié par l'utilisateur : le frais remplace
   // tout — sinon l'ancien enregistrement écraserait résumé et actions neufs.
   const nextM = mios;
-  const nextD = merge(prevD, deadlines, (d) => d.src === "manuel" || d.done);
+  // Garde-fou : l'accueil peut être une fenêtre glissante — une échéance
+  // FUTURE qui sort du carrousel n'est pas annulée pour autant. On la garde
+  // jusqu'à sa date. (Revers assumé : un évènement réellement supprimé par le
+  // prof persiste jusqu'à son échéance ; on préfère un faux rappel à un
+  // examen silencieusement disparu.)
+  const aujourdHui = new Date().toISOString().slice(0, 10);
+  const nextD = merge(prevD, deadlines, (d) => d.src === "manuel" || d.done || d.date >= aujourdHui);
   fileStore.write("mios", nextM);
   fileStore.write("deadlines", nextD);
   const payload = { lastScrape: new Date().toISOString(), mios: nextM, deadlines: nextD };

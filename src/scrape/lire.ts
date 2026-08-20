@@ -8,31 +8,43 @@ import { fileStore, type Mio } from "../store.js";
  * qu'un aperçu tronqué, inutilisable pour extraire une date d'examen.
  *
  * Garde-fous :
- *  - cache par identifiant (mio-bodies.json) : un message n'est JAMAIS rouvert,
- *    même quand la lecture a échoué (on ne martèle pas Omnivox à chaque heure) ;
+ *  - cache par identifiant (mio-bodies.json) : un corps LU n'est jamais rouvert ;
+ *  - un corps MANQUÉ est retenté aux passages suivants, ESSAIS_MAX fois en tout
+ *    (compteur mio-bodies-tries.json), puis on renonce — l'agent retombe sur
+ *    l'aperçu, et son analyse est refaite si le corps arrive plus tard ;
  *  - au plus LIMITE ouvertures par collecte ;
- *  - toute erreur dégrade en corps vide : l'agent retombe sur l'aperçu.
+ *  - toute erreur dégrade en corps vide, jamais en échec de collecte.
  */
 const LIMITE = 8;
 const MAX_LEN = 6000;
+const ESSAIS_MAX = 3;
 
 export async function fetchBodies(page: Page, mios: Mio[]): Promise<Record<string, string>> {
   const cache = fileStore.read<Record<string, string>>("mio-bodies", {});
-  const nouveaux = mios.filter((m) => cache[m.id] === undefined).slice(0, LIMITE);
+  const essais = fileStore.read<Record<string, number>>("mio-bodies-tries", {});
+  const nouveaux = mios
+    .filter((m) => !cache[m.id] && (essais[m.id] ?? 0) < ESSAIS_MAX)
+    .slice(0, LIMITE);
   if (!nouveaux.length) return cache;
 
   log.step(`Ouverture de ${nouveaux.length} MIO pour lire le corps complet`);
   for (const m of nouveaux) {
+    essais[m.id] = (essais[m.id] ?? 0) + 1;
     try {
       cache[m.id] = await readOne(page, m);
-      log.info(cache[m.id] ? `corps lu (${cache[m.id]!.length} car.) — ${m.subject.slice(0, 40)}…`
-                           : `corps introuvable — ${m.subject.slice(0, 40)}…`);
+      if (cache[m.id]) {
+        delete essais[m.id];   // lu : plus rien à compter
+        log.info(`corps lu (${cache[m.id]!.length} car.) — ${m.subject.slice(0, 40)}…`);
+      } else {
+        log.info(`corps introuvable (essai ${essais[m.id]}/${ESSAIS_MAX}) — ${m.subject.slice(0, 40)}…`);
+      }
     } catch (err) {
       cache[m.id] = "";
-      log.warn(`lecture impossible d'un MIO : ${err instanceof Error ? err.message : err}`);
+      log.warn(`lecture impossible (essai ${essais[m.id]}/${ESSAIS_MAX}) : ${err instanceof Error ? err.message : err}`);
     }
   }
   fileStore.write("mio-bodies", cache);
+  fileStore.write("mio-bodies-tries", essais);
   return cache;
 }
 
