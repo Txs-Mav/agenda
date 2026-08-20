@@ -6,14 +6,15 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 
 const src = readFileSync("agenda.html", "utf8");
-// Le corps commence au premier conteneur de mise en page ; tout ce qui précède
-// (title, meta, style) part dans le <head>.
-const MARK = '<div class="frame">';
-const at = src.indexOf(MARK);
-if (at < 0) throw new Error(`Marqueur ${MARK} introuvable dans agenda.html`);
+// La frontière head/body est la fin du bloc <style> : title, meta et styles
+// partent dans le <head>, le reste dans le <body>. Insensible au renommage
+// des conteneurs de mise en page.
+const END = "</style>";
+const at = src.lastIndexOf(END);
+if (at < 0) throw new Error("Aucun bloc <style> dans agenda.html");
 
-const head = src.slice(0, at).trim();
-const body = src.slice(at).trim();
+const head = src.slice(0, at + END.length).trim();
+const body = src.slice(at + END.length).trim();
 
 const page = `<!doctype html>
 <html lang="fr">
