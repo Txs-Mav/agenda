@@ -1,0 +1,27 @@
+# Quand ce fichier existe, la CLI Vercel l'utilise À LA PLACE du .gitignore :
+# tout ce qui est sensible doit être répété ici.
+
+# Secrets et sessions — jamais dans un déploiement
+.env
+.env.*
+*storage-state*.json
+data/
+runs/
+screenshots/
+*.har
+trace.zip
+playwright/
+
+# Données perso scrapées : le site est public, ces fichiers ne doivent JAMAIS
+# être servis en clair. Chaque compte lit les siennes via Supabase (RLS).
+public/data.json
+public/horaire.json
+
+# Inutile au build (build.mjs ne lit que agenda.html)
+node_modules/
+src/
+tests/
+capture.ts
+horaire.scrape.plist
+apercu-agenda.png
+.gstack/
