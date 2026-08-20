@@ -9,11 +9,18 @@ import { fileStore } from "../store.js";
 
 /**
  * Lit une capture d'écran ou une photo de l'horaire Omnivox et en extrait la
- * grille de cours. Une fois par session, précision avant tout : claude-opus-5
- * (une seule image, quelques cents). La colonne des heures DOIT être visible —
- * sans elle, on refuse plutôt que de deviner.
+ * grille de cours. La colonne des heures DOIT être visible — sans elle, on
+ * refuse plutôt que de deviner.
+ *
+ * POURQUOI claude-opus-5 : testé le 2026-08-20 sur la même capture avec le
+ * même prompt et le même schéma — opus : 18/18 blocs exacts ;
+ * claude-sonnet-5 ET claude-haiku-4-5 : 12/18 blocs déplacés (tout le lundi
+ * glissé au mardi, cours de 50 min étirés à 2 h), avec un air parfaitement
+ * sûr d'eux. Lire une grille dense est une capacité de perception, pas de
+ * prompt. L'écart de coût est de ~3 ¢ une fois par session : un cours à la
+ * mauvaise heure coûte infiniment plus. HORAIRE_MODEL permet de retester.
  */
-const MODEL = "claude-opus-5";
+const MODEL = process.env.HORAIRE_MODEL || "claude-opus-5";
 
 type Bloc = {
   jour: number; debut: string; fin: string; titre: string;
