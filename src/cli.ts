@@ -2,34 +2,50 @@
  * Étape 1 du plan, et rien d'autre: réussir la connexion et screenshoter
  * l'accueil. Aucun scraping tant que ces deux commandes ne sont pas vertes.
  *
- *   npm run login   navigateur visible, tu te connectes (ou il le fait), session sauvée
+ *   npm run login   navigateur visible, TU tapes tes identifiants, session sauvée
  *   npm run check   headless, réutilise la session, screenshot de l'accueil
  */
 import { join } from "node:path";
 import { openSession } from "./browser.js";
 import { ensureSession, isLoggedIn, AuthRejected, CaptchaArmed } from "./auth.js";
-import { config, urls } from "./config.js";
+import { config, urls, PLACEHOLDER_MSG } from "./config.js";
 import { log } from "./log.js";
 
 const stampName = () => new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
 
+/**
+ * Connexion MANUELLE par défaut: le navigateur s'ouvre, tu tapes tes
+ * identifiants directement dans le formulaire d'Omnivox. Rien ne transite par
+ * le projet, et aucune valeur d'exemple ne peut être soumise par accident.
+ *
+ * `npm run login -- --auto` utilise le .env, seulement s'il est vraiment rempli.
+ */
 async function cmdLogin(): Promise<void> {
+  const auto = process.argv.includes("--auto");
   const s = await openSession({ headed: true });
   try {
     log.step("Étape 1a — établir une session");
+
     if (await isLoggedIn(s.page)) {
       log.info("session déjà valide, rien à faire");
-    } else if (config.hasCredentials) {
+    } else if (auto) {
+      if (!config.hasCredentials) throw new AuthRejected(PLACEHOLDER_MSG);
       await ensureSession(s.page);
     } else {
-      log.warn("aucun identifiant en environnement — connecte-toi dans la fenêtre ouverte");
+      log.info("Connecte-toi dans la fenêtre qui vient de s'ouvrir.");
+      log.info("Je n'écris rien dans le formulaire et je ne lis pas ce que tu tapes.");
       await s.page.goto(urls.login, { waitUntil: "domcontentloaded" });
       await s.page.waitForURL((u) => !/\/Login\/Account\/Login/i.test(u.toString()), {
         timeout: 5 * 60_000,
       });
+      if (!(await isLoggedIn(s.page))) {
+        throw new AuthRejected("La page a changé mais la session n'est pas valide.");
+      }
+      log.info("connexion réussie");
     }
+
     await s.saveState();
-    log.info("OK. Lance maintenant `npm run check`, puis relance-le dans 30 min.");
+    log.info("OK. Lance `npm run check`, puis relance-le dans 30 min.");
   } finally {
     await s.close();
   }

@@ -34,6 +34,24 @@ function required(key: string): string {
 
 loadDotEnv();
 
+/** Valeurs de .env.example et autres placeholders évidents. Les soumettre à
+ *  Omnivox serait une tentative de connexion ratée — donc un pas vers le
+ *  captcha armé et le verrouillage du DA. On les traite comme "absent". */
+const PLACEHOLDERS = new Set([
+  "REMPLACE_MOI",
+  "1234567",
+  "0000000",
+  "motdepasse-bidon-remplace-moi",
+  "changeme",
+  "xxx",
+]);
+
+const isPlaceholder = (v: string | undefined): boolean =>
+  !v || v.trim() === "" || PLACEHOLDERS.has(v.trim().toLowerCase()) || PLACEHOLDERS.has(v.trim());
+
+const credsUsable =
+  !isPlaceholder(process.env.OMNIVOX_USER) && !isPlaceholder(process.env.OMNIVOX_PASS);
+
 const dataDir = resolve(process.env.DATA_DIR || "./data");
 
 export const config = {
@@ -41,17 +59,26 @@ export const config = {
   /** Lus paresseusement: `check` doit pouvoir tourner sur une session existante
    *  sans que les identifiants soient présents. */
   get user() {
-    return required("OMNIVOX_USER");
+    const v = required("OMNIVOX_USER");
+    if (isPlaceholder(v)) throw new Error(PLACEHOLDER_MSG);
+    return v;
   },
   get pass() {
-    return required("OMNIVOX_PASS");
+    const v = required("OMNIVOX_PASS");
+    if (isPlaceholder(v)) throw new Error(PLACEHOLDER_MSG);
+    return v;
   },
-  hasCredentials: Boolean(process.env.OMNIVOX_USER && process.env.OMNIVOX_PASS),
+  hasCredentials: credsUsable,
   headed: process.env.HEADED === "true",
   dataDir,
   statePath: join(dataDir, "storage-state.json"),
   runsDir: join(dataDir, "runs"),
 } as const;
+
+export const PLACEHOLDER_MSG =
+  "Le .env contient encore les valeurs d'exemple. Ouvre " +
+  `${resolve(process.cwd(), ".env")} et remplis OMNIVOX_USER / OMNIVOX_PASS ` +
+  "avec tes vrais identifiants. Aucune connexion n'a été tentée.";
 
 export const urls = {
   root: `https://${config.host}/`,
