@@ -284,6 +284,29 @@ li:hover .kill{opacity:1}
 .pop .when{font-family:var(--mono);font-size:.7rem;color:var(--dim);margin-top:.15rem}
 .pop input{width:100%;margin-top:.7rem;background:var(--surface-2);border:1px solid transparent;border-radius:12px;padding:.6rem .75rem;color:var(--ink);font:inherit;font-size:.87rem}
 .pop input:focus{outline:none;border-color:var(--ink)}
+/* Le composeur de bloc n'a qu'un champ, la retouche d'un cours en aligne
+   cinq : sans étiquette, « SA3075 » et « Alexander, E » se ressemblent. */
+.pop .fld{display:block;margin-top:.6rem}
+.pop .fld>span{display:block;font-size:.66rem;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);margin-bottom:.25rem}
+.pop .fld input{margin-top:0}
+.pop select{width:100%;background:var(--surface-2);border:1px solid transparent;border-radius:12px;padding:.6rem .75rem;color:var(--ink);font:inherit;font-size:.87rem}
+.pop select:focus{outline:none;border-color:var(--ink)}
+.pop .duo{display:flex;gap:.5rem}
+.pop .duo .fld{flex:1 1 0;min-width:0}
+.pop .hint{margin-top:.6rem}
+.pop .seg{display:flex;gap:.3rem;margin-top:.45rem}
+.pop .seg button{flex:1 1 0;border-radius:999px;padding:.35rem .5rem;font-size:.72rem;background:var(--surface-2);color:var(--dim);transition:background .15s,color .15s}
+.pop .seg button.on{background:var(--invert);color:var(--on-invert)}
+/* Une bascule plutôt qu'un menu de types : « examen » est le seul marquage
+   qui change quelque chose à l'écran, les autres tiennent dans le titre. */
+.pop .kind{display:flex;gap:.4rem;margin-top:.6rem}
+.pop .kind .kd{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;
+  padding:.34rem .72rem;font-size:.73rem;font-weight:550;color:var(--dim);background:var(--surface-2);
+  transition:background .15s,color .15s,box-shadow .15s}
+.pop .kind .kd:hover{color:var(--ink)}
+.pop .kind .kd.on{background:color-mix(in srgb,var(--p3) 14%,transparent);color:var(--p3t);
+  box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--p3) 42%,transparent)}
+.pop .kind .kd .i{width:13px;height:13px}
 .sw-row{display:flex;gap:.4rem;margin-top:.7rem;flex-wrap:wrap}
 .sw-c{width:1.55rem;height:1.55rem;border-radius:50%;background:hsl(var(--h) 62% 52%);transition:transform .12s,box-shadow .12s}
 .sw-c:hover{transform:scale(1.1)}
@@ -389,9 +412,11 @@ li:hover .kill{opacity:1}
 .mio h5,.mio .sm{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .mio.open h5,.mio.open .sm{display:block;-webkit-line-clamp:unset;overflow:visible}
 .mio.clip{cursor:pointer}
-/* Même respiration sous le dernier élément que le bouton « Ajouter » (.9rem) :
-   les trois cartes de la rangée terminent au même rythme. */
-.pending{display:flex;gap:.5rem;align-items:center;margin:.2rem 1.25rem .9rem;padding:.6rem .75rem;border:1px dashed var(--line-hi);border-radius:13px;color:var(--faint);font-size:.75rem;line-height:1.35}
+/* Pied de carte : même hauteur totale (1.875rem ≈ le bouton « Ajouter ») et
+   même marge basse (.9rem) que les autres cartes de la rangée — les listes se
+   terminent donc à la même ligne. Une seule ligne de texte, ellipse au besoin. */
+.pending{display:flex;gap:.5rem;align-items:center;margin:.2rem 1.25rem .9rem;padding:.3rem .75rem;min-height:1.875rem;box-sizing:border-box;border:1px dashed var(--line-hi);border-radius:999px;color:var(--faint);font-size:.75rem;line-height:1.35}
+.pending>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* Pastilles d'échéance sur l'en-tête de jour */
 .dh{position:relative}
@@ -479,6 +504,24 @@ li:hover .kill{opacity:1}
 /* Une échéance horodatée s'affiche dans la grille, marquée par l'urgence. */
 .ev.dlblk{border-left:3px solid var(--p);border-style:solid;box-shadow:inset 0 0 0 1px var(--p)}
 .ev.dlblk .m{font-weight:600;color:var(--pt)}
+
+/* Un bloc marqué « examen » emprunte le langage des échéances : la couleur
+   choisie reste le fond, l'urgence tient l'anneau et l'étiquette. Rien de
+   nouveau à apprendre — c'est déjà ce que dit une remise dans la grille. */
+.ev.exam{border-left:3px solid var(--p);border-left-style:solid;box-shadow:inset 0 0 0 1.5px var(--p)}
+.ev.exam .m{font-family:var(--mono);font-size:.58rem;letter-spacing:.09em;text-transform:uppercase;
+  font-weight:650;color:var(--pt);opacity:1}
+/* Le signal ne bouge que quand ça compte : 3 jours ou moins. Au-delà, une
+   grille qui respire toute la session devient du bruit qu'on cesse de voir. */
+.ev.exam.soon{animation:fx-exam 2.6s ease-in-out infinite}
+@keyframes fx-exam{
+  0%,100%{transform:scale(1);box-shadow:inset 0 0 0 1.5px var(--p)}
+  50%{transform:scale(1.015);box-shadow:inset 0 0 0 1.5px var(--p),0 0 0 4px color-mix(in srgb,var(--p) 20%,transparent)}
+}
+/* Sans mouvement, le même signal en statique : un halo permanent. */
+@media (prefers-reduced-motion:reduce){
+  .ev.exam.soon{animation:none;box-shadow:inset 0 0 0 2px var(--p),0 0 0 3px color-mix(in srgb,var(--p) 20%,transparent)}
+}
 .nrow .kill{margin-left:.2rem;align-self:flex-start;margin-top:.15rem}
 
 /* Révélations : cascade des tuiles KPI et pastilles, tracé des anneaux. */
@@ -595,25 +638,106 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
 }
 @media print{.card,.work,.course,.dl,.side,body{background-image:none}}
 
-/* ── Page d'accueil (landing) ───────────────────────────────────── */
-#landing{display:flex;flex-direction:column;gap:.85rem;padding-top:.6rem}
-.hero{padding:3rem 2.4rem 2.6rem;display:flex;flex-direction:column;gap:1rem;align-items:flex-start}
-.hero h2{font-size:clamp(2rem,4.4vw,3.1rem);font-weight:650;letter-spacing:-.045em;line-height:1.04}
+/* ── Page d'accueil ──────────────────────────────────────────────
+   Une vraie page de présentation : pleine largeur, sans la barre latérale
+   de l'app, sept sections dans l'ordre où on convainc quelqu'un — titre,
+   produit, bénéfices, preuve, avant/après, garantie, inscription. */
+body.lp .side{display:none}
+body.lp .shell{grid-template-columns:minmax(0,1fr)}
+#landing{display:flex;flex-direction:column;gap:.85rem;max-width:76rem;margin:0 auto;width:100%}
+
+.lphead{display:flex;align-items:center;gap:.7rem;padding:.5rem .4rem 1rem}
+.lphead b{font-size:1.02rem;font-weight:650;letter-spacing:-.02em}
+.lphead .grow,.lpfoot .grow{flex:1 1 auto}
+.lphead .mk{
+  width:2.1rem;height:2.1rem;border-radius:11px;display:grid;place-items:center;
+  background:var(--invert);color:var(--on-invert);
+  background-image:linear-gradient(160deg,var(--invert-2),var(--invert));
+}
+.lplink{font-size:.85rem;color:var(--dim);text-decoration:none;transition:color .15s}
+.lplink:hover{color:var(--ink)}
+.cta.sm{padding:.5rem .95rem;font-size:.83rem;background:var(--invert);color:var(--on-invert)}
+
+/* 1–2. Titre + point focal : le produit est DANS la carte du titre. */
+.hero{padding:3.4rem 2.6rem 0;display:flex;flex-direction:column;align-items:center;text-align:center;gap:.9rem}
+.hero .tag{
+  font-family:var(--mono);font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;
+  color:rgba(255,255,255,.62);border:1px solid rgba(255,255,255,.16);
+  border-radius:99px;padding:.34rem .8rem;
+}
+:root[data-theme="dark"] .hero .tag{color:rgba(0,0,0,.6);border-color:rgba(0,0,0,.18)}
+.hero h2{font-size:clamp(2.1rem,5vw,3.5rem);font-weight:650;letter-spacing:-.045em;line-height:1.02}
 .hero .grad{
-  background-image:linear-gradient(180deg,var(--on-invert) 45%,color-mix(in srgb,var(--on-invert) 45%,transparent));
+  background-image:linear-gradient(180deg,var(--on-invert) 42%,color-mix(in srgb,var(--on-invert) 42%,transparent));
   -webkit-background-clip:text;background-clip:text;color:transparent;
 }
-.hero p{max-width:36rem;font-size:.95rem;line-height:1.55}
-.ctas{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem}
+.hero p.lead{max-width:38rem;font-size:1rem;line-height:1.55}
+.ctas{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;margin-top:.5rem}
 .cta{
-  display:inline-flex;align-items:center;gap:.5rem;border-radius:999px;padding:.72rem 1.3rem;
-  font-size:.9rem;font-weight:600;text-decoration:none;
+  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border-radius:999px;
+  padding:.78rem 1.5rem;font-size:.92rem;font-weight:600;text-decoration:none;
   background:var(--on-invert);color:var(--invert);
   transition:translate .15s ease,opacity .15s;
 }
 .cta:hover{translate:0 -1px;opacity:.92}
 .cta.ghosty{background:color-mix(in srgb,var(--on-invert) 13%,transparent);color:var(--on-invert)}
-.cta.dark-cta{background:var(--invert);color:var(--on-invert);margin-left:auto;flex:0 0 auto}
+.hero .fine{font-family:var(--mono);font-size:.68rem;color:rgba(255,255,255,.5);margin-top:.1rem}
+:root[data-theme="dark"] .hero .fine{color:rgba(0,0,0,.5)}
+.heroshot{width:100%;max-width:60rem;margin-top:2.2rem}
+.heroshot img{
+  display:block;width:100%;height:auto;border-radius:16px 16px 0 0;
+  border:1px solid color-mix(in srgb,var(--on-invert) 16%,transparent);border-bottom:0;
+  box-shadow:0 -30px 70px -30px rgba(0,0,0,.75);
+}
+
+/* 3. Bénéfices : une capture réelle par promesse. */
+.bens{display:grid;grid-template-columns:repeat(auto-fit,minmax(17rem,1fr));gap:.85rem}
+.ben{display:flex;flex-direction:column;padding:0;overflow:hidden}
+.benshot{
+  background:var(--surface-2);padding:1.1rem 1.1rem 0;height:11.5rem;overflow:hidden;
+  border-bottom:1px solid var(--line);
+}
+.benshot img{
+  display:block;width:100%;height:auto;border-radius:10px 10px 0 0;
+  border:1px solid var(--line-hi);border-bottom:0;box-shadow:0 10px 26px -18px rgba(0,0,0,.6);
+}
+.bentxt{padding:1.15rem 1.25rem 1.35rem;display:flex;flex-direction:column;gap:.5rem}
+.bentxt .fic{
+  width:2.1rem;height:2.1rem;border-radius:11px;display:grid;place-items:center;
+  background:hsl(var(--h,222) 62% 55% / .16);color:hsl(var(--h,222) 62% var(--evt-tx));
+}
+.bentxt h4{font-size:.99rem;font-weight:600;letter-spacing:-.015em}
+.bentxt p{font-size:.83rem;line-height:1.5}
+
+/* 4. La preuve : des faits vérifiables, pas des témoignages inventés. */
+.proof{padding:1.6rem 1.7rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:1.2rem}
+.pf b{display:block;font-size:1.9rem;font-weight:650;letter-spacing:-.035em;line-height:1.1}
+.pf>span{display:block;font-size:.8rem;line-height:1.45;margin-top:.3rem}
+.quote{margin:0;padding:1.7rem 1.9rem;display:flex;flex-direction:column;gap:.8rem}
+.quote .qm{font-size:2.4rem;line-height:.6;color:var(--faint);font-family:Georgia,serif}
+.quote blockquote{font-size:1.05rem;line-height:1.5;letter-spacing:-.015em;margin:0;max-width:44rem}
+.quote figcaption{font-family:var(--mono);font-size:.7rem;color:var(--dim)}
+.quote figcaption a{color:inherit}
+
+/* 5. Avant / après. */
+.story{display:grid;grid-template-columns:repeat(auto-fit,minmax(19rem,1fr));gap:.85rem}
+.sto{padding:1.4rem 1.5rem 1.5rem;display:flex;flex-direction:column;gap:.75rem}
+.stoshot{
+  background:#fff;border-radius:14px;border:1px solid var(--line-hi);
+  height:14rem;overflow:hidden;display:flex;align-items:flex-start;justify-content:center;
+}
+.stoshot img{display:block;width:100%;height:auto}
+.stoshot.pad img{width:auto;height:100%;object-fit:contain}
+.pill{
+  align-self:flex-start;font-family:var(--mono);font-size:.65rem;letter-spacing:.09em;
+  text-transform:uppercase;padding:.3rem .62rem;border-radius:99px;
+}
+.pill.avant{background:color-mix(in srgb,var(--p2) 18%,transparent);color:var(--p2)}
+.pill.apres{background:color-mix(in srgb,var(--p0) 18%,transparent);color:var(--p0)}
+.sto h4{font-size:1rem;font-weight:600;letter-spacing:-.015em}
+.sto p{font-size:.85rem;line-height:1.5}
+
+/* Les trois étapes, sous l'avant/après. */
 .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:.85rem}
 .step{padding:1.2rem 1.25rem 1.35rem;display:flex;flex-direction:column;gap:.55rem}
 .step .no{
@@ -621,27 +745,37 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
   background:var(--invert);color:var(--on-invert);font-weight:650;font-size:.95rem;
   background-image:linear-gradient(160deg,var(--invert-2),var(--invert));
 }
-.step h4,.feat h4{font-size:.97rem;font-weight:600;letter-spacing:-.015em}
-.step p,.feat p{font-size:.82rem;line-height:1.5}
-.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(13.5rem,1fr));gap:.85rem}
-.feat{
-  background:var(--surface);border-radius:20px;box-shadow:var(--shadow);
-  padding:1.05rem 1.1rem;display:flex;flex-direction:column;gap:.45rem;
-  background-image:linear-gradient(180deg,var(--sheen),transparent 36%),linear-gradient(0deg,var(--tint),transparent 42%);
-  transition:translate .16s ease,box-shadow .16s ease;
+.step h4{font-size:.97rem;font-weight:600;letter-spacing:-.015em}
+.step p{font-size:.82rem;line-height:1.5}
+
+/* 6. Garantie. */
+.guar{padding:1.6rem 1.7rem;display:flex;flex-direction:column;gap:1.1rem}
+.guar .gh{display:flex;align-items:center;gap:.7rem}
+.guar .gh h3{font-size:1.05rem;font-weight:650;letter-spacing:-.02em}
+.glist{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:.9rem}
+.glist div{display:flex;gap:.6rem;align-items:flex-start}
+.glist .i{color:var(--p0);flex:0 0 auto;margin-top:.1rem}
+.glist p{font-size:.83rem;line-height:1.5}
+.glist b{font-weight:600}
+
+/* 7. Dernier appel. */
+.final{padding:2.8rem 2rem 3rem;display:flex;flex-direction:column;align-items:center;text-align:center;gap:.85rem}
+.final h2{font-size:clamp(1.6rem,3.4vw,2.3rem);font-weight:650;letter-spacing:-.035em;line-height:1.08}
+.final p{max-width:34rem;font-size:.92rem;line-height:1.55}
+.lpfoot{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;padding:.4rem .5rem 1.4rem;font-size:.78rem;color:var(--faint)}
+.lpfoot a{color:var(--dim);text-decoration:none}
+.lpfoot a:hover{color:var(--ink)}
+
+@media (max-width:720px){
+  .hero{padding:2.4rem 1.4rem 0}
+  .heroshot{margin-top:1.6rem}
+  .benshot{height:9rem;padding:.8rem .8rem 0}
+  .proof,.guar,.quote{padding:1.3rem 1.3rem}
+  .lphead .lplink{display:none}
 }
-.feat:hover,.step:hover{translate:0 -2px}
-.feat .fic{
-  width:2.1rem;height:2.1rem;border-radius:11px;display:grid;place-items:center;
-  background:hsl(var(--h,222) 62% 55% / .16);color:hsl(var(--h,222) 62% var(--evt-tx));
-}
-.priv{display:flex;align-items:center;gap:.9rem;padding:1.15rem 1.3rem;flex-direction:row}
-.priv p{flex:1 1 auto;font-size:.82rem;line-height:1.5;min-width:14rem}
-.priv .i{color:var(--faint)}
-@media (max-width:720px){.hero{padding:2.2rem 1.4rem 2rem}.priv{flex-wrap:wrap}.cta.dark-cta{margin-left:0}}
 
 /* ── Création de compte au premier passage ──────────────────────── */
-#onboard{display:flex;justify-content:center;padding:2.6rem 0 1.2rem}
+#onboard{display:flex;justify-content:center;align-items:center;min-height:78vh;padding:2rem 0}
 .joinbox{width:min(26rem,100%);padding:1.9rem 1.8rem 1.5rem;display:flex;flex-direction:column}
 .joinbox .jic{
   width:2.6rem;height:2.6rem;border-radius:13px;display:grid;place-items:center;
@@ -661,6 +795,46 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
 .join-cta:disabled{opacity:.55;translate:none}
 .jalt{display:flex;align-items:center;gap:.6rem;margin-top:1rem;flex-wrap:wrap}
 .jalt .grow{flex:1 1 auto}
+/* ── Fiche d'une matière ────────────────────────────────────────
+   Cliquer une matière ouvre sa fiche : ce que l'horaire sait déjà,
+   les dates qu'on y ajoute, et les notes qu'on y prend. */
+.mgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:.85rem;align-items:start}
+.mcol{display:flex;flex-direction:column;gap:.85rem;min-width:0}
+@media (max-width:900px){.mgrid{grid-template-columns:1fr}}
+.mgrid .empty{line-height:1.5}
+.mpip{display:inline-block;width:.62rem;height:.62rem;border-radius:50%;margin-right:.5rem;flex:0 0 auto}
+#matiere .sect h2{display:flex;align-items:center;min-width:0}
+
+/* Ce que l'horaire sait : lu, jamais saisi. */
+.mfacts{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));gap:.65rem .9rem;padding:.15rem 1.25rem 1rem}
+.mfacts div{display:flex;flex-direction:column;gap:.2rem;min-width:0}
+.mfacts .k{font-size:.64rem;letter-spacing:.11em;text-transform:uppercase;color:var(--faint)}
+.mfacts .v{font-size:.85rem;line-height:1.35;overflow-wrap:anywhere}
+.mfacts+.pbody{border-top:1px solid var(--line);padding-top:.9rem}
+
+.mform{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+@media (max-width:560px){.mform{grid-template-columns:1fr}}
+.mform label{display:flex;flex-direction:column;gap:.32rem;min-width:0}
+.mform .full{grid-column:1/-1}
+
+/* Ajout d'une date : le titre prend la place qui reste. */
+.dadd{display:flex;flex-wrap:wrap;gap:.45rem;padding:.35rem 1.25rem 1.15rem}
+.dadd .pin{width:auto;min-width:0;padding:.52rem .68rem;font-size:.83rem}
+.dadd .pin.tt{flex:1 1 100%}
+.dadd .pin.k{flex:1 1 6.4rem}
+.dadd .pin.d{flex:1 1 8.4rem}
+.dadd .pin.t{flex:1 1 5.6rem}
+.dadd .btn{flex:0 0 auto;margin-left:auto}
+
+/* Une note : un tampon de date, puis un texte qui grandit tout seul. */
+.notes{display:flex;flex-direction:column;gap:.5rem;padding:.35rem 1.25rem 1.15rem}
+.note{background:var(--surface-2);border-radius:15px;padding:.5rem .7rem .2rem}
+.note .nh{display:flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.62rem;color:var(--faint)}
+.note .nh .grow{flex:1 1 auto}
+.note:hover .kill,.note:focus-within .kill{opacity:1}
+.note textarea{width:100%;background:none;border:none;resize:none;color:var(--ink);font:inherit;font-size:.86rem;line-height:1.45;padding:.2rem 0 .5rem;overflow:hidden}
+.note textarea:focus{outline:none}
+.note textarea::placeholder{color:var(--faint)}
 </style>
 
 <div class="shell">
@@ -779,6 +953,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
             <button class="wn" id="w-next" title="Semaine suivante" aria-label="Semaine suivante"><svg class="i" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button>
           </div>
           <button class="link" id="add-week2" hidden>Ajouter une semaine <svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button>
+          <button class="link" id="h-reset" hidden></button>
           <button class="link" id="h-mode"></button></div>
         <div class="stack" id="weeks"></div>
       </div>
@@ -838,88 +1013,218 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
       </div>
     </div>
 
+    <div id="matiere" hidden>
+      <div class="sect"><h2><i class="mpip" id="m-pip"></i><span id="m-title">Matière</span></h2><span class="grow"></span>
+        <button class="link" id="m-filter"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17"/></svg> <span id="m-flabel">Voir à l'horaire</span></button>
+        <button class="link" id="m-back"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg> Retour au tableau de bord</button></div>
+      <div class="mgrid">
+        <div class="mcol">
+          <section class="card fx">
+            <div class="ch"><h3>Infos</h3></div>
+            <div class="mfacts" id="m-facts"></div>
+            <div class="pbody">
+              <div class="mform">
+                <label><span class="lab">Enseignant</span><input class="pin" id="m-prof" type="text" maxlength="60"></label>
+                <label><span class="lab">Courriel</span><input class="pin" id="m-mail" type="email" maxlength="90" placeholder="prenom.nom@cegeptr.qc.ca"></label>
+                <label><span class="lab">Local habituel</span><input class="pin" id="m-room" type="text" maxlength="24"></label>
+                <label><span class="lab">Lien du cours</span><input class="pin" id="m-link" type="url" maxlength="300" placeholder="Léa, Moodle, Teams…"></label>
+                <label class="full"><span class="lab">À retenir</span><input class="pin" id="m-memo" type="text" maxlength="140" placeholder="Pondération, matériel obligatoire, règle du prof…"></label>
+              </div>
+            </div>
+          </section>
+          <section class="card fx">
+            <div class="ch"><h3>Dates importantes</h3><span class="grow"></span>
+              <span class="dim mono" id="m-dn" style="font-size:.7rem"></span></div>
+            <ul class="nlist" id="m-dates"></ul>
+            <p class="empty" id="m-dempty">Aucune date pour ce cours. Celles que tu ajoutes ici deviennent de vraies échéances : elles comptent dans le rappel et se posent dans l'horaire.</p>
+            <div class="dadd">
+              <input class="pin tt" id="m-dt" type="text" maxlength="70" placeholder="Examen, remise, lecture…">
+              <select class="pin k" id="m-dk">
+                <option value="examen">Examen</option>
+                <option value="remise">Remise</option>
+                <option value="autre" selected>Autre</option>
+              </select>
+              <input class="pin d" id="m-dd" type="date">
+              <input class="pin t" id="m-dh" type="time">
+              <button class="btn solid" id="m-dgo">Ajouter</button>
+            </div>
+          </section>
+        </div>
+        <section class="card fx">
+          <div class="ch"><h3>Notes</h3><span class="grow"></span>
+            <button class="link" id="m-nadd"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg> Nouvelle note</button></div>
+          <div class="notes" id="m-notes"></div>
+          <p class="empty" id="m-nempty">Rien de noté pour l'instant. Consignes du prof, pages à lire, ce qui est tombé à l'examen — tout reste sur cet appareil.</p>
+        </section>
+      </div>
+    </div>
+
     <div id="landing" hidden>
+
+      <header class="lphead">
+        <span class="mk"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h7M4 12h16M4 18h11"/></svg></span>
+        <b>Agenda</b>
+        <span class="grow"></span>
+        <a class="lplink" href="guide.html">Guide d'installation</a>
+        <button class="lplink" id="lp-signin">Se connecter</button>
+        <button class="cta sm" id="cta-open2">Créer mon compte</button>
+      </header>
+
+      <!-- 1) Titre  2) Point focal : le produit, tout de suite. -->
       <section class="card dark hero fx">
+        <span class="tag">Cégep de Trois-Rivières · Léa + MIO</span>
         <h2>Ton cégep,<br><span class="grad">sans surprise.</span></h2>
-        <p class="dim">Un agent installé sur ta machine lit Léa et MIO à ta place, résume ce qui compte
-          et remplit ton agenda tout seul — échéances datées, urgences en couleur, messages en une phrase.</p>
+        <p class="dim lead">Un agent installé sur ta machine lit Léa et MIO à ta place, date chaque
+          échéance et résume chaque message. Toi, tu ouvres un seul écran — déjà trié.</p>
         <div class="ctas">
-          <button class="cta" id="cta-open">Ouvrir mon agenda
+          <button class="cta" id="cta-open">Créer mon compte
+            <svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button>
+          <a class="cta ghosty" href="#comment">Voir comment ça marche</a>
+        </div>
+        <p class="fine">Courriel + mot de passe · 2 minutes · tes identifiants Omnivox restent chez toi</p>
+        <div class="heroshot">
+          <img id="hero-shot" width="1800" height="1175"
+               data-light="img/app-tableau.jpg" data-dark="img/app-tableau-clair.jpg"
+               alt="Le tableau de bord de l'agenda : aperçu de la session, semaine en cours, progression, tâches, échéances datées et résumés de MIO.">
+        </div>
+      </section>
+
+      <!-- 3) Bénéfices — une capture réelle par promesse. -->
+      <div class="sect" style="padding-top:1.6rem"><h2>Ce que tu gagnes</h2>
+        <span class="grow"></span><span class="link mono" style="font-size:.7rem">trois écrans, zéro fouille</span></div>
+      <div class="bens">
+        <section class="card ben fx">
+          <div class="benshot"><img loading="lazy" src="img/app-echeances.jpg" width="1127" height="1400" alt="Liste d'échéances triées par urgence, avec compte à rebours coloré."></div>
+          <div class="bentxt" style="--h:344">
+            <span class="fic"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg></span>
+            <h4>Les échéances se datent toutes seules</h4>
+            <p class="dim">En retard, aujourd'hui, demain, cette semaine : chaque remise et chaque
+              évaluation relevée dans Léa arrive datée, classée, avec son compte à rebours en couleur.</p>
+          </div>
+        </section>
+        <section class="card ben fx">
+          <div class="benshot"><img loading="lazy" src="img/app-mios.jpg" width="1400" height="856" alt="Résumés de MIO : chaque message tient en une phrase, avec l'action à en tirer."></div>
+          <div class="bentxt" style="--h:264">
+            <span class="fic"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 8.2 6 8.2-6"/></svg></span>
+            <h4>Treize pavés deviennent treize phrases</h4>
+            <p class="dim">Chaque MIO est résumé en une ligne, et l'action qu'il cachait — un formulaire,
+              une date, un local — se transforme en tâche ou en échéance d'un seul clic.</p>
+          </div>
+        </section>
+        <section class="card ben fx">
+          <div class="benshot"><img loading="lazy" src="img/app-horaire-mini.jpg" width="1500" height="1054" alt="Grille d'horaire hebdomadaire avec les cours colorés par matière."></div>
+          <div class="bentxt" style="--h:190">
+            <span class="fic"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4"/></svg></span>
+            <h4>Un horaire qui vit avec ta session</h4>
+            <p class="dim">Tes cours sur la grille, tes blocs perso au glisser, une pastille sur les
+              journées chargées, et l'export .ics quand tu veux tout dans Calendrier.</p>
+          </div>
+        </section>
+      </div>
+
+      <!-- 4) La preuve : des faits vérifiables, pas des témoignages. -->
+      <div class="sect" style="padding-top:1.6rem"><h2>La preuve</h2></div>
+      <section class="card proof fx">
+        <div class="pf"><b>1&thinsp;×&thinsp;/&thinsp;h</b>
+          <span class="dim">L'agent relit Léa et MIO chaque heure via <span class="mono">launchd</span>.
+            Chaque passage est écrit dans un journal que tu peux ouvrir.</span></div>
+        <div class="pf"><b>0</b>
+          <span class="dim">identifiant Omnivox transmis, centralisé ou visible par qui que ce soit.
+            Ils vivent dans un fichier local, exclu de git.</span></div>
+        <div class="pf"><b>1</b>
+          <span class="dim">seule tentative de connexion, jamais de réessai — c'est précisément ce qui
+            garde ton dossier étudiant déverrouillé.</span></div>
+      </section>
+      <figure class="card quote fx">
+        <span class="qm">&ldquo;</span>
+        <blockquote>Ce n'est pas de la prudence décorative : c'est ce qui protège ton dossier étudiant.</blockquote>
+        <figcaption>README du projet — section « Ce que ce projet refuse de faire »</figcaption>
+      </figure>
+
+      <!-- 5) Avant / après, puis les trois étapes. -->
+      <div class="sect" id="comment" style="padding-top:1.6rem"><h2>Avant, après</h2></div>
+      <div class="story">
+        <section class="card sto fx">
+          <span class="pill avant">Avant</span>
+          <div class="stoshot pad"><img loading="lazy" src="img/omnivox-login.png" width="896" height="1280" alt="Le formulaire de connexion d'Omnivox du Cégep de Trois-Rivières."></div>
+          <h4>Six écrans avant de savoir quoi faire</h4>
+          <p class="dim">Se connecter, passer la double authentification, ouvrir Léa, choisir un cours,
+            ouvrir l'onglet des travaux, revenir en arrière. Puis tout recommencer du côté des MIO.</p>
+        </section>
+        <section class="card sto fx">
+          <span class="pill apres">Après</span>
+          <div class="stoshot"><img loading="lazy" src="img/app-tableau-clair.jpg" width="1800" height="1175" alt="Le même contenu, rassemblé sur un seul tableau de bord."></div>
+          <h4>Un écran, déjà à jour</h4>
+          <p class="dim">L'agent a fait le trajet à ta place pendant que tu dormais. Tu ouvres :
+            tout est daté, trié, résumé, et ce que tu avais coché « fait » l'est resté.</p>
+        </section>
+      </div>
+
+      <div class="steps" style="margin-top:.85rem">
+        <section class="card step fx">
+          <span class="no">1</span>
+          <h4>Installe l'agent</h4>
+          <p class="dim">Une seule commande dans le Terminal, puis une connexion à Omnivox dans une
+            fenêtre visible — c'est toi qui saisis le code de vérification.</p>
+        </section>
+        <section class="card step fx">
+          <span class="no">2</span>
+          <h4>Il collecte, chaque heure</h4>
+          <p class="dim">Léa et MIO sont relus automatiquement. Les nouveaux messages passent par
+            l'IA pour en tirer une phrase et l'action qui s'y cache.</p>
+        </section>
+        <section class="card step fx">
+          <span class="no">3</span>
+          <h4>Ton agenda se remplit</h4>
+          <p class="dim">Le résultat remonte dans ton compte, et te suit sur ton portable, ta tablette
+            ou l'ordinateur de la bibliothèque.</p>
+        </section>
+      </div>
+
+      <!-- 6) La garantie. -->
+      <section class="card guar fx">
+        <div class="gh">
+          <svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><rect x="5" y="10.5" width="14" height="10" rx="3"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>
+          <h3>La garantie, en trois phrases</h3>
+        </div>
+        <div class="glist">
+          <div><svg class="i" viewBox="0 0 24 24" style="width:17px;height:17px"><path d="m5 12.5 4.5 4.5L19 7"/></svg>
+            <p class="dim"><b>Tes identifiants ne quittent jamais ta machine.</b> Ils vivent dans un
+              fichier local exclu de git, lu uniquement par le navigateur qui tourne chez toi.</p></div>
+          <div><svg class="i" viewBox="0 0 24 24" style="width:17px;height:17px"><path d="m5 12.5 4.5 4.5L19 7"/></svg>
+            <p class="dim"><b>L'authentification multifacteur n'est jamais contournée.</b> C'est toi qui
+              saisis le code ; le script attend. La collecte planifiée n'a pas le droit de s'authentifier.</p></div>
+          <div><svg class="i" viewBox="0 0 24 24" style="width:17px;height:17px"><path d="m5 12.5 4.5 4.5L19 7"/></svg>
+            <p class="dim"><b>Ton compte ne transporte que le résultat.</b> Échéances et résumés, sous ton
+              compte à toi, isolés au niveau de la base. Rien d'Omnivox n'y transite.</p></div>
+        </div>
+      </section>
+
+      <!-- 7) Dernier appel. -->
+      <section class="card dark final fx">
+        <h2>Ton prochain lundi matin<br>peut déjà être trié.</h2>
+        <p class="dim">Crée ton compte — un courriel, un mot de passe, rien d'autre — puis installe
+          l'agent avec une seule commande. Le premier écran rempli arrive à la collecte suivante.</p>
+        <div class="ctas">
+          <button class="cta" id="cta-open3">Créer mon compte
             <svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button>
           <a class="cta ghosty" href="guide.html">Guide d'installation</a>
         </div>
       </section>
 
-      <div class="sect" style="padding-top:1.4rem"><h2>Comment ça marche</h2></div>
-      <div class="steps">
-        <section class="card step fx">
-          <span class="no">1</span>
-          <h4>Installe l'agent local</h4>
-          <p class="dim">Une seule commande dans le Terminal. Tes identifiants Omnivox restent sur ta
-            machine — ils ne sont jamais envoyés ailleurs, à personne.</p>
-        </section>
-        <section class="card step fx">
-          <span class="no">2</span>
-          <h4>Il collecte à chaque heure</h4>
-          <p class="dim">Léa (échéances, événements) et MIO (messages) sont relevés automatiquement.
-            Chaque nouveau MIO est résumé en une phrase par l'IA, avec l'action à en tirer.</p>
-        </section>
-        <section class="card step fx">
-          <span class="no">3</span>
-          <h4>Ton agenda se remplit</h4>
-          <p class="dim">Les échéances arrivent classées par urgence, des pastilles marquent les journées
-            chargées sur l'horaire, et tu ajoutes tes propres blocs et tâches par-dessus.</p>
-        </section>
-      </div>
-
-      <div class="sect" style="padding-top:1.4rem"><h2>Ce que tu retrouves ici</h2></div>
-      <div class="feats">
-        <section class="feat fx" style="--h:190">
-          <span class="fic"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4"/></svg></span>
-          <h4>Horaire vivant</h4>
-          <p class="dim">Tes cours sur la grille, tes blocs perso au glisser, export .ics pour Calendrier.</p>
-        </section>
-        <section class="feat fx" style="--h:344">
-          <span class="fic"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg></span>
-          <h4>Échéances triées</h4>
-          <p class="dim">L'urgence se calcule toute seule : en retard, aujourd'hui, demain, cette semaine.</p>
-        </section>
-        <section class="feat fx" style="--h:264">
-          <span class="fic"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 8.2 6 8.2-6"/></svg></span>
-          <h4>MIO résumés</h4>
-          <p class="dim">Fini les pavés : chaque message tient en une phrase, transformable en échéance d'un clic.</p>
-        </section>
-        <section class="feat fx" style="--h:150">
-          <span class="fic"><svg class="i" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"/></svg></span>
-          <h4>À faire, façon Notion</h4>
-          <p class="dim">Des lignes éditables en place, réordonnables, avec sous-tâches au Tab.</p>
-        </section>
-        <section class="feat fx" style="--h:222">
-          <span class="fic"><svg class="i" viewBox="0 0 24 24"><path d="M7 17.5a4.5 4.5 0 1 1 .8-8.93 5.5 5.5 0 0 1 10.7 1.43h.25a3.75 3.75 0 0 1 0 7.5z"/></svg></span>
-          <h4>Compte optionnel</h4>
-          <p class="dim">Un courriel + mot de passe pour retrouver tes données ailleurs. Rien d'Omnivox n'y transite.</p>
-        </section>
-        <section class="feat fx" style="--h:48">
-          <span class="fic"><svg class="i" viewBox="0 0 24 24"><rect x="4.5" y="3.5" width="15" height="17" rx="3"/><path d="M9 20.5v-3h6v3"/></svg></span>
-          <h4>Installable</h4>
-          <p class="dim">Ajoute-la comme app sur ton Mac — thème sombre et impression compris.</p>
-        </section>
-      </div>
-
-      <section class="card fx priv">
-        <svg class="i" viewBox="0 0 24 24" style="width:20px;height:20px;flex:0 0 auto"><rect x="5" y="10.5" width="14" height="10" rx="3"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>
-        <p class="dim">Tes identifiants Omnivox ne quittent <b>jamais</b> ta machine : l'agent tourne chez toi,
-          et seul le résultat (échéances, résumés) est affiché ici. Le compte d'agenda est optionnel et n'y donne accès qu'à toi.</p>
-        <button class="cta dark-cta" id="cta-open2">C'est parti</button>
-      </section>
+      <footer class="lpfoot">
+        <span>Agenda Cégep — outil personnel, non affilié au Cégep de Trois-Rivières ni à Skytech.</span>
+        <span class="grow"></span>
+        <a href="guide.html">Guide d'installation</a>
+      </footer>
     </div>
 
     <div id="onboard" hidden>
       <section class="card fx joinbox">
         <span class="jic"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></span>
         <h2 id="jo-title">Crée ton compte d'agenda</h2>
-        <p class="dim jsub" id="jo-sub">Un courriel et un mot de passe, rien de plus : ils servent à retrouver
-          tes échéances et tes résumés sur tes autres appareils. Tes identifiants Omnivox n'y transitent jamais.</p>
+        <p class="dim jsub" id="jo-sub">Un courriel et un mot de passe, rien de plus : c'est ce qui te
+          rend ton agenda sur n'importe quel appareil. Tes identifiants Omnivox n'y transitent jamais.</p>
         <input id="jo-email" type="email" autocomplete="email" placeholder="Courriel">
         <input id="jo-pw" type="password" autocomplete="new-password" placeholder="Mot de passe (8+ caractères)">
         <p class="jmsg" id="jo-msg"></p>
@@ -927,7 +1232,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
         <div class="jalt">
           <button class="link" id="jo-swap">J'ai déjà un compte</button>
           <span class="grow"></span>
-          <button class="link" id="jo-skip">Continuer sans compte</button>
+          <button class="link" id="jo-home">Retour à l'accueil</button>
         </div>
       </section>
     </div>
@@ -969,7 +1274,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
   ];
   /* L'horaire est une donnée, plus une constante : il peut venir d'une photo
      lue par l'agent (npm run horaire), du nuage, ou du repli intégré. */
-  let TT = DEFAULT_TT, byDay = new Map(), COURSES = [], hues = new Map();
+  let BASE_TT = DEFAULT_TT, TT = DEFAULT_TT, byDay = new Map(), COURSES = [], hues = new Map();
   function rebuildTT() {
     byDay = new Map();
     for (const e of TT) { let m = byDay.get(e.d); if (!m) { m = new Map(); byDay.set(e.d, m); }
@@ -977,15 +1282,65 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
     COURSES = [...new Set(TT.map(e => e.t))].sort((a,b) => a.localeCompare(b,"fr"));
     hues = new Map(COURSES.map((t,i) => [t, HUES[i % HUES.length]]));
   }
-  rebuildTT();
   const hueOf = t => hues.get(t) ?? HUES[((t||"").length * 7) % HUES.length];
   const looksLikeTT = x => Array.isArray(x) && x.length > 0 &&
     x.every(r => Number.isInteger(r.d) && Array.isArray(r.h) && typeof r.t === "string");
   function setTimetable(tt, origin) {
     if (!looksLikeTT(tt)) return;
-    TT = tt; rebuildTT();
+    BASE_TT = tt; ttChanged();
+  }
+
+  /* ── Retouches de l'horaire ───────────────────────────────────── */
+  /* L'horaire est lu sur une photo par un modèle : il se trompe de nom, de
+     local, invente une case. Une retouche n'écrase donc pas la source — elle
+     se pose par-dessus, comme un calque, pour que la photo puisse être relue
+     (ou le nuage resynchronisé) sans effacer ce qui a été corrigé à la main.
+     Jour + heure de début : le seul repère d'un bloc qui tienne d'un import à
+     l'autre, deux cours ne pouvant commencer à la même heure le même jour. */
+  const ttKey = e => `${e.d}-${e.h[0]}`;
+  const TT_FIELDS = ["t","code","k","room","prof"];
+  const ttBase = key => BASE_TT.find(r => ttKey(r) === key) || {};
+  function editedTT(base) {
+    const out = [];
+    for (const e of base) {
+      const ed = state.ttEdits[ttKey(e)];
+      if (!ed) { out.push(e); continue; }
+      if (ed.del) continue;
+      const row = { ...e };
+      for (const f of TT_FIELDS) if (f in ed) row[f] = ed[f];
+      out.push(row);
+    }
+    return out;
+  }
+  const applyTT = () => { TT = editedTT(BASE_TT); rebuildTT(); };
+  /* Une valeur revenue à celle de la source n'est plus une retouche : on la
+     jette, sinon le compteur annonce des corrections qui n'existent plus. */
+  function setTTEdit(key, patch) {
+    const base = ttBase(key);
+    const next = { ...(state.ttEdits[key] || {}), ...patch };
+    if (!next.del) {
+      delete next.del;
+      for (const f of TT_FIELDS) if (f in next && (next[f] || "") === (base[f] || "")) delete next[f];
+    }
+    if (next.del || TT_FIELDS.some(f => f in next)) state.ttEdits[key] = next;
+    else delete state.ttEdits[key];
+  }
+  /* Toucher à l'horaire, c'est toucher à la grille, aux matières, aux
+     compteurs et aux cartes de cours : tout ce qui compte des heures repasse
+     par ici, d'un seul appel. */
+  function ttChanged() {
+    applyTT();
     if (state.filter && !COURSES.includes(state.filter)) state.filter = null;
+    if (mCur && !COURSES.includes(mCur)) closeMatiere();
     renderWeeks(); renderSubjects(); renderOverview(); renderChart(); renderRings(); renderCourses();
+    if (mCur) renderMatiere();
+    syncTTReset(); save();
+  }
+  function syncTTReset() {
+    const n = Object.keys(state.ttEdits).length, b = el("h-reset");
+    if (!b) return;
+    b.hidden = !n;
+    b.textContent = `${n} retouche${n > 1 ? "s" : ""} · rétablir`;
   }
   /* Omnivox nomme les cours autrement que le relevé d'horaire
      (« Philosophie et rationalité » vs « Philo. rationnelle »). Le sigle, lui,
@@ -1078,12 +1433,19 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
     wview: "une", wcur: 0,
     name:"Maverick Menard",
     blocks: {},
+    /* Retouches de l'horaire, par bloc (« jour-heure ») : ce que tu corriges
+       d'un cours mal lu sur la photo. Voir setTTEdit. */
+    ttEdits: {},
     todos: [
       { id:"g1", t:"Réviser le labo de Calcul différentiel", done:false, lvl:0 },
       { id:"g2", t:"Relire les chapitres 1 à 4 de philo", done:false, lvl:1 },
       { id:"g3", t:"Lire le chapitre de Sociologie", done:true, lvl:0 },
       { id:"g4", t:"Repérer le local HA3370", done:false, lvl:0 },
     ],
+    /* Fiches de matière : infos saisies à la main et notes, par cours.
+       Indexées par sigle quand il existe — un horaire relu sur photo peut
+       renommer « Philo. rationnelle », le sigle, lui, ne bouge pas. */
+    sheets: {},
     /* Vides par conception : remplis par le scraper Léa/MIO, pas par des exemples. */
     deadlines: [],
     mios: [],
@@ -1098,12 +1460,17 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
   catch { state = seed(); }
   if (!Array.isArray(state.wks) || !state.wks.length) state.wks = [0];
   if (!state.acted || typeof state.acted !== "object") state.acted = {};
+  if (!state.ttEdits || typeof state.ttEdits !== "object") state.ttEdits = {};
+  if (!state.sheets || typeof state.sheets !== "object") state.sheets = {};
   if (state.wview !== "pile") state.wview = "une";
   if (!Number.isInteger(state.wcur)) state.wcur = 0;
   /* Le filtre de matière est une loupe, pas un réglage. Le retrouver actif au
      chargement suivant, c'est rouvrir l'horaire délavé sans savoir pourquoi :
      il repart donc à zéro à chaque ouverture. */
   state.filter = null;
+  /* L'horaire n'est complet qu'une fois les retouches connues : c'est ici,
+     l'état chargé, que la source et le calque se rejoignent. */
+  applyTT();
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} };
   const uid = () => "x" + Math.random().toString(36).slice(2,9);
 
@@ -1244,8 +1611,22 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
     }
 
     if (blk) {
-      if (blk.from === hr) paint(cell, { hue:blk.h, span:blk.to-blk.from, title:blk.t,
-        meta:"", time:`${pad(blk.from)}:00 – ${pad(blk.to)}:00`, mine:true });
+      if (blk.from === hr) {
+        const exam = blk.kind === "examen";
+        paint(cell, { hue:blk.h, span:blk.to-blk.from, title:blk.t,
+          meta: exam ? "Examen" : "", time:`${pad(blk.from)}:00 – ${pad(blk.to)}:00`, mine:true });
+        if (exam) {
+          /* L'urgence se calcule, elle ne se choisit pas : même règle que pour
+             une remise, l'examen de demain crie, celui d'octobre non. */
+          const cd = countdown(dISO, `${pad(blk.from)}:00`);
+          const ev = cell.querySelector(".ev");
+          ev.classList.add("exam");
+          if (cd.lvl >= 2) ev.classList.add("soon");
+          ev.style.setProperty("--p", `var(--p${cd.lvl})`);
+          ev.style.setProperty("--pt", `var(--p${cd.lvl}t)`);
+          cell.title = `${blk.t}\nExamen · ${cd.txt}`;
+        }
+      }
       else cell.classList.add("under");
     } else if (dl) {
       const cd = countdown(dl.date, dl.time);
@@ -1332,6 +1713,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
       from, to,
       t: covered.length === 1 ? covered[0].t : "",
       h: covered.length ? covered[0].h : HUES[0],
+      kind: covered.some(b => b.kind === "examen") ? "examen" : null,
       merge: covered.map(b => b.id),
     }, !covered.length);
     markRange(d, from, to - 1);
@@ -1385,6 +1767,19 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
     input.placeholder = "Examen, travail, rendez-vous…"; input.value = blk.t || "";
     box.append(input);
 
+    let kind = blk.kind || null;
+    const kindRow = mk("div","kind");
+    const examBtn = mk("button","kd" + (kind === "examen" ? " on" : ""));
+    examBtn.innerHTML = ICON.examen;
+    examBtn.append(document.createTextNode("Examen"));
+    examBtn.title = "Marquer ce bloc comme un examen";
+    examBtn.addEventListener("click", () => {
+      kind = kind === "examen" ? null : "examen";
+      examBtn.classList.toggle("on", kind === "examen");
+    });
+    kindRow.append(examBtn);
+    box.append(kindRow);
+
     let hue = blk.h ?? HUES[0];
     const row = mk("div","sw-row");
     for (const h of HUES) {
@@ -1418,7 +1813,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
       if (!t) { closePop(); return; }
       const drop = new Set(blk.merge?.length ? blk.merge : [blk.id].filter(Boolean));
       const list = dayBlocks(d).filter(b => !drop.has(b.id) && !(b.from < blk.to && b.to > blk.from));
-      list.push({ id: uid(), from: blk.from, to: blk.to, t, h: hue });
+      list.push({ id: uid(), from: blk.from, to: blk.to, t, h: hue, ...(kind ? { kind } : {}) });
       state.blocks[d] = list.sort((a,b) => a.from - b.from);
       closePop(); renderWeeks();
     };
@@ -1455,7 +1850,12 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
       r.append(a, mk("span", null, v)); ul.append(r);
     }
     box.append(ul);
-    const acts = mk("div","acts"); acts.append(mk("span","grow"));
+    const acts = mk("div","acts");
+    /* Un bloc de cours n'est pas gravé : la photo se trompe, un cours change
+       de local, une case n'a jamais existé. « Modifier » ouvre la retouche. */
+    const edit = mk("button","btn quiet","Modifier");
+    edit.addEventListener("click", () => editCourse(cell, e));
+    acts.append(edit, mk("span","grow"));
     const close = mk("button","btn quiet","Fermer"); close.addEventListener("click", closePop);
     const filt = mk("button","btn solid", state.filter === e.t ? "Retirer le filtre" : "Filtrer cette matière");
     filt.addEventListener("click", () => {
@@ -1464,6 +1864,133 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
     });
     acts.append(close, filt); box.append(acts);
     pop = box; place(box, cell, true);
+  }
+
+  /* Un champ étiqueté du composeur. `options` en fait une liste déroulante. */
+  function field(label, value, opts = {}) {
+    const w = mk("label","fld");
+    w.append(mk("span", null, label));
+    let i;
+    if (opts.options) {
+      i = mk("select");
+      for (const [v, t] of opts.options) { const o = mk("option", null, t); o.value = v; i.append(o); }
+      i.value = value || "";
+    } else {
+      i = mk("input"); i.type = "text"; i.maxLength = opts.max || 60;
+      i.value = value || ""; if (opts.ph) i.placeholder = opts.ph;
+    }
+    w.append(i);
+    return { w, i };
+  }
+
+  /* Retoucher un bloc de cours. Le nom appartient au cours — il porte la
+     couleur, le filtre, la carte de matière — alors que le type, le local et
+     le professeur appartiennent au bloc : le labo n'est pas dans le local du
+     cours magistral. D'où deux portées, et une seule question posée. */
+  function editCourse(cell, e) {
+    pop?.remove();
+    const key = ttKey(e), touched = !!state.ttEdits[key];
+    const sib = TT.filter(x => x.t === e.t);
+    const box = mk("div","pop wide fx");
+    box.append(mk("h4", null, "Modifier le bloc"));
+    box.append(mk("p","when", `${DOW_FULL[e.d]} · ${e.time} · ${e.h[1]-e.h[0]} h`));
+
+    const nom = field("Nom", e.t, { ph:"Nom du cours ou de l'activité" });
+    box.append(nom.w);
+
+    /* Un cours occupe plusieurs cases : renommer la seule qu'on a sous les
+       yeux le couperait en deux matières de deux couleurs. On ne demande la
+       portée que lorsqu'elle se pose vraiment. */
+    let scope = sib.length > 1 ? "cours" : "bloc";
+    if (sib.length > 1) {
+      const seg = mk("div","seg");
+      const all = mk("button","on", `Tout le cours (${sib.length} blocs)`);
+      const one = mk("button", null, "Ce bloc seulement");
+      const pick = v => { scope = v;
+        all.classList.toggle("on", v === "cours"); one.classList.toggle("on", v === "bloc"); };
+      all.addEventListener("click", () => pick("cours"));
+      one.addEventListener("click", () => pick("bloc"));
+      seg.append(all, one); box.append(seg);
+    }
+
+    const duo = mk("div","duo");
+    const code = field("Sigle", e.code, { ph:"101-115-RI", max:20 });
+    const kinds = [["","—"],["TH","Théorie"],["LA","Laboratoire"],["AP","Activité pratique"]];
+    if (e.k && !kinds.some(([v]) => v === e.k)) kinds.push([e.k, e.k]);
+    const kind = field("Type", e.k, { options: kinds });
+    duo.append(code.w, kind.w);
+    const room = field("Local", e.room, { ph:"HA3325", max:40 });
+    const prof = field("Professeur", e.prof, { ph:"Nom du professeur", max:60 });
+    box.append(duo, room.w, prof.w);
+    box.append(mk("p","hint", sib.length > 1
+      ? "Une retouche vaut pour toutes les semaines. Le type, le local et le professeur ne changent que pour ce bloc."
+      : "Une retouche vaut pour toutes les semaines."));
+
+    const acts = mk("div","acts");
+    /* Supprimer libère les heures : la case redevient sélectionnable et
+       accepte un bloc à toi — c'est le chemin pour remplacer un cours par
+       autre chose sur toute la session. */
+    const del = mk("button","btn danger","Supprimer");
+    del.title = "Libère ces heures dans toutes les semaines";
+    del.addEventListener("click", () => {
+      setTTEdit(key, { del:true }); closePop(); ttChanged();
+    });
+    acts.append(del);
+    if (touched) {
+      const undo = mk("button","btn quiet","Rétablir");
+      undo.title = "Remettre ce bloc tel qu'il a été importé";
+      undo.addEventListener("click", () => {
+        delete state.ttEdits[key]; closePop(); ttChanged();
+      });
+      acts.append(undo);
+    }
+    acts.append(mk("span","grow"));
+    const cancel = mk("button","btn quiet","Annuler");
+    cancel.addEventListener("click", closePop);
+    const ok = mk("button","btn solid","Enregistrer");
+    const commit = () => {
+      const t = nom.i.value.trim();
+      if (!t) return;
+      const c = code.i.value.trim();
+      for (const row of (scope === "cours" ? sib : [e])) {
+        const k = ttKey(row);
+        setTTEdit(k, row === e
+          ? { t, code:c, k:kind.i.value, room:room.i.value.trim(), prof:prof.i.value.trim() }
+          : { t, code:c });
+      }
+      closePop(); ttChanged();
+    };
+    ok.addEventListener("click", commit);
+    /* Un nom vide n'enregistre rien : on le dit avec le bouton plutôt que de
+       fermer le composeur sans explication. */
+    const syncOk = () => { ok.disabled = !nom.i.value.trim(); };
+    nom.i.addEventListener("input", syncOk);
+    syncOk();
+    for (const f of [nom, code, room, prof]) f.i.addEventListener("keydown", ev => {
+      if (ev.key === "Enter") { ev.preventDefault(); commit(); }
+      if (ev.key === "Escape") { ev.preventDefault(); closePop(); }
+    });
+    acts.append(cancel, ok); box.append(acts);
+    pop = box; place(box, cell, true); nom.i.focus(); nom.i.select();
+  }
+
+  /* Rétablir efface toutes les retouches d'un coup : on dit combien, et on le
+     demande une seconde fois — des corrections patiemment saisies ne partent
+     pas sur un clic distrait. */
+  function openTTReset(anchorEl) {
+    pop?.remove();
+    const n = Object.keys(state.ttEdits).length;
+    const box = mk("div","pop fx");
+    box.append(mk("h4", null, "Rétablir l'horaire"));
+    box.append(mk("p","when", `${n} retouche${n > 1 ? "s" : ""}`));
+    box.append(mk("p","hint", "Les noms, sigles, types, locaux et professeurs que tu as corrigés reviennent à l'horaire importé, et les blocs de cours supprimés reparaissent. Les blocs que tu as ajoutés toi-même ne bougent pas."));
+    const acts = mk("div","acts"); acts.append(mk("span","grow"));
+    const cancel = mk("button","btn quiet","Annuler");
+    cancel.addEventListener("click", closePop);
+    const ok = mk("button","btn danger","Rétablir");
+    ok.addEventListener("click", () => { state.ttEdits = {}; closePop(); ttChanged(); });
+    acts.append(cancel, ok); box.append(acts);
+    pop = box; place(box, anchorEl);
   }
 
   /* ── Fiche d'une bande du graphique ───────────────────────────── */
@@ -1846,7 +2373,8 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
     return n;
   }
   const refreshAll = () => { renderDeadlines(); renderTodos(); renderWeeks();
-    renderOverview(); renderRings(); renderMios(); };
+    renderOverview(); renderRings(); renderMios();
+    if (mCur && !el("matiere").hidden) renderMDates(); };
 
   const ACT_LBL = { examen:"examen", remise:"remise", autre:"date" };
   function actionChip(a) {
@@ -1932,12 +2460,12 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
       const b = mk("button","subj");
       const pip = mk("span","pip"); pip.style.background = `hsl(${hueOf(c)} 62% 52%)`;
       b.append(pip, mk("span", null, c), mk("span","cnt", `${info.hours}h`));
-      if (state.filter === c) { b.style.background = "var(--surface-2)"; b.style.color = "var(--ink)"; }
+      if (state.filter === c || mCur === c) { b.style.background = "var(--surface-2)"; b.style.color = "var(--ink)"; }
       else if (state.filter) b.style.opacity = ".45";
-      b.addEventListener("click", () => {
-        state.filter = state.filter === c ? null : c;
-        renderSubjects(); renderWeeks(); save();
-      });
+      /* Le clic ouvre la fiche du cours plutôt que de filtrer : filtrer reste
+         un geste, mais depuis la fiche, l'horaire ou la carte du cours. */
+      b.addEventListener("click", () => openMatiere(c));
+      b.title = `Ouvrir la fiche de ${c}`;
       box.append(b);
     }
   }
@@ -2052,17 +2580,196 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
       top.append(ring);
       const st = mk("p","st");
       st.append(mk("i"), document.createTextNode(`${info.blocks} bloc${info.blocks>1?"s":""} · ${info.code || "—"}`));
-      card.append(top, st, mk("p","dsc", info.prof || "Aucun professeur inscrit"));
+      const sh = mSheet(c), n = mCount(c);
+      card.append(top, st, mk("p","dsc", sh.prof || info.prof || "Aucun professeur inscrit"));
+      /* Ce que la fiche contient déjà, dit sur la carte : sans ça, rien
+         n'indique qu'il y a quelque chose à aller voir. */
+      const bits = [n.notes && `${n.notes} note${n.notes > 1 ? "s" : ""}`,
+                    n.dates && `${n.dates} date${n.dates > 1 ? "s" : ""}`].filter(Boolean);
+      if (bits.length) card.append(mk("p","dsc", bits.join(" · ")));
       card.style.cursor = "pointer";
-      card.addEventListener("click", () => { state.filter = state.filter === c ? null : c;
-        renderSubjects(); renderWeeks(); el("horaire").scrollIntoView({ behavior:"smooth", block:"start" }); });
+      card.title = `Ouvrir la fiche de ${c}`;
+      card.addEventListener("click", () => openMatiere(c));
       box.append(card);
     }
   }
 
+  /* ── Fiche d'une matière ─────────────────────────────────────────
+     Cliquer une matière — dans la barre latérale ou dans « Mes cours » —
+     ouvre sa fiche. Les dates qu'on y ajoute ne sont pas un carnet à part :
+     ce sont les mêmes échéances que partout ailleurs, d'où le rappel qui
+     s'allume et la case qui se pose dans l'horaire. */
+  const MSHEET = { prof:"", mail:"", room:"", link:"", memo:"", notes:[] };
+  /* Clés possibles d'une fiche, la meilleure en tête. Un horaire lu sur photo
+     laisse souvent le sigle vide : la fiche s'ouvre alors sous le nom du
+     cours, puis déménage sous le sigle dès qu'une collecte le fait
+     apparaître — sans que les notes déjà prises restent en arrière. */
+  const mKeys = c => { const code = courseInfo(c).code; return code ? [code, c] : [c]; };
+  const mRaw = c => { const ks = mKeys(c); return state.sheets[ks.find(k => state.sheets[k])] || {}; };
+  const mSheet = c => { const r = mRaw(c);
+    return { ...MSHEET, ...r, notes: Array.isArray(r.notes) ? r.notes : [] }; };
+  const mPatch = (c, patch) => { const ks = mKeys(c);
+    state.sheets[ks[0]] = { ...MSHEET, ...mRaw(c), ...patch };
+    for (const old of ks.slice(1)) delete state.sheets[old];
+    save(); };
+  const mDates = c => state.deadlines.filter(d => courseOf(d) === c);
+  const mStamp = () => { const t = new Date();
+    return `${t.getDate()} ${MONTH[t.getMonth()].slice(0,4)} · ${pad(t.getHours())}:${pad(t.getMinutes())}`; };
+  /* Ce qu'une fiche contient déjà : sert aux compteurs des cartes « Mes cours ». */
+  const mCount = c => { const sh = mSheet(c);
+    return { notes: sh.notes.filter(n => (n.t || "").trim()).length, dates: mDates(c).length }; };
+  let mCur = null;                     // matière dont la fiche est ouverte
+
+  function openMatiere(c) {
+    if (!COURSES.includes(c)) return;
+    mCur = c;
+    showView("matiere");
+    renderMatiere();
+    renderSubjects();
+  }
+  /* Refermer la fiche passe par showView : c'est le seul endroit que TOUTE
+     navigation traverse — le bouton « Retour », un onglet de la barre
+     latérale, le logo. Un seul point de sortie, donc un seul rafraîchissement
+     des cartes de « Mes cours ». */
+  function closeMatiere() {
+    if (!el("matiere").hidden) { showView("board"); return; }
+    mCur = null; renderSubjects(); renderCourses();
+  }
+  /* Les faits viennent de l'horaire ; la saisie manuelle a le dernier mot
+     quand l'horaire est muet (photo lue avec des cases vides). */
+  function renderMFacts() {
+    const c = mCur; if (!c) return;
+    const info = courseInfo(c), nx = nextSession(c), sh = mSheet(c);
+    const firstOf = key => (TT.find(e => e.t === c && e[key]) || {})[key] || "";
+    const box = el("m-facts"); box.textContent = "";
+    for (const [k, v] of [
+      ["Sigle", info.code || "Non inscrit"],
+      ["Par semaine", `${info.hours} h · ${info.blocks} bloc${info.blocks > 1 ? "s" : ""}`],
+      ["Prochaine séance", nx ? sessionWhen(nx) : "Aucune à venir"],
+      ["Type", nx ? kindLabel(nx.e.k) : ""],
+      ["Local", sh.room || nx?.e.room || firstOf("room") || "Non inscrit"],
+      ["Professeur", sh.prof || info.prof || "Non inscrit"],
+    ]) { if (!v) continue;
+      const d = mk("div"); d.append(mk("span","k",k), mk("span","v",v)); box.append(d); }
+  }
+  const MFIELDS = [["m-prof","prof"],["m-mail","mail"],["m-room","room"],["m-link","link"],["m-memo","memo"]];
+  function renderMatiere() {
+    const c = mCur; if (!c) return;
+    const info = courseInfo(c), sh = mSheet(c);
+    const firstOf = key => (TT.find(e => e.t === c && e[key]) || {})[key] || "";
+    el("m-title").textContent = c;
+    el("m-pip").style.background = `hsl(${hueOf(c)} 62% 52%)`;
+    el("m-flabel").textContent = state.filter === c ? "Retirer le filtre" : "Voir à l'horaire";
+    renderMFacts();
+    for (const [id, key] of MFIELDS) el(id).value = sh[key] || "";
+    /* Un champ vide n'invente rien : il montre en gris ce que l'horaire dit
+       déjà, pour qu'on n'ait à écrire que ce qui manque. */
+    el("m-prof").placeholder = info.prof || "Nom de l'enseignant";
+    el("m-room").placeholder = firstOf("room") || "Ex. HA3380";
+    el("m-dd").value = el("m-dd").value || iso(addDays(today0, 7));
+    renderMDates(); renderMNotes();
+  }
+  function renderMDates() {
+    const c = mCur; if (!c) return;
+    const box = el("m-dates"); box.textContent = "";
+    const list = mDates(c).sort((a,b) =>
+      (a.done - b.done) || a.date.localeCompare(b.date) || (a.time||"").localeCompare(b.time||""));
+    for (const d of list) {
+      const cd = countdown(d.date, d.time);
+      const li = mk("li","nrow dline" + (d.done ? " done" : ""));
+      li.style.setProperty("--p", `var(--p${cd.lvl})`);
+      const bd = mk("div","al");
+      bd.append(mk("p","tx", d.t));
+      const meta = mk("p","w");
+      const label = ACT_LBL[d.kind] || "date";
+      meta.append(mk("b","cd l" + cd.lvl, cd.txt),
+        document.createTextNode(` · ${frDate(d.date)}${d.time ? ` · ${d.time}` : ""} · ${label}`));
+      bd.append(meta);
+      const bx = mk("button","nbox"); bx.innerHTML = ICON.check;
+      bx.setAttribute("aria-label", d.done ? "Rouvrir" : "Marquer fait");
+      bx.addEventListener("click", () => { d.done = !d.done; renderMDates(); refreshAll(); });
+      const kill = mk("button","kill","×"); kill.title = "Supprimer";
+      kill.addEventListener("click", () => {
+        state.deadlines = state.deadlines.filter(x => x.id !== d.id);
+        renderMDates(); renderCourses(); refreshAll();
+      });
+      li.append(mk("span","bar4"), bd, bx, kill);
+      box.append(li);
+    }
+    el("m-dempty").hidden = list.length > 0;
+    el("m-dn").textContent = list.length ? `${list.length}` : "";
+  }
+  function addMDate() {
+    const c = mCur; if (!c) return;
+    const t = el("m-dt").value.trim();
+    if (!t) { el("m-dt").focus(); return; }
+    state.deadlines.push({ id:uid(), t, course:c, code:courseInfo(c).code || "",
+      date: el("m-dd").value || iso(addDays(today0, 7)), time: el("m-dh").value || "",
+      kind: el("m-dk").value, src:"manuel", done:false });
+    el("m-dt").value = ""; el("m-dh").value = "";
+    renderMDates(); renderCourses(); refreshAll();
+    el("m-dt").focus();
+  }
+  /* Une note se modifie là où on la lit : pas de mode « édition », le champ
+     EST la note. La hauteur suit le texte pour qu'aucune ligne ne se cache. */
+  function renderMNotes() {
+    const c = mCur; if (!c) return;
+    const box = el("m-notes"); box.textContent = "";
+    const notes = mSheet(c).notes;
+    for (const n of notes) {
+      const w = mk("div","note");
+      const h = mk("div","nh");
+      const kill = mk("button","kill","×"); kill.title = "Supprimer la note";
+      kill.addEventListener("click", () => {
+        mPatch(c, { notes: mSheet(c).notes.filter(x => x.id !== n.id) });
+        renderMNotes(); renderCourses();
+      });
+      h.append(mk("span", null, n.at || ""), mk("span","grow"), kill);
+      const ta = mk("textarea");
+      ta.value = n.t || ""; ta.rows = 1; ta.placeholder = "Écris ta note…";
+      const grow = () => { ta.style.height = "auto"; ta.style.height = `${ta.scrollHeight}px`; };
+      ta.addEventListener("input", () => {
+        grow();
+        mPatch(c, { notes: mSheet(c).notes.map(x => x.id === n.id ? { ...x, t: ta.value } : x) });
+      });
+      w.append(h, ta); box.append(w);
+      requestAnimationFrame(grow);
+    }
+    el("m-nempty").hidden = notes.length > 0;
+  }
+
+  el("m-back").addEventListener("click", () => { closeMatiere(); scrollTo({ top:0, behavior:"smooth" }); });
+  el("m-filter").addEventListener("click", () => {
+    const c = mCur; if (!c) return;
+    const on = state.filter !== c;
+    state.filter = on ? c : null;
+    save(); renderWeeks(); renderCourses();
+    /* Filtrer, c'est vouloir voir la grille : on y va. Retirer le filtre se
+       fait sur place, sans quitter la fiche. */
+    if (on) { closeMatiere(); goto("horaire"); }
+    else { el("m-flabel").textContent = "Voir à l'horaire"; renderSubjects(); }
+  });
+  for (const [id, key] of MFIELDS) el(id).addEventListener("input", () => {
+    if (!mCur) return;
+    mPatch(mCur, { [key]: el(id).value });
+    if (key === "prof" || key === "room") renderMFacts();
+  });
+  el("m-dgo").addEventListener("click", addMDate);
+  el("m-dt").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addMDate(); } });
+  el("m-nadd").addEventListener("click", () => {
+    if (!mCur) return;
+    mPatch(mCur, { notes: [{ id:uid(), t:"", at:mStamp() }, ...mSheet(mCur).notes] });
+    renderMNotes();
+    el("m-notes").querySelector("textarea")?.focus();
+  });
+
   /* ── Thème + commandes ────────────────────────────────────────── */
   function applyTheme() {
     document.documentElement.setAttribute("data-theme", state.theme);
+    /* La carte du titre s'inverse avec le thème : la capture doit suivre,
+       sinon l'écran montré jure avec la carte qui l'entoure. */
+    const hs = el("hero-shot");
+    if (hs) hs.src = hs.dataset[state.theme === "dark" ? "dark" : "light"];
     el("th-icon").innerHTML = state.theme === "dark" ? ICON.sun : ICON.moon;
     el("t-icon").innerHTML = state.theme === "dark" ? ICON.sun : ICON.moon;
     el("t-label").textContent = state.theme === "dark" ? "Thème clair" : "Thème sombre";
@@ -2091,6 +2798,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
   el("w-next").addEventListener("click", () => stepWeek(1));
   el("w-now").addEventListener("click", () => goWeek(0));
   el("h-mode").addEventListener("click", () => setWView(state.wview === "pile" ? "une" : "pile"));
+  el("h-reset").addEventListener("click", ev => openTTReset(ev.currentTarget));
   el("h-unfilter").addEventListener("click", () => {
     state.filter = null; renderSubjects(); renderWeeks(); renderCourses(); save();
   });
@@ -2197,6 +2905,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
 
   applyTheme(); renderWeeks(); renderSubjects(); renderOverview(); renderChart();
   renderRings(); renderCourses(); renderTodos(); renderDeadlines(); renderMios();
+  syncTTReset();
   observeCards();
   // Hors-ligne aussi : les actions déjà en mémoire locale s'appliquent.
   if (autoApply()) refreshAll();
@@ -2223,6 +2932,23 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
     if (!r.ok) throw new Error(d.msg || d.error_description || d.message || `erreur ${r.status}`);
     return d;
   }
+  /* Supabase répond en anglais. Les quelques messages qu'un étudiant verra
+     vraiment sont traduits ; le reste passe tel quel plutôt que d'être avalé. */
+  const SB_FR = [
+    [/invalid login credentials/i, "Courriel ou mot de passe incorrect."],
+    [/unable to validate email/i, "Ce courriel n'a pas l'air valide."],
+    [/user already registered|already been registered/i, "Ce courriel a déjà un compte — connecte-toi plutôt."],
+    [/email not confirmed/i, "Confirme d'abord le lien reçu par courriel."],
+    [/password should be at least/i, "Mot de passe trop court : au moins 8 caractères."],
+    [/only request this after (\d+)/i, "Trop de tentatives d'affilée. Attends une minute."],
+    [/failed to fetch|networkerror/i, "Pas de réseau — réessaie dans un instant."],
+  ];
+  const frErr = (e) => {
+    const m = String(e?.message || e || "");
+    for (const [re, fr] of SB_FR) if (re.test(m)) return fr;
+    return m;
+  };
+
   const sbKeep = (d) => { sbSave({ at: d.access_token, rt: d.refresh_token, uid: d.user?.id, email: d.user?.email }); };
 
   async function sbFetchSnapshot(retry = true) {
@@ -2233,7 +2959,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
     });
     if (r.status === 401 && retry && s0.rt) {
       try { sbKeep(await sbAuth("token?grant_type=refresh_token", { refresh_token: s0.rt })); }
-      catch { sbClear(); renderAccount(); return null; }
+      catch { sbClear(); renderAccount(); showJoin("signin"); return null; }
       return sbFetchSnapshot(false);
     }
     if (!r.ok) return null;
@@ -2283,7 +3009,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
       box.append(mk("p","when","Tes échéances et MIO se synchronisent depuis l'agent local à chaque collecte."));
       const acts = mk("div","acts");
       const out = mk("button","btn danger","Se déconnecter");
-      out.addEventListener("click", () => { sbClear(); renderAccount(); closePop(); });
+      out.addEventListener("click", () => { sbClear(); renderAccount(); closePop(); showJoin("signin"); });
       acts.append(out, mk("span","grow"));
       const close = mk("button","btn quiet","Fermer"); close.addEventListener("click", closePop);
       const sync = mk("button","btn solid","Rafraîchir");
@@ -2306,7 +3032,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
             const d = await sbAuth(path, { email: em.value.trim(), password: pw.value });
             if (d.access_token) { sbKeep(d); renderAccount(); closePop(); applyCloud(await sbFetchSnapshot()); }
             else msg.textContent = "Compte créé : clique le lien de confirmation reçu par courriel, puis connecte-toi.";
-          } catch (e2) { msg.textContent = String(e2.message || e2); }
+          } catch (e2) { msg.textContent = frErr(e2); }
         });
         return b;
       };
@@ -2327,8 +3053,13 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
      page d'accueil qui explique le fonctionnement. L'en-tête « Salut » ne
      vaut que dans l'app : la landing se présente seule. */
   function showView(name) {
-    for (const v of ["board","profil","landing","onboard"]) el(v).hidden = v !== name;
-    el("apphead").hidden = name === "landing" || name === "onboard";
+    /* Quitter la fiche d'une matière la referme : les cartes de « Mes cours »
+       reprennent alors les notes et les dates qu'on vient d'y écrire. */
+    if (name !== "matiere" && mCur) { mCur = null; renderSubjects(); renderCourses(); }
+    for (const v of ["board","profil","matiere","landing","onboard"]) el(v).hidden = v !== name;
+    const hors = name === "landing" || name === "onboard";
+    el("apphead").hidden = hors;
+    document.body.classList.toggle("lp", hors);
     if (name !== "board") scrollTo({ top:0, behavior:"smooth" });
   }
   function showProfile(on) {
@@ -2378,17 +3109,20 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
     document.querySelectorAll(".navi[data-go]").forEach(x => x.classList.toggle("on", x.dataset.go === "top"));
     scrollTo({ top:0, behavior:"smooth" });
   };
-  /* Depuis l'accueil : un appareil neuf et sans compte passe d'abord par
-     l'inscription ; tous les autres entrent directement. */
+  /* Le compte n'est pas facultatif : sans session, l'accueil ne mène qu'à
+     l'inscription. Une session déjà ouverte entre directement. */
   const openApp = () => {
-    if (firstVisit() && !sbSession()) { showJoin("signup"); return; }
-    markVu(); enterBoard();
+    if (sbSession()) { markVu(); enterBoard(); return; }
+    showJoin("signup");
   };
-  el("cta-open").addEventListener("click", openApp);
-  el("cta-open2").addEventListener("click", openApp);
+  for (const id of ["cta-open","cta-open2","cta-open3"]) el(id).addEventListener("click", openApp);
+  el("lp-signin").addEventListener("click", () => showJoin(sbSession() ? "signup" : "signin"));
 
   let joMode = "signup";
   function showJoin(mode) {
+    /* Franchir l'accueil, c'est l'avoir vu : au prochain passage sur cet
+       appareil, on ouvre directement le formulaire. */
+    markVu();
     joMode = mode;
     const up = joMode === "signup";
     el("jo-title").textContent = up ? "Crée ton compte d'agenda" : "Connecte-toi";
@@ -2417,22 +3151,32 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
         sbKeep(d); renderAccount(); markVu(); enterBoard();
         applyCloud(await sbFetchSnapshot());
       } else {
-        joSay("Compte créé : confirme le lien reçu par courriel, puis connecte-toi ici.");
+        /* showJoin remet le message à zéro : basculer d'abord, parler ensuite. */
+        showJoin("signin");
+        el("jo-email").value = email;
+        joSay(`Compte créé. Un courriel de confirmation part vers ${email} : clique le lien, `
+            + "puis reviens ici pour te connecter.");
       }
-    } catch (e2) { joSay(String(e2.message || e2), true); }
+    } catch (e2) { joSay(frErr(e2), true); }
     finally { el("jo-go").disabled = false; }
   }
   el("jo-go").addEventListener("click", joSubmit);
   el("jo-swap").addEventListener("click", () => showJoin(joMode === "signup" ? "signin" : "signup"));
-  el("jo-skip").addEventListener("click", () => { markVu(); enterBoard(); });
+  el("jo-home").addEventListener("click", () => showView("landing"));
   el("onboard").addEventListener("keydown", ev => {
     if (ev.key === "Enter" && ev.target.tagName === "INPUT") joSubmit();
   });
 
-  /* Vue de départ. Un compte déjà connecté vaut témoin : l'appareil n'est
-     pas neuf, même si le cookie a été effacé. */
-  if (firstVisit() && !sbSession()) showView("landing");
-  else { markVu(); enterBoard(); }
+  /* Vue de départ, en trois cas :
+       session ouverte        → le tableau de bord, directement ;
+       appareil neuf          → la page d'accueil, qui explique ;
+       déjà venu, déconnecté  → le formulaire de connexion, sans le laïus. */
+  function route() {
+    if (sbSession()) { markVu(); enterBoard(); }
+    else if (firstVisit()) showView("landing");
+    else showJoin("signin");
+  }
+  route();
   el("p-name").addEventListener("input", () => { state.name = el("p-name").value; renderIdentity(); save(); });
   el("p-account").addEventListener("click", ev => openAccount(ev.currentTarget));
 
@@ -2440,7 +3184,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
     const s0 = sbSession();
     if (!s0?.rt) return false;
     try { sbKeep(await sbAuth("token?grant_type=refresh_token", { refresh_token: s0.rt })); return true; }
-    catch { sbClear(); renderAccount(); return false; }
+    catch { sbClear(); renderAccount(); showJoin("signin"); return false; }
   }
   async function sbUpdatePassword(pw, retry = true) {
     const s0 = sbSession();
@@ -2463,7 +3207,7 @@ button.me:hover{box-shadow:var(--shadow),0 0 0 3px color-mix(in srgb,var(--inver
       await sbUpdatePassword(a);
       el("p-pw1").value = ""; el("p-pw2").value = "";
       msg.textContent = "Mot de passe changé ✓";
-    } catch (e2) { msg.textContent = String(e2.message || e2); }
+    } catch (e2) { msg.textContent = frErr(e2); }
   });
 
   /* Photo d'horaire : compressée en JPEG (côté long ≤ 1600 px) pour tenir

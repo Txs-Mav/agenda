@@ -4,20 +4,46 @@
     {
       "name": "agenda-static-2",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-l", "4179", "public"],
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "4179",
+        "public"
+      ],
       "port": 4179
     },
     {
       "name": "agenda-static-3",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-l", "4183", "public"],
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "4183",
+        "public"
+      ],
       "port": 4183
     },
     {
       "name": "agenda-static-4",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-l", "4191", "public"],
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "4191",
+        "public"
+      ],
       "port": 4191
+    },
+    {
+      "name": "agenda-static-5",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "4197",
+        "public"
+      ],
+      "port": 4197
     }
   ]
 }
