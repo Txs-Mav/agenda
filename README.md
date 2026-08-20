@@ -24,7 +24,10 @@ Guide illustré et détaillé : https://agenda-five-sigma.vercel.app/guide.html
 - **Une seule tentative de connexion, jamais de réessai** — des échecs répétés
   arment le captcha d'Omnivox puis verrouillent le dossier.
 - Le compte nuagique (facultatif) ne transporte que les **données dérivées** —
-  échéances et résumés — sous ton propre compte, protégé par RLS.
+  échéances, résumés, et la liste de ce que tu as supprimé — sous ton propre
+  compte, protégé par RLS. Cette dernière est ce qui empêche la collecte
+  suivante de te remettre une tâche ou une échéance que tu viens de retirer :
+  Omnivox, lui, continue de l'afficher.
 
 ## Commandes
 

@@ -818,13 +818,19 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
 .mform .full{grid-column:1/-1}
 
 /* Ajout d'une date : le titre prend la place qui reste. */
-.dadd{display:flex;flex-wrap:wrap;gap:.45rem;padding:.35rem 1.25rem 1.15rem}
+.dadd{display:flex;flex-wrap:wrap;gap:.45rem;padding:.35rem 1.25rem .6rem}
 .dadd .pin{width:auto;min-width:0;padding:.52rem .68rem;font-size:.83rem}
 .dadd .pin.tt{flex:1 1 100%}
 .dadd .pin.k{flex:1 1 6.4rem}
 .dadd .pin.d{flex:1 1 8.4rem}
 .dadd .pin.t{flex:1 1 5.6rem}
 .dadd .btn{flex:0 0 auto;margin-left:auto}
+/* Une date n'existe jamais toute seule : elle part classée sous un cours.
+   On le nomme là où on l'écrit, avec la pastille de la matière. */
+.dhint{padding:0 1.25rem 1.15rem;font-size:.72rem;line-height:1.5;color:var(--faint)}
+.dhint i{display:inline-block;width:.5rem;height:.5rem;border-radius:50%;
+  background:hsl(var(--h) 60% 52%);margin-right:.35rem}
+.dhint b{color:var(--dim);font-weight:600}
 
 /* Une note : un tampon de date, puis un texte qui grandit tout seul. */
 .notes{display:flex;flex-direction:column;gap:.5rem;padding:.35rem 1.25rem 1.15rem}
@@ -835,6 +841,45 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
 .note textarea{width:100%;background:none;border:none;resize:none;color:var(--ink);font:inherit;font-size:.86rem;line-height:1.45;padding:.2rem 0 .5rem;overflow:hidden}
 .note textarea:focus{outline:none}
 .note textarea::placeholder{color:var(--faint)}
+
+/* Où le cours tombe dans la semaine. La grille de l'horaire répond « qu'est-ce
+   que j'ai mardi ? » ; celle-ci répond « quand ai-je CE cours ? » — d'où les
+   blocs des autres matières laissés en sourdine : ils donnent le relief de la
+   semaine sans disputer le regard à ceux qu'on est venu voir. */
+.mtt{display:grid;grid-template-columns:1.85rem repeat(var(--mc,5),minmax(0,1fr));
+  grid-auto-rows:1.6rem;padding:.2rem 1.25rem 1.25rem;min-width:0;container-type:inline-size}
+.mtt[hidden]{display:none}
+.mtt .k{display:flex;align-items:center;justify-content:flex-end;padding-right:.4rem;
+  font-family:var(--mono);font-size:.58rem;color:var(--faint);font-variant-numeric:tabular-nums}
+.mtt .dh{padding:0 0 .3rem;border:0;text-align:center;font-family:var(--mono);font-size:.58rem;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--faint);background:none}
+.mtt .dh.td{color:var(--live)}
+.mtt .c{border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.mtt .c.we{background:var(--surface-2)}
+.mtt .c.end{border-bottom:1px solid var(--line)}
+.mtt .e{position:relative;z-index:2;margin:1.5px;border-radius:7px;padding:0 .32rem;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:center;min-width:0;text-align:left;
+  transition:background .14s,color .14s}
+.mtt .e b,.mtt .e .r{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Le nom d'un autre cours prend les lignes que la hauteur du bloc lui donne :
+   deux heures de cours valent deux lignes, une heure n'en vaut qu'une. */
+.mtt .e .n{display:-webkit-box;-webkit-line-clamp:var(--lines,1);-webkit-box-orient:vertical;
+  overflow:hidden;word-break:break-word}
+.mtt .e b,.mtt .e span{font-size:.6rem;line-height:1.22;font-weight:500}
+/* Les autres cours : présents, jamais bruyants — un aplat neutre, aucune teinte. */
+.mtt .e.off{background:var(--surface-2);color:var(--faint);cursor:pointer}
+.mtt .e.off:hover{background:var(--surface-3);color:var(--dim)}
+/* Le cours de la fiche : la même couleur que dans la vraie grille. */
+.mtt .e.on{background:hsl(var(--h) 62% 55% / var(--evt-bg));
+  box-shadow:inset 0 0 0 1px hsl(var(--h) 55% 48% / var(--evt-bd));
+  border-left:3px solid hsl(var(--h) 62% 48%);
+  color:hsl(var(--h) 60% var(--evt-tx));cursor:pointer}
+.mtt .e.on b{font-weight:650}
+.mtt .e.on span{opacity:.78}
+/* Sur une colonne étroite, un nom de cours ne rentre plus qu'en morceaux
+   (« Écritu / re e… ») : mieux vaut le taire. Les blocs gardent leur place et
+   leur couleur, c'est tout ce que la carte a à dire à cette largeur. */
+@container (max-width:26rem){ .mtt .e .n,.mtt .e .r{display:none} }
 </style>
 
 <div class="shell">
@@ -1048,14 +1093,23 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
               <input class="pin t" id="m-dh" type="time">
               <button class="btn solid" id="m-dgo">Ajouter</button>
             </div>
+            <p class="dhint" id="m-dhint"></p>
           </section>
         </div>
-        <section class="card fx">
-          <div class="ch"><h3>Notes</h3><span class="grow"></span>
-            <button class="link" id="m-nadd"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg> Nouvelle note</button></div>
-          <div class="notes" id="m-notes"></div>
-          <p class="empty" id="m-nempty">Rien de noté pour l'instant. Consignes du prof, pages à lire, ce qui est tombé à l'examen — tout reste sur cet appareil.</p>
-        </section>
+        <div class="mcol">
+          <section class="card fx">
+            <div class="ch"><h3>Notes</h3><span class="grow"></span>
+              <button class="link" id="m-nadd"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg> Nouvelle note</button></div>
+            <div class="notes" id="m-notes"></div>
+            <p class="empty" id="m-nempty">Rien de noté pour l'instant. Consignes du prof, pages à lire, ce qui est tombé à l'examen — tout reste sur cet appareil.</p>
+          </section>
+          <section class="card fx">
+            <div class="ch"><h3>Semaine type</h3><span class="grow"></span>
+              <span class="dim mono" id="m-ttn" style="font-size:.7rem"></span></div>
+            <div class="mtt" id="m-tt"></div>
+            <p class="empty" id="m-ttempty" hidden>Ce cours n'a aucun bloc à l'horaire.</p>
+          </section>
+        </div>
       </div>
     </div>
 
@@ -1454,12 +1508,24 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
        une action ne s'applique automatiquement qu'UNE fois — ce que tu
        supprimes ensuite ne revient jamais tout seul. */
     acted: {},
+    /* Reports/annulations d'échéances décidés par l'agent (ou toi), par id
+       d'échéance visée : réappliqués après chaque rechargement des données,
+       sinon le Léa scrapé restaurerait l'ancienne date. */
+    mods: {},
+    /* Suppressions assumées, par identifiant : { k, t, at }. Ce que tu retires
+       à la main doit le rester — le scraper repousse les mêmes échéances Léa à
+       chaque collecte, et une ré-analyse peut re-proposer la même tâche sous un
+       autre identifiant. Poussée dans le nuage (genre « suppressions ») pour
+       valoir sur tous tes appareils. */
+    gone: {},
   });
   let state;
   try { state = { ...seed(), ...(JSON.parse(localStorage.getItem(KEY)) || {}) }; }
   catch { state = seed(); }
   if (!Array.isArray(state.wks) || !state.wks.length) state.wks = [0];
   if (!state.acted || typeof state.acted !== "object") state.acted = {};
+  if (!state.mods || typeof state.mods !== "object") state.mods = {};
+  if (!state.gone || typeof state.gone !== "object") state.gone = {};
   if (!state.ttEdits || typeof state.ttEdits !== "object") state.ttEdits = {};
   if (!state.sheets || typeof state.sheets !== "object") state.sheets = {};
   if (state.wview !== "pile") state.wview = "une";
@@ -1630,13 +1696,17 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
       else cell.classList.add("under");
     } else if (dl) {
       const cd = countdown(dl.date, dl.time);
-      paint(cell, { hue:hueOf(courseOf(dl)), span:1, title:dl.t,
-        meta:dl.kind === "examen" ? "Examen" : "Remise", time:dl.time });
+      /* Une case ne dit que le titre : la teinte donne la matière à l'œil,
+         l'infobulle la donne en toutes lettres. Et « autre » n'est pas une
+         remise — on ne lui colle pas une étiquette qu'elle n'a pas. */
+      const dlc = courseOf(dl);
+      const dlk = dl.kind === "examen" ? "Examen" : dl.kind === "remise" ? "Remise" : "Date";
+      paint(cell, { hue:hueOf(dlc), span:1, title:dl.t, meta:dlk, time:dl.time });
       const ev = cell.querySelector(".ev");
       ev.classList.add("dlblk");
       ev.style.setProperty("--p", `var(--p${cd.lvl})`);
       ev.style.setProperty("--pt", `var(--p${cd.lvl}t)`);   // variante lisible sur fond clair
-      cell.title = `${dl.t}\n${cd.txt}`;
+      cell.title = `${dl.t}\n${dlc ? `${dlc} · ` : ""}${dlk} · ${cd.txt}`;
       cell.style.cursor = "pointer";
       cell.addEventListener("pointerdown", e2 => { e2.preventDefault(); goto("echeances"); });
       return cell;
@@ -1798,6 +1868,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
       const del = mk("button","btn danger", merging ? "Supprimer tout" : "Supprimer");
       del.addEventListener("click", () => {
         const ids = new Set(blk.merge?.length ? blk.merge : [blk.id]);
+        for (const b of dayBlocks(d)) if (ids.has(b.id)) noteSuppression("bloc", b);
         state.blocks[d] = dayBlocks(d).filter(b => !ids.has(b.id));
         if (!state.blocks[d].length) delete state.blocks[d];
         closePop(); renderWeeks(); renderMios(); // une puce d'agent peut repasser à « + »
@@ -1953,8 +2024,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
       if (!t) return;
       const c = code.i.value.trim();
       for (const row of (scope === "cours" ? sib : [e])) {
-        const k = ttKey(row);
-        setTTEdit(k, row === e
+        setTTEdit(ttKey(row), row === e
           ? { t, code:c, k:kind.i.value, room:room.i.value.trim(), prof:prof.i.value.trim() }
           : { t, code:c });
       }
@@ -2212,6 +2282,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
       const kill = mk("button","kill","×");
       kill.title = "Supprimer la tâche"; kill.setAttribute("aria-label","Supprimer la tâche");
       kill.addEventListener("click", () => {
+        noteSuppression("tache", it);
         state.todos.splice(i,1);
         if (!state.todos.length) state.todos.push({ id:uid(), t:"", done:false, lvl:0 });
         renderTodos(); renderRings(); renderMios(); // une puce d'agent peut repasser à « + »
@@ -2256,6 +2327,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
       bx.addEventListener("click", () => { d.done = !d.done; renderDeadlines(); renderWeeks(); renderOverview(); renderRings(); });
       const kill = mk("button","kill","×");
       kill.addEventListener("click", () => {
+        noteSuppression("echeance", d);
         state.deadlines = state.deadlines.filter(x => x.id !== d.id);
         renderDeadlines(); renderWeeks(); renderOverview(); renderRings();
         renderMios(); // une puce d'agent peut repasser à « + »
@@ -2279,23 +2351,26 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     box.append(mk("p","when","L'urgence se calcule à partir de la date."));
     const t = mk("input"); t.type = "text"; t.placeholder = "Examen, remise, lecture…"; t.maxLength = 70;
     t.value = pre?.t || "";
+    const clab = mk("p", null, "Matière");
+    clab.style.cssText = "margin:.6rem 0 .25rem;font-size:.66rem;letter-spacing:.11em;text-transform:uppercase;color:var(--faint)";
     const c = mk("select");
-    c.style.cssText = "width:100%;margin-top:.5rem;background:var(--surface-2);border:1px solid transparent;border-radius:12px;padding:.6rem .7rem;color:var(--ink);font:inherit;font-size:.85rem";
+    c.style.cssText = "width:100%;background:var(--surface-2);border:1px solid transparent;border-radius:12px;padding:.6rem .7rem;color:var(--ink);font:inherit;font-size:.85rem";
     for (const name of COURSES) { const o = mk("option", null, name); o.value = name;
       if (pre?.course === name) o.selected = true; c.append(o); }
     const wrap = mk("div"); wrap.style.cssText = "display:flex;gap:.5rem;margin-top:.5rem";
     const d = mk("input"); d.type = "date"; d.value = pre?.date || iso(addDays(today0, 7)); d.style.flex = "1 1 auto";
     const h = mk("input"); h.type = "time"; h.value = pre?.time || ""; h.style.width = "7.5rem";
     wrap.append(d, h);
-    box.append(t, c, wrap);
+    box.append(t, clab, c, wrap);
     const acts = mk("div","acts");
     acts.append(mk("span","grow"));
     const cancel = mk("button","btn quiet","Annuler"); cancel.addEventListener("click", closePop);
     const ok = mk("button","btn solid","Ajouter");
     const commit = () => {
       const v = t.value.trim(); if (!v) { closePop(); return; }
-      state.deadlines.push({ id:uid(), t:v, course:c.value, date:d.value || iso(addDays(today0,7)),
-        time:h.value || "", kind:pre?.kind || "autre", src:pre?.src || "manuel", done:false });
+      state.deadlines.push({ id:uid(), t:v, course:c.value, code:courseInfo(c.value).code || "",
+        date:d.value || iso(addDays(today0,7)), time:h.value || "",
+        kind:pre?.kind || "autre", src:pre?.src || "manuel", done:false });
       closePop(); renderDeadlines(); renderWeeks(); renderOverview(); renderRings();
     };
     ok.addEventListener("click", commit);
@@ -2311,10 +2386,80 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
      appliquée UNE fois puis consignée dans state.acted : supprimer l'élément
      créé est donc définitif, et la puce de la carte MIO permet de le
      ré-ajouter à la main. */
+  /* Mots significatifs d'un titre, pour reconnaître une reformulation. */
+  const sigTok = s => new Set((s || "").toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ").trim()
+    .split(" ").filter(w => w.length > 3));
+  const memeTitre = (x, y) => {
+    const A = sigTok(x), B = sigTok(y);
+    if (!A.size || !B.size) return false;
+    let n = 0; for (const w of A) if (B.has(w)) n++;
+    return n / Math.min(A.size, B.size) >= 0.6;
+  };
+
+  /* ── Suppressions ────────────────────────────────────────────────
+     Supprimer est une décision, pas un affichage : elle doit survivre à la
+     collecte suivante. On garde donc une pierre tombale par élément retiré —
+     identifiant, titre, date — consultée avant de ré-ajouter quoi que ce
+     soit, et poussée dans le nuage pour valoir sur tous tes appareils.
+     Ré-ajouter à la main lève la suppression. Passé une session (180 jours),
+     une tombe ne protège plus rien : on la jette. */
+  const GONE_TTL = 180 * 864e5;
+  function prunGone() {
+    const lim = Date.now() - GONE_TTL;
+    for (const [id, g] of Object.entries(state.gone)) if (!g || (g.at && g.at < lim)) delete state.gone[id];
+  }
+  /* Le balayage se fait ici, pas à la lecture de l'état : GONE_TTL n'existe
+     qu'à partir de cette ligne, et rien ne consulte les tombes avant. */
+  prunGone();
+  function noteSuppression(k, item) {
+    if (!item?.id) return;
+    state.gone[item.id] = { k, t: item.t || "", at: Date.now() };
+    save(); sbPushGone();
+  }
+  /* Un identifiant vient du contenu (sigle + titre + date côté Léa, message +
+     titre côté agent) : un travail que le prof modifie VRAIMENT en obtient un
+     nouveau et reparaît — c'est voulu, ce n'est plus le même. */
+  const estSupprime = id => !!state.gone[id];
+  /* Une ré-analyse (autre modèle, corps enfin lu) renumérote les actions :
+     pour une tâche on reconnaît donc aussi le titre reformulé, la mesure
+     qu'actionExists prend déjà pour ne jamais empiler deux fois la même.
+     Échéances et blocs s'en tiennent à l'identifiant : « Devoir 3 » et
+     « Devoir 4 » se ressemblent trop pour risquer d'en effacer un. */
+  const memeTache = (a, g) => g.k === "tache" && memeTitre(g.t, a.t);
+  function actionSupprimee(a) {
+    if (estSupprime(a.id)) return true;
+    if (a.type !== "tache") return false;
+    return Object.values(state.gone).some(g => memeTache(a, g));
+  }
+  function annuleSuppression(a) {
+    let n = 0;
+    for (const [id, g] of Object.entries(state.gone))
+      if (id === a.id || (a.type === "tache" && memeTache(a, g))) { delete state.gone[id]; n++; }
+    if (n) { save(); sbPushGone(); }
+  }
+  /* Une suppression venue d'un autre appareil retire aussi ce qui est déjà
+     là — à l'identifiant SEULEMENT : une tâche écrite à la main n'a pas à
+     disparaître parce qu'une autre lui ressemble. */
+  function purgeSupprimes() {
+    state.deadlines = state.deadlines.filter(d => !estSupprime(d.id));
+    state.todos = state.todos.filter(t => !estSupprime(t.id));
+    if (!state.todos.length) state.todos.push({ id:uid(), t:"", done:false, lvl:0 });
+    for (const [date, list] of Object.entries(state.blocks)) {
+      const reste = list.filter(b => !estSupprime(b.id));
+      if (reste.length) state.blocks[date] = reste; else delete state.blocks[date];
+    }
+  }
+  /* Une ré-analyse (meilleur modèle, corps enfin lu) change les identifiants
+     d'action : on reconnaît aussi l'élément équivalent déjà en place, pour ne
+     jamais empiler deux fois la même chose. */
   function actionExists(a) {
-    if (a.type === "echeance") return state.deadlines.some(d => d.id === a.id);
-    if (a.type === "tache")    return state.todos.some(t => t.id === a.id);
+    if (a.type === "echeance") return state.deadlines.some(d => d.id === a.id) || dupEcheance(a);
+    if (a.type === "tache")
+      return state.todos.some(t => t.id === a.id || memeTitre(t.t, a.t));
     if (a.type === "bloc")     return (state.blocks[a.date] || []).some(b => b.id === a.id);
+    if (a.type === "reporter") return !!state.mods[a.target] && !state.mods[a.target].dropped;
+    if (a.type === "annuler")  return !!state.mods[a.target]?.dropped;
     return false;
   }
   /* Un bloc ne s'installe jamais par-dessus un cours ou un bloc existant. */
@@ -2359,14 +2504,37 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
       }
       return true;
     }
+    if (a.type === "reporter") {
+      state.mods[a.target] = { date:a.date, time:a.time || "" };
+      applyMods();
+      return true;
+    }
+    if (a.type === "annuler") {
+      state.mods[a.target] = { dropped:true };
+      applyMods();
+      return true;
+    }
     return false;
+  }
+  /* Réapplique reports et annulations sur la liste courante : nécessaire à
+     chaque ingestion, puisque le Léa scrapé revient avec l'ancienne date. */
+  function applyMods() {
+    for (const [id, mod] of Object.entries(state.mods)) {
+      const i = state.deadlines.findIndex(x => x.id === id);
+      if (i < 0) continue;
+      if (mod.dropped) state.deadlines.splice(i, 1);
+      else { const d = state.deadlines[i];
+        if (mod.date) d.date = mod.date;
+        if (mod.time !== undefined) d.time = mod.time; }
+    }
   }
   function autoApply() {
     let n = 0;
     for (const m of state.mios) for (const a of (m.actions || [])) {
       if (state.acted[a.id]) continue;
       state.acted[a.id] = true;
-      if (a.type === "echeance" && dupEcheance(a)) continue; // déjà couvert par Léa
+      if (actionSupprimee(a)) continue; // tu l'avais retiré : il ne revient pas seul
+      if (actionExists(a)) continue; // déjà en place (ou déjà couvert par Léa)
       if (applyAction(a)) n++;
     }
     if (n) save();
@@ -2382,20 +2550,25 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     const off = !on && a.type === "bloc" && blockConflict(a);
     const chip = mk("button","act" + (on ? " done" : off ? " off" : ""));
     const k = a.type === "echeance" ? (ACT_LBL[a.kind] || "date")
-            : a.type === "bloc" ? "bloc" : "tâche";
+            : a.type === "bloc" ? "bloc"
+            : a.type === "reporter" ? "reporté"
+            : a.type === "annuler" ? "annulé" : "tâche";
     chip.append(mk("span","k", (on ? "✓ " : "+ ") + k));
     const when = a.type === "echeance" ? ` · ${frDate(a.date)}${a.time ? " " + a.time : ""}`
-               : a.type === "bloc" ? ` · ${frDate(a.date)} ${pad(a.from)}–${pad(a.to)} h` : "";
+               : a.type === "bloc" ? ` · ${frDate(a.date)} ${pad(a.from)}–${pad(a.to)} h`
+               : a.type === "reporter" ? ` → ${frDate(a.date)}${a.time ? " " + a.time : ""}` : "";
     chip.append(mk("span","l", a.t + when));
     if (on) {
       chip.title = "Déjà dans l'agenda — cliquer pour y aller";
       chip.addEventListener("click", () =>
-        goto(a.type === "echeance" ? "echeances" : a.type === "bloc" ? "horaire" : "todocard"));
+        goto(a.type === "bloc" ? "horaire" : a.type === "tache" ? "todocard" : "echeances"));
     } else if (off) {
       chip.title = "Chevauche un cours ou un bloc existant";
     } else {
-      chip.title = "Ajouter à l'agenda";
+      chip.title = actionSupprimee(a)
+        ? "Tu l'avais supprimé — cliquer pour le remettre" : "Ajouter à l'agenda";
       chip.addEventListener("click", () => {
+        annuleSuppression(a);   // le remettre à la main lève la suppression
         state.acted[a.id] = true;
         if (applyAction(a)) refreshAll(); else renderMios();
       });
@@ -2613,6 +2786,10 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     for (const old of ks.slice(1)) delete state.sheets[old];
     save(); };
   const mDates = c => state.deadlines.filter(d => courseOf(d) === c);
+  /* Un champ de note fait exactement la hauteur de son texte : rien à
+     dérouler, rien de coupé. À recalculer dès que la largeur change, sinon
+     une note écrite au large se tronque une fois la fenêtre rétrécie. */
+  const mGrow = ta => { ta.style.height = "auto"; ta.style.height = `${ta.scrollHeight}px`; };
   const mStamp = () => { const t = new Date();
     return `${t.getDate()} ${MONTH[t.getMonth()].slice(0,4)} · ${pad(t.getHours())}:${pad(t.getMinutes())}`; };
   /* Ce qu'une fiche contient déjà : sert aux compteurs des cartes « Mes cours ». */
@@ -2667,7 +2844,13 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     el("m-prof").placeholder = info.prof || "Nom de l'enseignant";
     el("m-room").placeholder = firstOf("room") || "Ex. HA3380";
     el("m-dd").value = el("m-dd").value || iso(addDays(today0, 7));
-    renderMDates(); renderMNotes();
+    /* La date écrite ici devient une échéance comme les autres : dire sous
+       quelle matière elle part évite de la chercher ensuite. */
+    const hint = el("m-dhint"); hint.textContent = "";
+    hint.style.setProperty("--h", hueOf(c));
+    hint.append(mk("i"), document.createTextNode("S'ajoute à "), mk("b", null, c),
+      document.createTextNode(" · elle portera ce nom dans tes échéances."));
+    renderMDates(); renderMNotes(); renderMTT();
   }
   function renderMDates() {
     const c = mCur; if (!c) return;
@@ -2690,6 +2873,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
       bx.addEventListener("click", () => { d.done = !d.done; renderMDates(); refreshAll(); });
       const kill = mk("button","kill","×"); kill.title = "Supprimer";
       kill.addEventListener("click", () => {
+        noteSuppression("echeance", d);
         state.deadlines = state.deadlines.filter(x => x.id !== d.id);
         renderMDates(); renderCourses(); refreshAll();
       });
@@ -2727,27 +2911,100 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
       h.append(mk("span", null, n.at || ""), mk("span","grow"), kill);
       const ta = mk("textarea");
       ta.value = n.t || ""; ta.rows = 1; ta.placeholder = "Écris ta note…";
-      const grow = () => { ta.style.height = "auto"; ta.style.height = `${ta.scrollHeight}px`; };
       ta.addEventListener("input", () => {
-        grow();
+        mGrow(ta);
         mPatch(c, { notes: mSheet(c).notes.map(x => x.id === n.id ? { ...x, t: ta.value } : x) });
       });
       w.append(h, ta); box.append(w);
-      requestAnimationFrame(grow);
+      /* Tout de suite, pour que la note soit à sa taille dès le premier
+         affichage ; puis au cadre suivant, une fois la police posée. Un
+         onglet en arrière-plan ne rend jamais ce cadre — d'où les deux. */
+      mGrow(ta); requestAnimationFrame(() => mGrow(ta));
     }
     el("m-nempty").hidden = notes.length > 0;
   }
+  /* La semaine type du cours : les mêmes blocs que dans l'horaire, à l'échelle
+     d'une carte. Seul le cours ouvert garde sa couleur ; les autres restent en
+     gris pour qu'on voie d'un coup où celui-ci se pose — et cliquer l'un d'eux
+     ouvre sa fiche, puisque c'est la question qui suit. */
+  function renderMTT() {
+    const c = mCur; if (!c) return;
+    const box = el("m-tt"); box.textContent = "";
+    /* La fin de semaine ne s'affiche que si un cours s'y trouve : sinon deux
+       colonnes vides voleraient la largeur des cinq qui comptent. */
+    const n = (state.weekend || TT.some(e => e.d > 4)) ? 7 : 5;
+    const rows = TT.filter(e => e.d < n && e.h[1] > START_HOUR && e.h[0] <= END_HOUR);
+    const mine = rows.filter(e => e.t === c);
+    el("m-tt").hidden = !rows.length;
+    el("m-ttempty").hidden = rows.length > 0;
+    el("m-ttn").textContent = [...new Set(mine.map(e => e.d))]
+      .sort((a,b) => a-b).map(d => DOW[d]).join(" · ");
+    if (!rows.length) return;
+    /* La grille s'arrête aux heures réellement occupées : une carte sans
+       rangées vides en haut ni en bas. */
+    const lo = Math.max(START_HOUR, Math.min(...rows.map(e => e.h[0])));
+    const hi = Math.min(END_HOUR + 1, Math.max(...rows.map(e => e.h[1])));
+    box.style.setProperty("--mc", n);
+    const at = (node, col, r1, r2) => { node.style.gridColumn = col;
+      node.style.gridRow = r2 ? `${r1} / ${r2}` : r1; box.append(node); };
+
+    at(mk("div"), 1, 1);
+    const wdToday = inSem(now0) ? (now0.getDay()+6)%7 : -1;
+    for (let d = 0; d < n; d++) {
+      const h = mk("div", "dh" + (d === wdToday ? " td" : ""), DOW[d]);
+      at(h, d+2, 1);
+    }
+    for (let hr = lo; hr < hi; hr++) {
+      at(mk("div","k", `${hr}h`), 1, hr-lo+2);
+      for (let d = 0; d < n; d++) {
+        const cell = mk("div", "c" + (d > 4 ? " we" : "") + (hr === hi-1 ? " end" : ""));
+        at(cell, d+2, hr-lo+2);
+      }
+    }
+    for (const e of rows) {
+      const on = e.t === c;
+      const b = mk("div", "e " + (on ? "on" : "off"));
+      b.style.setProperty("--h", hueOf(e.t));
+      b.title = [e.t, e.code && `${e.code}${e.k ? ` (${kindLabel(e.k)})` : ""}`, e.room, e.time]
+        .filter(Boolean).join("\n");
+      const span = Math.min(hi, e.h[1]) - Math.max(lo, e.h[0]);
+      if (on) {
+        b.append(mk("b", null, e.k || c));
+        if (span >= 2 && e.room) b.append(mk("span","r", e.room));
+      } else {
+        b.style.setProperty("--lines", span >= 2 ? 2 : 1);
+        b.append(mk("span","n", e.t));
+      }
+      b.tabIndex = 0;
+      const open = () => on ? seeAtSchedule(c) : openMatiere(e.t);
+      if (!on) b.title = `Ouvrir la fiche de ${e.t}\n` + b.title;
+      b.addEventListener("click", open);
+      b.addEventListener("keydown", ev => {
+        if (ev.key === "Enter") { ev.preventDefault(); open(); } });
+      at(b, e.d+2, Math.max(lo, e.h[0])-lo+2, Math.min(hi, e.h[1])-lo+2);
+    }
+  }
+  /* Filtrer l'horaire sur un cours, puis y aller : le bouton de l'en-tête et
+     un bloc de la semaine type disent la même chose, ils font donc la même. */
+  function seeAtSchedule(c) {
+    state.filter = c;
+    save(); renderWeeks(); renderCourses();
+    closeMatiere(); goto("horaire");
+  }
+  addEventListener("resize", () => {
+    if (el("matiere").hidden) return;
+    el("m-notes").querySelectorAll("textarea").forEach(mGrow);
+  });
 
   el("m-back").addEventListener("click", () => { closeMatiere(); scrollTo({ top:0, behavior:"smooth" }); });
   el("m-filter").addEventListener("click", () => {
     const c = mCur; if (!c) return;
-    const on = state.filter !== c;
-    state.filter = on ? c : null;
-    save(); renderWeeks(); renderCourses();
     /* Filtrer, c'est vouloir voir la grille : on y va. Retirer le filtre se
        fait sur place, sans quitter la fiche. */
-    if (on) { closeMatiere(); goto("horaire"); }
-    else { el("m-flabel").textContent = "Voir à l'horaire"; renderSubjects(); }
+    if (state.filter !== c) { seeAtSchedule(c); return; }
+    state.filter = null;
+    save(); renderWeeks(); renderCourses();
+    el("m-flabel").textContent = "Voir à l'horaire"; renderSubjects();
   });
   for (const [id, key] of MFIELDS) el(id).addEventListener("input", () => {
     if (!mCur) return;
@@ -2839,7 +3096,8 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
   el("t-theme").addEventListener("click", flipTheme);
   el("t-print").addEventListener("click", () => window.print());
   el("go-print").addEventListener("click", () => window.print());
-  el("t-weekend").addEventListener("click", () => { state.weekend = !state.weekend; renderWeeks(); renderChart(); save(); });
+  el("t-weekend").addEventListener("click", () => { state.weekend = !state.weekend;
+    renderWeeks(); renderChart(); if (mCur) renderMTT(); save(); });
   el("chart-flip").addEventListener("click", () => { state.chart = state.chart === "jour" ? "cours" : "jour"; renderChart(); });
 
   el("dl-ics").addEventListener("click", async () => {
@@ -2954,7 +3212,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
   async function sbFetchSnapshot(retry = true) {
     const s0 = sbSession();
     if (!s0) return null;
-    const r = await fetch(`${SB_URL}/rest/v1/agenda_snapshots?kind=in.(export,horaire)&select=kind,payload,updated_at`, {
+    const r = await fetch(`${SB_URL}/rest/v1/agenda_snapshots?kind=in.(export,horaire,suppressions)&select=kind,payload,updated_at`, {
       headers: { apikey: SB_KEY, authorization: `Bearer ${s0.at}` },
     });
     if (r.status === 401 && retry && s0.rt) {
@@ -2966,20 +3224,54 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     return await r.json();   // [{kind, payload}, …]
   }
 
+  /* Écriture d'une ligne sous le compte courant. Même table et mêmes règles
+     RLS que la lecture ; « merge-duplicates » remplace la ligne du même genre
+     (clé primaire user_id + kind) au lieu d'en empiler une seconde. */
+  async function sbPut(kind, payload, retry = true) {
+    const s0 = sbSession();
+    if (!s0?.at || !s0?.uid) return false;
+    const r = await fetch(`${SB_URL}/rest/v1/agenda_snapshots`, {
+      method: "POST",
+      headers: { apikey: SB_KEY, authorization: `Bearer ${s0.at}`,
+                 "content-type": "application/json", prefer: "resolution=merge-duplicates" },
+      body: JSON.stringify([{ user_id: s0.uid, kind, payload }]),
+    });
+    if (r.status === 401 && retry && s0.rt) {
+      try { sbKeep(await sbAuth("token?grant_type=refresh_token", { refresh_token: s0.rt })); }
+      catch { return false; }
+      return sbPut(kind, payload, false);
+    }
+    return r.ok;
+  }
+  /* On nettoie rarement une seule ligne : on laisse retomber la poussière
+     avant d'écrire. Sans compte, tout reste local — la liste vit quand même
+     dans localStorage et protège déjà la prochaine ingestion. */
+  let goneTimer = null;
+  function sbPushGone() {
+    if (!sbSession()) return;
+    clearTimeout(goneTimer);
+    goneTimer = setTimeout(() => { sbPut("suppressions", { v:1, gone: state.gone }).catch(() => {}); }, 800);
+  }
+
   /* Un seul point d'entrée pour les données du scraper (data.json ou nuage).
      Le scrapé remplace le scrapé ; ce qui n'en vient pas — saisi à la main
      (manuel) ou appliqué depuis un MIO (mio) — survit, tout comme les cases
-     cochées « fait ». Puis l'agent applique les actions encore jamais vues. */
+     cochées « fait ». Ce que tu as supprimé ne repasse pas. Puis l'agent
+     applique les actions encore jamais vues. */
   function ingest(d) {
     if (!d || (!d.deadlines && !d.mios)) return;
     const kept = state.deadlines.filter(x => x.src !== "lea");
     const doneIds = new Set(state.deadlines.filter(x => x.done).map(x => x.id));
-    state.deadlines = [...kept, ...(d.deadlines || []).map(x => ({ ...x, done: x.done || doneIds.has(x.id) }))];
+    /* Le scraper repousse TOUT Léa à chaque collecte : sans ce filtre, une
+       échéance supprimée ici reparaît à l'ingestion suivante. */
+    const frais = (d.deadlines || []).filter(x => !estSupprime(x.id));
+    state.deadlines = [...kept, ...frais.map(x => ({ ...x, done: x.done || doneIds.has(x.id) }))];
     state.mios = d.mios || [];
     if (d.lastScrape) {
       const t = new Date(d.lastScrape);
       state.lastScrape = `${DOW[(t.getDay()+6)%7]}. ${t.getDate()} ${MONTH[t.getMonth()].slice(0,4)} ${pad(t.getHours())}:${pad(t.getMinutes())}`;
     }
+    applyMods();   // le Léa scrapé revient toujours avec l'ancienne date
     autoApply();
     refreshAll();
   }
@@ -2988,9 +3280,21 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
   function applyCloud(rows) {
     if (!Array.isArray(rows)) return;
     const of = k => rows.find(r => r.kind === k)?.payload;
+    fusionneSuppressions(of("suppressions"));  // d'abord : rien de supprimé ne doit revenir
     const h = of("horaire");
     if (h?.tt) setTimetable(h.tt, "nuage");
     ingest(of("export"));
+  }
+  /* Une suppression ne s'annule que par un ré-ajout explicite : les deux
+     listes s'unissent, jamais ne se soustraient. Si le nuage ignore des
+     tombes locales (autre appareil, première synchro), on lui pousse la
+     liste fusionnée. */
+  function fusionneSuppressions(payload) {
+    const dist = (payload && typeof payload.gone === "object" && payload.gone) || {};
+    let neuf = 0;
+    for (const [id, g] of Object.entries(dist)) if (!state.gone[id]) { state.gone[id] = g; neuf++; }
+    if (neuf) { prunGone(); purgeSupprimes(); save(); refreshAll(); }
+    if (Object.keys(state.gone).some(id => !dist[id])) sbPushGone();
   }
 
   function renderAccount() {

@@ -48,13 +48,14 @@ export type Deadline = {
  */
 export type MioAction = {
   id: string;
-  type: "echeance" | "tache" | "bloc";
+  type: "echeance" | "tache" | "bloc" | "reporter" | "annuler";
   t: string;
   kind?: Deadline["kind"]; // echeance
-  date?: string;           // echeance, bloc — AAAA-MM-JJ
-  time?: string;           // echeance — HH:MM ou ""
+  date?: string;           // echeance, bloc, reporter — AAAA-MM-JJ
+  time?: string;           // echeance, reporter — HH:MM ou ""
   from?: number;           // bloc — heure entière de début
   to?: number;             // bloc — heure entière de fin
+  target?: string;         // reporter, annuler — id de l'échéance visée
   code?: string;           // sigle du cours s'il apparaît dans le message
   course?: string;         // nom du cours si identifiable
 };

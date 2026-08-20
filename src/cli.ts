@@ -13,8 +13,9 @@ import { config, urls, PLACEHOLDER_MSG } from "./config.js";
 import { discover } from "./scrape/discover.js";
 import { collectMios, persist } from "./scrape/collect.js";
 import { fetchBodies } from "./scrape/lire.js";
+import { fileStore, type Deadline } from "./store.js";
 import { analyzeNew } from "./scrape/agent.js";
-import { pushSnapshot } from "./sync/supabase.js";
+import { pushSnapshot, fetchSuppressions } from "./sync/supabase.js";
 import { extractHoraire } from "./scrape/horaire.js";
 import { collectEvenements } from "./scrape/evenements.js";
 import { reportFailure, reportSuccess } from "./notify.js";
@@ -140,11 +141,18 @@ async function cmdScrape(): Promise<void> {
     // ainsi qu'on arme le captcha puis qu'on verrouille le DA. Elle exige une
     // session déjà établie par `npm run login`, et échoue bruyamment sinon.
     log.info(`session ${await ensureSession(s.page, { allowLogin: false })}`);
-    const echeances = await collectEvenements(s.page);
+    // Relu AVANT la collecte : ce que tu as supprimé dans l'agenda ne doit ni
+    // revenir dans les données, ni être resoumis à l'agent comme « connu ».
+    const supprimees = await fetchSuppressions();
+    const echeances = (await collectEvenements(s.page)).filter((d) => !supprimees.has(d.id));
     const miosBruts = await collectMios(s.page);
     const corps = await fetchBodies(s.page, miosBruts); // nouveaux seulement, 8 max par passage
-    const mios = await analyzeNew(miosBruts, corps);    // résumé + actions, modèle le moins cher
-    persist(mios, echeances);
+    // L'agent reçoit toutes les échéances connues (fraîches + retenues) pour
+    // dédoublonner et pouvoir reporter/annuler ce qu'un prof change en MIO.
+    const prevD = fileStore.read<Deadline[]>("deadlines", []).filter((p) => !supprimees.has(p.id));
+    const connues = [...echeances, ...prevD.filter((p) => !echeances.some((e) => e.id === p.id))];
+    const mios = await analyzeNew(miosBruts, corps, connues);
+    persist(mios, echeances, supprimees);
     const { readFileSync: rf } = await import("node:fs");
     await pushSnapshot(JSON.parse(rf(join(config.dataDir, "export.json"), "utf8")));
     await s.saveState();

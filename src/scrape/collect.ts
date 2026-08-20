@@ -81,7 +81,7 @@ export function merge<T extends { id: string }>(previous: T[], fresh: T[], keep:
   return out;
 }
 
-export function persist(mios: Mio[], deadlines: Deadline[]): void {
+export function persist(mios: Mio[], deadlines: Deadline[], supprimees: Set<string> = new Set()): void {
   const prevD = fileStore.read<Deadline[]>("deadlines", []);
   // Les MIO n'ont aucun champ modifié par l'utilisateur : le frais remplace
   // tout — sinon l'ancien enregistrement écraserait résumé et actions neufs.
@@ -92,7 +92,10 @@ export function persist(mios: Mio[], deadlines: Deadline[]): void {
   // prof persiste jusqu'à son échéance ; on préfère un faux rappel à un
   // examen silencieusement disparu.)
   const aujourdHui = new Date().toISOString().slice(0, 10);
-  const nextD = merge(prevD, deadlines, (d) => d.src === "manuel" || d.done || d.date >= aujourdHui);
+  // Ce que tu as supprimé dans l'agenda ne rentre pas, même si Omnivox
+  // continue de l'afficher : sans ce filtre, chaque collecte le ressusciterait.
+  const nextD = merge(prevD, deadlines, (d) => d.src === "manuel" || d.done || d.date >= aujourdHui)
+    .filter((d) => !supprimees.has(d.id));
   fileStore.write("mios", nextM);
   fileStore.write("deadlines", nextD);
   const payload = { lastScrape: new Date().toISOString(), mios: nextM, deadlines: nextD };
