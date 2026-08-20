@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda Cégep — Guide d'installation</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<style>
+:root{
+  --bg:#E7E8EB;--surface:#FFF;--surface-2:#F3F4F6;--invert:#1B1C1E;--on-invert:#FFF;
+  --ink:#16171A;--dim:#666A70;--faint:#9BA0A6;--line:rgba(0,0,0,.08);
+  --ok:#3FA457;--warn:#E8912B;--bad:#E0483A;
+  --shadow:0 1px 2px rgba(16,18,20,.05),0 14px 34px -22px rgba(16,18,20,.45);
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box} h1,h2,h3,p,ul,ol{margin:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--font);-webkit-font-smoothing:antialiased}
+.wrap{max-width:46rem;margin:0 auto;padding:2.5rem 1.2rem 5rem}
+.hero{text-align:center;padding:1.5rem 0 2.2rem}
+.hero .mk{width:3.4rem;height:3.4rem;border-radius:14px;background:var(--invert);color:var(--on-invert);display:inline-grid;place-items:center;margin-bottom:1rem}
+.hero h1{font-size:2rem;font-weight:650;letter-spacing:-.035em}
+.hero p{color:var(--dim);max-width:34rem;margin:.7rem auto 0}
+.hero .cta{display:inline-flex;gap:.6rem;margin-top:1.4rem}
+.btn{display:inline-flex;align-items:center;gap:.45rem;border-radius:999px;padding:.65rem 1.2rem;font-size:.9rem;font-weight:550;text-decoration:none;color:var(--ink);background:var(--surface);box-shadow:var(--shadow)}
+.btn.solid{background:var(--invert);color:var(--on-invert)}
+.card{background:var(--surface);border-radius:22px;box-shadow:var(--shadow);padding:1.5rem 1.6rem;margin-top:1.1rem}
+.card h2{font-size:1.12rem;font-weight:650;letter-spacing:-.02em;display:flex;align-items:center;gap:.6rem}
+.n{display:inline-grid;place-items:center;width:1.7rem;height:1.7rem;border-radius:50%;background:var(--invert);color:var(--on-invert);font-size:.85rem;flex:0 0 auto}
+.card p{color:var(--dim);margin-top:.6rem}
+.card b{color:var(--ink)}
+pre{background:var(--invert);color:#E8EAED;border-radius:14px;padding:.95rem 1.1rem;overflow-x:auto;font:12.5px/1.6 var(--mono);margin:.8rem 0 0;position:relative}
+pre .c{color:#8A9199}
+.pill{display:inline-block;font:11px/1 var(--mono);letter-spacing:.06em;padding:.3rem .6rem;border-radius:99px;margin-top:.8rem}
+.pill.ok{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+.pill.warn{background:color-mix(in srgb,var(--warn) 16%,transparent);color:#9a5f0a}
+.callout{display:flex;gap:.7rem;background:var(--surface-2);border-radius:14px;padding:.85rem 1rem;margin-top:.9rem;font-size:.85rem;color:var(--dim)}
+.callout.mfa{background:color-mix(in srgb,var(--warn) 10%,var(--surface-2))}
+.callout b{color:var(--ink)}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(12rem,1fr));gap:.8rem;margin-top:1rem}
+.mini{background:var(--surface-2);border-radius:14px;padding:.9rem 1rem}
+.mini b{font-size:.9rem}
+.mini p{font-size:.8rem;margin-top:.3rem}
+footer{text-align:center;color:var(--faint);font-size:.78rem;margin-top:3rem}
+footer a{color:var(--dim)}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#141618;--surface:#1D2023;--surface-2:#24282B;--invert:#F2F3F5;--on-invert:#16171A;
+    --ink:#F1F3F5;--dim:#A2A8AF;--faint:#6E757C;--line:rgba(255,255,255,.09);
+    --shadow:0 1px 2px rgba(0,0,0,.35),0 14px 34px -22px rgba(0,0,0,.8);color-scheme:dark}
+  pre{background:#0E1012;color:#D7DBDF}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <span class="mk"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7M4 12h16M4 18h11"/></svg></span>
+    <h1>Ton agenda de cégep,<br>rempli tout seul depuis Omnivox</h1>
+    <p>Horaire, travaux, examens et MIO collectés chez toi, affichés dans un tableau de bord clair.
+       <b>Tes identifiants ne quittent jamais ta machine</b> — chacun fait tourner sa propre copie.</p>
+    <span class="cta">
+      <a class="btn solid" href="#install">Installer en 5 étapes</a>
+      <a class="btn" href="/">Voir l'agenda</a>
+    </span>
+  </div>
+
+  <div class="card">
+    <h2>Comment ça marche</h2>
+    <div class="grid3">
+      <div class="mini"><b>1 · Tu te connectes une fois</b><p>Fenêtre visible, tu tapes ton code de vérification toi-même. Le script ne le voit jamais.</p></div>
+      <div class="mini"><b>2 · La session est réutilisée</b><p>Une collecte automatique passe toutes les heures, sans jamais se reconnecter.</p></div>
+      <div class="mini"><b>3 · Ton agenda se remplit</b><p>Échéances datées avec compte à rebours, MIO résumés, pastilles sur les dates d'examen.</p></div>
+    </div>
+    <div class="callout"><span>🔒</span><span><b>Modèle de sécurité :</b> aucun serveur central. Ton mot de passe vit dans un fichier <b>.env</b> chez toi, exclu de git. L'authentification multifacteur n'est <b>jamais contournée</b> — c'est toi qui saisis le code, le script attend.</span></span></div>
+  </div>
+
+  <div class="card" id="install">
+    <h2><span class="n">1</span> Prérequis</h2>
+    <p>Un Mac (la collecte automatique utilise launchd), <b>Node.js 20+</b> et <b>git</b>.</p>
+    <pre><span class="c"># vérifier :</span>
+node --version && git --version</pre>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">2</span> Cloner et installer</h2>
+    <pre>git clone https://github.com/Txs-Mav/agenda.git
+cd agenda
+npm install
+npx playwright install chromium</pre>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">3</span> Tes identifiants — chez toi seulement</h2>
+    <p>Copie le gabarit, puis remplace les deux <b>REMPLACE_MOI</b> par ton matricule et ton mot de passe Omnivox. Ce fichier est déjà dans <b>.gitignore</b> : il ne peut pas être commité ni envoyé où que ce soit.</p>
+    <pre>cp .env.example .env
+open -e .env</pre>
+    <div class="callout"><span>💡</span><span>Tant que les valeurs d'exemple sont présentes, le programme <b>refuse</b> de tenter une connexion — impossible d'armer le captcha par accident.</span></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">4</span> La connexion, guidée</h2>
+    <p>Une fenêtre s'ouvre, tes identifiants sont préremplis. Il ne reste que l'étape de vérification :</p>
+    <pre>npm run login</pre>
+    <div class="callout mfa"><span>📱</span><span><b>Quand le code apparaît :</b> saisis-le dans la fenêtre, puis coche <b>« se souvenir de cet appareil »</b> si l'option est proposée — c'est ce qui évite de refaire cette étape à chaque collecte. Le script attend jusqu'à 10 minutes, puis enregistre la session.</span></div>
+    <span class="pill ok">UNE SEULE FOIS · ENSUITE LA SESSION EST RÉUTILISÉE</span>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">5</span> Collecter, puis automatiser</h2>
+    <p>Première collecte immédiate :</p>
+    <pre>npm run scrape</pre>
+    <p>Puis la collecte horaire automatique (une fois) :</p>
+    <pre>cp horaire.scrape.plist ~/Library/LaunchAgents/ca.qc.cegeptr.agenda.scrape.plist
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/ca.qc.cegeptr.agenda.scrape.plist</pre>
+    <p>Et pour voir ton tableau de bord avec tes données :</p>
+    <pre>cd public && python3 -m http.server 8899
+<span class="c"># puis ouvre http://localhost:8899</span></pre>
+  </div>
+
+  <div class="card">
+    <h2>En cas de pépin</h2>
+    <div class="grid3">
+      <div class="mini"><b>« Aucune session valide »</b><p>La session a expiré ou n'existe pas encore : relance <b>npm run login</b>. La collecte ne tente jamais de se connecter seule — c'est voulu.</p></div>
+      <div class="mini"><b>Captcha au login</b><p>Ferme, attends un peu, relance <b>npm run login</b> et connecte-toi entièrement à la main dans la fenêtre.</p></div>
+      <div class="mini"><b>Rien ne se collecte</b><p>Regarde <b>data/scrape.log</b>. « session réutilisée » suivi de comptes = tout va bien ; « code 3 » = refais le login.</p></div>
+    </div>
+  </div>
+
+  <footer>
+    Fait pour le Cégep de Trois-Rivières · le code est libre, tes données restent chez toi ·
+    <a href="/">ouvrir l'agenda</a>
+  </footer>
+</div>
+</body>
+</html>

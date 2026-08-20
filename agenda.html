@@ -412,6 +412,23 @@ li:hover .kill{opacity:1}
 /* Une échéance horodatée s'affiche dans la grille, marquée par l'urgence. */
 .ev.dlblk{border-left:3px solid var(--p);border-style:solid;box-shadow:inset 0 0 0 1px var(--p)}
 .ev.dlblk .m{font-weight:600;color:var(--pt)}
+.nrow .kill{margin-left:.2rem;align-self:flex-start;margin-top:.15rem}
+
+/* Révélations : cascade des tuiles KPI et pastilles, tracé des anneaux. */
+.card .tile,.card .fig{opacity:0;transform:translateY(9px)}
+.card.in .tile,.card.in .fig{animation:fx-rise .42s cubic-bezier(.2,.7,.3,1) forwards}
+.card.in .fig:nth-child(2){animation-delay:.07s}
+.card.in .tile:nth-child(1){animation-delay:.05s}
+.card.in .tile:nth-child(2){animation-delay:.13s}
+.card.in .tile:nth-child(3){animation-delay:.21s}
+#dial circle{transition:stroke-dasharray .9s cubic-bezier(.3,.7,.2,1)}
+.pop .sw-c,.dots .dot{opacity:0;animation:fx-pop .22s ease forwards}
+.pop .sw-c:nth-child(n){animation-delay:calc(.03s * var(--i,0))}
+@media (prefers-reduced-motion:reduce){
+  .card .tile,.card .fig{opacity:1;transform:none;animation:none!important}
+  .pop .sw-c,.dots .dot{opacity:1;animation:none!important}
+  #dial circle{transition:none}
+}
 </style>
 
 <div class="shell">
@@ -433,6 +450,7 @@ li:hover .kill{opacity:1}
     <p class="grp">Affichage</p>
     <button class="navi" id="t-theme"><span id="t-icon"></span> <span id="t-label">Thème sombre</span></button>
     <button class="navi" id="t-weekend"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M16 9.5v11"/></svg> Fins de semaine</button>
+    <a class="navi" href="guide.html" style="text-decoration:none"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 7.5h.01"/></svg> Guide d'installation</a>
     <button class="navi" id="t-print"><svg class="i" viewBox="0 0 24 24"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="7.5" rx="2"/><path d="M7 14h10v6.5H7z"/></svg> Imprimer</button>
   </aside>
 
@@ -849,10 +867,23 @@ li:hover .kill{opacity:1}
   });
 
   /* ── Composeur ────────────────────────────────────────────────── */
-  let pop = null;
-  const closePop = () => { pop?.remove(); pop = null; clearSel(); sel = null; };
+  let pop = null, popAnchor = null, popSide = false;
+  const closePop = () => { pop?.remove(); pop = null; popAnchor = null; clearSel(); sel = null; };
+
+  /* position:fixed : sans repositionnement, le composeur reste collé à l'écran
+     pendant que sa case défile — il flotte orphelin par-dessus le reste. On le
+     fait suivre l'ancre, et on le ferme quand elle quitte l'écran. */
+  document.addEventListener("scroll", () => {
+    if (!pop || !popAnchor) return;
+    const r = popAnchor.getBoundingClientRect();
+    // On ferme dès que la case est presque sortie (40 px de marge) : un
+    // composeur accroché à 10 px de case visible flotte déjà sur autre chose.
+    if (r.bottom < 40 || r.top > innerHeight - 40 || r.right < 40 || r.left > innerWidth - 40) { closePop(); return; }
+    place(pop, popAnchor, popSide);
+  }, { capture: true, passive: true });
 
   function place(node, anchorEl, side) {
+    popAnchor = anchorEl; popSide = !!side;
     const r = anchorEl.getBoundingClientRect();
     node.style.visibility = "hidden";
     document.body.append(node);
@@ -884,6 +915,7 @@ li:hover .kill{opacity:1}
     for (const h of HUES) {
       const s = mk("button","sw-c" + (h === hue ? " on" : ""));
       s.style.setProperty("--h", h);
+      s.style.setProperty("--i", HUES.indexOf(h));
       s.title = COURSES[HUES.indexOf(h)] || "Couleur";
       s.addEventListener("click", () => { hue = h;
         row.querySelectorAll(".sw-c").forEach(x => x.classList.remove("on")); s.classList.add("on"); });
@@ -1044,7 +1076,14 @@ li:hover .kill{opacity:1}
           ev.preventDefault(); focusRow(Math.min(state.todos.length-1, i+1), true);
         }
       });
-      li.append(grab, bx, tx);
+      const kill = mk("button","kill","×");
+      kill.title = "Supprimer la tâche"; kill.setAttribute("aria-label","Supprimer la tâche");
+      kill.addEventListener("click", () => {
+        state.todos.splice(i,1);
+        if (!state.todos.length) state.todos.push({ id:uid(), t:"", done:false, lvl:0 });
+        renderTodos(); renderRings();
+      });
+      li.append(grab, bx, tx, kill);
       ul.append(li);
     });
     countTodos(); save();
@@ -1254,8 +1293,11 @@ li:hover .kill{opacity:1}
       s.append(svgEl("circle", { cx:60, cy:60, r:R[i], fill:"none", stroke:"color-mix(in srgb, var(--ink) 9%, transparent)", "stroke-width":8 }));
       s.append(svgEl("circle", { cx:60, cy:60, r:R[i], fill:"none",
         stroke:`color-mix(in srgb, var(--ink) ${r.o*100}%, transparent)`, "stroke-width":8,
-        "stroke-linecap":"round", "stroke-dasharray":`${(r.v*c).toFixed(1)} ${c.toFixed(1)}`,
-        transform:"rotate(-90 60 60)" })); });
+        "stroke-linecap":"round", "stroke-dasharray":`0 ${c.toFixed(1)}`,
+        transform:"rotate(-90 60 60)" }));
+      const arc = s.lastChild;
+      requestAnimationFrame(() => requestAnimationFrame(() =>
+        arc.setAttribute("stroke-dasharray", `${(r.v*c).toFixed(1)} ${c.toFixed(1)}`))); });
     el("prog-pct").textContent = `${Math.round(rows.reduce((a,r) => a+r.v, 0)/rows.length*100)}%`;
     el("prog-sub").textContent = `${dT + dD} élément${dT+dD>1?"s":""} complété${dT+dD>1?"s":""}`;
   }
@@ -1347,8 +1389,39 @@ li:hover .kill{opacity:1}
   el("stamp").textContent =
     `${DOW[(now0.getDay()+6)%7]}. ${now0.getDate()} ${MONTH[now0.getMonth()]} ${now0.getFullYear()} · session A26`;
 
+  /* Révélations au premier passage à l'écran : cascade des tuiles, compte des
+     grands chiffres, tracé des anneaux. Une seule fois par carte, et rien du
+     tout si l'utilisateur préfère réduire les animations. */
+  const noMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function countUp(node) {
+    const target = Number(node.textContent);
+    if (noMotion || !Number.isFinite(target) || target <= 0) return;
+    const t0 = performance.now(), dur = 650;
+    node.textContent = "0";
+    const tick = (now) => {
+      const p = Math.min(1, (now - t0) / dur), e = p * (2 - p); // ease-out
+      node.textContent = String(Math.round(target * e));
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+  const revealed = new WeakSet();
+  const io = new IntersectionObserver((entries) => {
+    for (const en of entries) {
+      if (!en.isIntersecting || revealed.has(en.target)) continue;
+      revealed.add(en.target);
+      en.target.classList.add("in");
+      en.target.querySelectorAll(".fig b, .tile b").forEach(countUp);
+      io.unobserve(en.target);
+    }
+  }, { threshold: 0.25 });
+  const observeCards = () => document.querySelectorAll(".card, .course").forEach((c) => {
+    if (!revealed.has(c)) io.observe(c);
+  });
+
   applyTheme(); renderWeeks(); renderSubjects(); renderOverview(); renderChart();
   renderRings(); renderCourses(); renderTodos(); renderDeadlines(); renderMios();
+  observeCards();
 
   /* Contrat avec le scraper : il écrit data/export.json, tu le copies en
      public/data.json. Ce qui vient d'Omnivox remplace le scrapé ; ce que tu as

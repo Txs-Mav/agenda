@@ -12,6 +12,7 @@ import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { config, urls, PLACEHOLDER_MSG } from "./config.js";
 import { discover } from "./scrape/discover.js";
 import { collectMios, persist } from "./scrape/collect.js";
+import { summarizeNew } from "./scrape/summarize.js";
 import { collectEvenements } from "./scrape/evenements.js";
 import { log } from "./log.js";
 
@@ -136,7 +137,8 @@ async function cmdScrape(): Promise<void> {
     // session déjà établie par `npm run login`, et échoue bruyamment sinon.
     log.info(`session ${await ensureSession(s.page, { allowLogin: false })}`);
     const echeances = await collectEvenements(s.page);
-    const mios = await collectMios(s.page);
+    const miosBruts = await collectMios(s.page);
+    const mios = await summarizeNew(miosBruts);   // nouveaux seulement, modèle le moins cher
     persist(mios, echeances);
     await s.saveState();
   } finally { await s.close(); }
