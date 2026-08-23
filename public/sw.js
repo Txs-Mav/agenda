@@ -1,6 +1,6 @@
 /* Réseau d'abord pour la page (un nouveau déploiement arrive sans purge),
    cache d'abord pour les icônes. L'app reste utilisable hors ligne. */
-const CACHE = "agenda-v7";
+const CACHE = "agenda-v8";
 const ASSETS = ["/", "/icon.svg", "/icon-180.png", "/icon-192.png", "/icon-512.png", "/manifest.webmanifest"];
 
 self.addEventListener("install", (e) => {

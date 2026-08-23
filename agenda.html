@@ -1043,12 +1043,12 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
 /* Les orbes et cartes flottantes dépassent leurs boîtes par design : le
    rognage se fait au niveau de la page, jamais par barre de défilement. */
 html,body{overflow-x:clip}
-:root{--vio:#6D5AF0;--vio2:#9E8CFF;--viod:#5B4BE8}
+:root{--ac:#12857A;--ac2:#2FBFA8;--acd:#0B6B62;--wa:#DE9038;--nuit:#0C1620}
 #landing{position:relative}
 .lp-orbs{position:absolute;inset:0;overflow:visible;pointer-events:none;z-index:-1}
 .lp-orbs i{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5}
-.lp-orbs .o1{width:34rem;height:34rem;top:-10rem;right:-8rem;background:radial-gradient(circle,#B9AFFF,transparent 65%);animation:lp-drift 16s ease-in-out infinite alternate}
-.lp-orbs .o2{width:22rem;height:22rem;top:22rem;left:-10rem;background:radial-gradient(circle,#FFD9EA,transparent 65%);animation:lp-drift 20s ease-in-out infinite alternate-reverse}
+.lp-orbs .o1{width:34rem;height:34rem;top:-10rem;right:-8rem;background:radial-gradient(circle,#9EE0D3,transparent 65%);animation:lp-drift 16s ease-in-out infinite alternate}
+.lp-orbs .o2{width:22rem;height:22rem;top:22rem;left:-10rem;background:radial-gradient(circle,#FFE2BC,transparent 65%);animation:lp-drift 20s ease-in-out infinite alternate-reverse}
 .lp-orbs .o3{width:18rem;height:18rem;top:60rem;right:-4rem;background:radial-gradient(circle,#C9E4FF,transparent 65%);animation:lp-drift 24s ease-in-out infinite alternate}
 @keyframes lp-drift{from{transform:translate(0,0)}to{transform:translate(2.4rem,1.6rem)}}
 :root[data-theme="dark"] .lp-orbs i{opacity:.16}
@@ -1058,52 +1058,52 @@ html,body{overflow-x:clip}
 
 .lp-nav{position:relative;z-index:2}
 .lplink{position:relative}
-.lplink::after{content:"";position:absolute;left:0;right:100%;bottom:-3px;height:1.5px;background:var(--vio);transition:right .2s ease}
+.lplink::after{content:"";position:absolute;left:0;right:100%;bottom:-3px;height:1.5px;background:var(--ac);transition:right .2s ease}
 .lplink:hover::after{right:0}
 
 .lp-hero{text-align:center;padding:2.4rem 0 0;position:relative}
 .lp-badge{
   display:inline-flex;align-items:center;gap:.5rem;text-decoration:none;
   font-size:.8rem;color:var(--dim);padding:.42rem .95rem .42rem .5rem;border-radius:999px;
-  background:color-mix(in srgb,var(--vio) 8%,var(--surface));
-  border:1px solid color-mix(in srgb,var(--vio) 25%,transparent);
+  background:color-mix(in srgb,var(--ac) 8%,var(--surface));
+  border:1px solid color-mix(in srgb,var(--ac) 25%,transparent);
   transition:border-color .2s,box-shadow .2s,transform .2s;
 }
 .lp-badge b{
   font-size:.68rem;font-weight:650;letter-spacing:.02em;color:#fff;
-  background:linear-gradient(100deg,var(--viod),var(--vio2));border-radius:999px;padding:.22rem .6rem;
+  background:linear-gradient(100deg,var(--acd),var(--ac2));border-radius:999px;padding:.22rem .6rem;
 }
 .lp-badge .i{width:14px;height:14px;transition:transform .2s}
-.lp-badge:hover{border-color:var(--vio);box-shadow:0 6px 20px -8px color-mix(in srgb,var(--vio) 55%,transparent);transform:translateY(-1px)}
+.lp-badge:hover{border-color:var(--ac);box-shadow:0 6px 20px -8px color-mix(in srgb,var(--ac) 55%,transparent);transform:translateY(-1px)}
 .lp-badge:hover .i{transform:translateX(3px)}
 .lp-hero h2{font-size:clamp(2.5rem,6vw,4.1rem);font-weight:700;letter-spacing:-.035em;line-height:1.04;margin:1.3rem 0 1.1rem}
 .lp-grad{
-  background:linear-gradient(100deg,var(--viod) 10%,var(--vio2) 55%,#D96FB4 95%);
+  background:linear-gradient(100deg,var(--acd) 10%,var(--ac2) 55%,var(--wa) 95%);
   -webkit-background-clip:text;background-clip:text;color:transparent;
 }
 .lp-lead{color:var(--dim);font-size:1.05rem;max-width:36rem;margin:0 auto}
 .lp-ctas{justify-content:center;margin-top:1.6rem}
 .lp-cta{
-  background:linear-gradient(100deg,var(--viod),var(--vio2));color:#fff;
-  box-shadow:0 10px 26px -10px color-mix(in srgb,var(--vio) 70%,transparent);
+  background:linear-gradient(100deg,var(--acd),var(--ac2));color:#fff;
+  box-shadow:0 10px 26px -10px color-mix(in srgb,var(--ac) 70%,transparent);
   transition:transform .2s,box-shadow .2s;
 }
 .lp-cta .i{width:16px;height:16px;transition:transform .2s}
-.lp-cta:hover{transform:translateY(-2px);box-shadow:0 16px 34px -10px color-mix(in srgb,var(--vio) 85%,transparent)}
+.lp-cta:hover{transform:translateY(-2px);box-shadow:0 16px 34px -10px color-mix(in srgb,var(--ac) 85%,transparent)}
 .lp-cta:hover .i{transform:translateX(3px)}
 .cta.lp-ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line-hi);transition:transform .2s,background .2s,border-color .2s,color .2s}
-.cta.lp-ghost:hover{transform:translateY(-2px);border-color:var(--vio);color:var(--vio);background:var(--surface)}
+.cta.lp-ghost:hover{transform:translateY(-2px);border-color:var(--ac);color:var(--ac);background:var(--surface)}
 
 /* La maquette produit, en HTML pur */
 .lp-shot{position:relative;max-width:56rem;margin:2.8rem auto 0;perspective:1400px}
 .lp-frame{
   border-radius:16px;overflow:hidden;background:var(--surface);
-  border:1px solid color-mix(in srgb,var(--vio) 16%,var(--line));
-  box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 40px 90px -30px color-mix(in srgb,var(--vio) 38%,rgba(20,20,40,.45));
+  border:1px solid color-mix(in srgb,var(--ac) 16%,var(--line));
+  box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 40px 90px -30px color-mix(in srgb,var(--ac) 38%,rgba(20,20,40,.45));
   transform:rotateX(6deg) scale(.985);transform-origin:top center;
   transition:transform .5s cubic-bezier(.2,.7,.3,1),box-shadow .5s;
 }
-.lp-shot:hover .lp-frame{transform:rotateX(0deg) scale(1);box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 50px 110px -34px color-mix(in srgb,var(--vio) 50%,rgba(20,20,40,.55))}
+.lp-shot:hover .lp-frame{transform:rotateX(0deg) scale(1);box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 50px 110px -34px color-mix(in srgb,var(--ac) 50%,rgba(20,20,40,.55))}
 .lp-bar{display:flex;align-items:center;gap:.45rem;background:var(--surface-2);padding:.6rem .9rem;border-bottom:1px solid var(--line)}
 .lp-bar i{width:.62rem;height:.62rem;border-radius:50%;background:var(--line-hi)}
 .lp-bar span{margin-left:.5rem;font-family:var(--mono);font-size:.64rem;color:var(--faint);background:var(--surface);border-radius:6px;padding:.2rem .8rem;border:1px solid var(--line)}
@@ -1134,7 +1134,7 @@ html,body{overflow-x:clip}
 .lp-cards .tiles .on{background:var(--on-invert);color:var(--invert)}
 .lp-cards .bars{display:flex;align-items:flex-end;gap:.4rem;height:5.4rem;padding-top:.9rem}
 .lp-cards .bars i{flex:1;height:var(--v);border-radius:6px 6px 3px 3px;background:var(--surface-3);position:relative;transition:height 1s cubic-bezier(.2,.7,.3,1)}
-.lp-cards .bars .on{background:linear-gradient(180deg,var(--vio2),var(--viod))}
+.lp-cards .bars .on{background:linear-gradient(180deg,var(--ac2),var(--acd))}
 .lp-cards .bars .on b{position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);font-size:.56rem;font-weight:650;color:#fff;background:var(--invert);color:var(--on-invert);border-radius:5px;padding:.14rem .38rem;white-space:nowrap}
 .lp-cards .days{display:flex;gap:.4rem;margin-top:.4rem}
 .lp-cards .days span{flex:1;text-align:center;font-size:.58rem;color:var(--faint)}
@@ -1153,21 +1153,21 @@ html,body{overflow-x:clip}
 }
 .lp-float b{display:block;font-size:.76rem;font-weight:650;letter-spacing:-.01em}
 .lp-float span{font-size:.66rem;color:var(--dim)}
-.lp-float .ic{width:2rem;height:2rem;border-radius:10px;display:grid;place-items:center;color:#fff;background:linear-gradient(120deg,var(--viod),var(--vio2));flex:0 0 auto}
+.lp-float .ic{width:2rem;height:2rem;border-radius:10px;display:grid;place-items:center;color:#fff;background:linear-gradient(120deg,var(--acd),var(--ac2));flex:0 0 auto}
 .lp-float .ic.v{background:linear-gradient(120deg,#2E9C58,#5BD68A)}
-.lp-float .spark{width:64px;height:22px;stroke:var(--vio);stroke-width:2.4;stroke-linecap:round;opacity:.85}
-.lp-float.a{top:34%;left:-5rem;animation:lp-float 6s ease-in-out infinite alternate}
+.lp-float .spark{width:64px;height:22px;stroke:var(--ac);stroke-width:2.4;stroke-linecap:round;opacity:.85}
+.lp-float.a{top:30%;left:-7.5rem;animation:lp-float 6s ease-in-out infinite alternate}
 .lp-float.b{bottom:-1.4rem;right:-3.8rem;animation:lp-float 7s .8s ease-in-out infinite alternate-reverse}
 @keyframes lp-float{from{transform:translateY(-7px)}to{transform:translateY(7px)}}
 
 .lp-marq{overflow:hidden;margin:2.6rem 0 .4rem;-webkit-mask:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);mask:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
 .lp-marq .in{display:flex;gap:1.6rem;width:max-content;animation:lp-slide 26s linear infinite;font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
-.lp-marq .in i{color:var(--vio);font-style:normal}
+.lp-marq .in i{color:var(--ac);font-style:normal}
 .lp-marq:hover .in{animation-play-state:paused}
 @keyframes lp-slide{to{transform:translateX(-50%)}}
 
 .lp-ben{transition:transform .25s cubic-bezier(.2,.7,.3,1),box-shadow .25s,border-color .25s;border:1px solid transparent}
-.lp-ben:hover{transform:translateY(-6px);border-color:color-mix(in srgb,var(--vio) 35%,transparent);box-shadow:0 24px 50px -20px color-mix(in srgb,var(--vio) 40%,rgba(20,20,40,.4))}
+.lp-ben:hover{transform:translateY(-6px);border-color:color-mix(in srgb,var(--ac) 35%,transparent);box-shadow:0 24px 50px -20px color-mix(in srgb,var(--ac) 40%,rgba(20,20,40,.4))}
 .lp-fic{
   width:2.7rem;height:2.7rem;border-radius:13px;display:grid;place-items:center;color:#fff;
   background:linear-gradient(120deg,var(--g1),var(--g2));
@@ -1201,22 +1201,22 @@ html,body{overflow-x:clip}
 .lp-mini .e i{width:3px;height:60%;border-radius:99px}
 
 .lp-step{position:relative;overflow:visible;transition:transform .25s,box-shadow .25s}
-.lp-step:hover{transform:translateY(-5px);box-shadow:0 20px 44px -20px color-mix(in srgb,var(--vio) 35%,rgba(20,20,40,.35))}
+.lp-step:hover{transform:translateY(-5px);box-shadow:0 20px 44px -20px color-mix(in srgb,var(--ac) 35%,rgba(20,20,40,.35))}
 .lp-no{
   width:2.4rem;height:2.4rem;border-radius:50%;display:grid;place-items:center;
   font-weight:750;font-size:1rem;color:#fff;
-  background:linear-gradient(120deg,var(--viod),var(--vio2));
-  box-shadow:0 8px 18px -6px color-mix(in srgb,var(--vio) 60%,transparent);
+  background:linear-gradient(120deg,var(--acd),var(--ac2));
+  box-shadow:0 8px 18px -6px color-mix(in srgb,var(--ac) 60%,transparent);
 }
 .lp-guar{border:1px solid transparent;background:
   linear-gradient(var(--surface),var(--surface)) padding-box,
-  linear-gradient(120deg,color-mix(in srgb,var(--vio) 55%,transparent),color-mix(in srgb,#D96FB4 45%,transparent)) border-box}
-.lp-guar .gh svg{color:var(--vio)}
-.lp-guar .glist svg{color:var(--vio)}
+  linear-gradient(120deg,color-mix(in srgb,var(--ac) 55%,transparent),color-mix(in srgb,var(--wa) 45%,transparent)) border-box}
+.lp-guar .gh svg{color:var(--ac)}
+.lp-guar .glist svg{color:var(--ac)}
 
 .lp-final{
   position:relative;overflow:hidden;border-radius:26px;text-align:center;color:#fff;
-  background:linear-gradient(120deg,#1E1748 0%,var(--viod) 55%,#8A5CF0 100%);
+  background:linear-gradient(125deg,#08131B 0%,var(--acd) 52%,#17A390 100%);
   padding:3.6rem 1.6rem 3.8rem;
 }
 .lp-final h2{font-size:clamp(1.7rem,3.6vw,2.5rem);font-weight:700;letter-spacing:-.03em;line-height:1.12}
@@ -1224,8 +1224,8 @@ html,body{overflow-x:clip}
 .lp-final .ctas{justify-content:center;margin-top:1.7rem}
 .lp-final i{position:absolute;border-radius:50%;filter:blur(50px);pointer-events:none}
 .lp-final .fo1{width:20rem;height:20rem;top:-8rem;right:-6rem;background:rgba(255,255,255,.16);animation:lp-drift 14s ease-in-out infinite alternate}
-.lp-final .fo2{width:16rem;height:16rem;bottom:-7rem;left:-5rem;background:rgba(233,120,190,.3);animation:lp-drift 18s ease-in-out infinite alternate-reverse}
-.lp-cta.inv{background:#fff;color:var(--viod);box-shadow:0 10px 26px -10px rgba(0,0,0,.45)}
+.lp-final .fo2{width:16rem;height:16rem;bottom:-7rem;left:-5rem;background:rgba(222,144,56,.34);animation:lp-drift 18s ease-in-out infinite alternate-reverse}
+.lp-cta.inv{background:#fff;color:var(--acd);box-shadow:0 10px 26px -10px rgba(0,0,0,.45)}
 .cta.lp-ghost.inv{background:transparent;border-color:rgba(255,255,255,.4);color:#fff}
 .cta.lp-ghost.inv:hover{border-color:#fff;color:#fff;background:rgba(255,255,255,.1)}
 
@@ -1258,18 +1258,17 @@ html,body{overflow-x:clip}
 .lp-row .txt p{max-width:26rem;font-size:1rem}
 .lp-kick{
   font-family:var(--mono);font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--k,#6D5AF0);display:inline-flex;align-items:center;gap:.5rem;
+  color:var(--k,#12857A);display:inline-flex;align-items:center;gap:.5rem;
 }
-.lp-kick::before{content:"";width:1.4rem;height:2px;border-radius:99px;background:var(--k,#6D5AF0)}
+.lp-kick::before{content:"";width:1.4rem;height:2px;border-radius:99px;background:var(--k,#12857A)}
 .lp-pic{
   margin:0;border-radius:16px;overflow:hidden;background:var(--surface);
-  aspect-ratio:7/5;
   border:1px solid var(--line);
-  box-shadow:0 30px 70px -26px color-mix(in srgb,var(--vio) 30%,rgba(20,20,40,.5));
+  box-shadow:0 30px 70px -26px color-mix(in srgb,var(--ac) 30%,rgba(20,20,40,.5));
   transition:transform .35s cubic-bezier(.2,.7,.3,1),box-shadow .35s;
 }
-.lp-pic:hover{transform:translateY(-6px) scale(1.012);box-shadow:0 42px 90px -30px color-mix(in srgb,var(--vio) 45%,rgba(20,20,40,.6))}
-.lp-pic img{width:100%;height:100%;object-fit:cover;object-position:top left}
+.lp-pic:hover{transform:translateY(-6px) scale(1.012);box-shadow:0 42px 90px -30px color-mix(in srgb,var(--ac) 45%,rgba(20,20,40,.6))}
+.lp-pic img{display:block;width:100%;height:auto}
 /* Sans image (artefact) : le texte devient une carte pleine largeur, rien ne casse. */
 .lp-row.noimg{grid-template-columns:minmax(0,1fr)}
 .lp-row.noimg .lp-pic{display:none}
@@ -1281,6 +1280,113 @@ html,body{overflow-x:clip}
   .lp-row.flip .lp-pic{order:0}
   .lp-row{padding:1.6rem 0}
 }
+
+/* ═══ Fond vivant : maille fine + halo qui suit le curseur ═════════ */
+.lp-bg{position:fixed;inset:0;z-index:-2;pointer-events:none;overflow:hidden}
+.lp-bg .mesh{
+  position:absolute;inset:-2px;
+  background-image:
+    repeating-linear-gradient(90deg,color-mix(in srgb,var(--ink) 7%,transparent) 0 1px,transparent 1px 68px),
+    repeating-linear-gradient(0deg,color-mix(in srgb,var(--ink) 7%,transparent) 0 1px,transparent 1px 68px);
+  -webkit-mask:radial-gradient(120% 80% at 50% 0%,#000 0%,transparent 72%);
+          mask:radial-gradient(120% 80% at 50% 0%,#000 0%,transparent 72%);
+  opacity:.5;
+}
+.lp-bg .spot{
+  position:absolute;width:44rem;height:44rem;border-radius:50%;
+  left:var(--mx,50%);top:var(--my,28%);transform:translate(-50%,-50%);
+  background:radial-gradient(circle,color-mix(in srgb,var(--ac) 17%,transparent),transparent 62%);
+  filter:blur(38px);transition:opacity .4s;opacity:0;
+}
+.lp-bg.live .spot{opacity:1}
+:root[data-theme="dark"] .lp-bg .mesh{opacity:.35}
+@media (pointer:coarse){.lp-bg .spot{display:none}}
+
+/* ═══ Bandeau image pleine largeur ════════════════════════════════ */
+.lp-band{
+  margin:clamp(2.4rem,6vw,4.4rem) 0;padding:clamp(1.6rem,4vw,2.8rem);
+  border-radius:24px;background:var(--surface-2);border:1px solid var(--line);
+  display:grid;gap:clamp(1.2rem,3vw,2rem);
+}
+.lp-band-txt{max-width:38rem}
+.lp-band-txt h3{font-size:clamp(1.5rem,2.9vw,2.1rem);font-weight:700;letter-spacing:-.025em;line-height:1.12;margin:.6rem 0 .6rem}
+.lp-band-txt h3 em{font-style:normal}
+.lp-band-pic{
+  margin:0;border-radius:16px;overflow:hidden;border:1px solid var(--line);
+  background:var(--surface);box-shadow:0 26px 60px -28px rgba(12,22,32,.5);
+  transition:transform .4s cubic-bezier(.2,.7,.3,1),box-shadow .4s;
+}
+.lp-band-pic img{display:block;width:100%;height:auto}
+.lp-band-pic:hover{transform:translateY(-5px);box-shadow:0 38px 80px -30px color-mix(in srgb,var(--ac) 40%,rgba(12,22,32,.55))}
+.lp-band.noimg .lp-band-pic{display:none}
+
+/* ═══ Bandes sombres : la rupture qui aère ════════════════════════ */
+.lp-dark{
+  position:relative;overflow:hidden;border-radius:26px;color:#EAF2F0;
+  background:linear-gradient(150deg,#0A121A 0%,var(--nuit) 45%,#102A2C 100%);
+  padding:clamp(2rem,5vw,3.4rem);margin:clamp(2.4rem,6vw,4.4rem) 0;
+}
+.lp-dark.tight{padding:clamp(1.6rem,4vw,2.4rem)}
+.lp-dark::after{
+  content:"";position:absolute;width:26rem;height:26rem;border-radius:50%;
+  top:-11rem;right:-8rem;pointer-events:none;
+  background:radial-gradient(circle,color-mix(in srgb,var(--ac2) 26%,transparent),transparent 66%);
+  filter:blur(46px);animation:lp-drift 18s ease-in-out infinite alternate;
+}
+.lp-dark-head{position:relative;max-width:34rem;margin-bottom:1.8rem}
+.lp-dark-head h3{font-size:clamp(1.5rem,2.9vw,2.1rem);font-weight:700;letter-spacing:-.025em;line-height:1.12;margin-top:.6rem}
+.lp-dark-head h3 em{font-style:normal}
+.lp-vs{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1.5fr);gap:clamp(.9rem,2.5vw,1.8rem);align-items:center}
+.lp-vs-side{margin:0;position:relative}
+/* Les deux cotes ont la meme hauteur mais pas la meme forme : le formulaire
+   est un portrait qu'on montre entier, le tableau de bord un paysage qu'on
+   laisse remplir sa boite. Rogner le premier coupait « No de matricule ». */
+.lp-vs-side img{display:block;width:100%;height:clamp(15rem,25vw,21rem);object-fit:cover;object-position:top center;border-radius:14px;border:1px solid rgba(255,255,255,.09)}
+.lp-vs-side.whole img{object-fit:contain;background:#fff;padding:.9rem}
+.lp-vs-side figcaption{margin-top:.8rem;font-size:.82rem;line-height:1.45;color:rgba(234,242,240,.62)}
+.lp-tag{
+  position:absolute;top:.7rem;left:.7rem;z-index:1;
+  font-family:var(--mono);font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;
+  padding:.28rem .62rem;border-radius:999px;backdrop-filter:blur(6px);
+}
+.lp-tag.av{background:rgba(222,144,56,.22);color:#F2C489;border:1px solid rgba(222,144,56,.4)}
+.lp-tag.ap{background:rgba(47,191,168,.2);color:#8BE6D2;border:1px solid rgba(47,191,168,.42)}
+.lp-arrow{display:grid;place-items:center;width:2.4rem;height:2.4rem;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13)}
+.lp-arrow svg{width:17px;height:17px;fill:none;stroke:var(--ac2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.lp-vs.noimg{grid-template-columns:minmax(0,1fr)}
+.lp-vs.noimg img,.lp-vs.noimg .lp-arrow{display:none}
+.lp-guar2{position:relative}
+.lp-guar2 .gh{display:flex;align-items:center;gap:.7rem;margin-bottom:1.1rem}
+.lp-guar2 .gh svg{width:21px;height:21px;fill:none;stroke:var(--ac2);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.lp-guar2 .gh h3{font-size:1.05rem;font-weight:650;letter-spacing:-.015em}
+.lp-guar2 .gl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.4rem}
+.lp-guar2 .gl p{font-size:.84rem;line-height:1.5;color:rgba(234,242,240,.6);padding-left:.85rem;border-left:2px solid rgba(47,191,168,.4)}
+.lp-guar2 .gl b{color:#EAF2F0;font-weight:600}
+
+/* ═══ Rail d'étapes : trois jalons, pas trois cartes ══════════════ */
+.lp-rail{list-style:none;margin:1.2rem 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(1rem,3vw,2.4rem);position:relative}
+.lp-rail::before{content:"";position:absolute;left:1.3rem;right:1.3rem;top:1.3rem;height:2px;background:linear-gradient(90deg,var(--ac),color-mix(in srgb,var(--ac) 20%,transparent));border-radius:99px}
+.lp-rail li{position:relative;padding-top:3.4rem}
+.lp-rail b{
+  position:absolute;top:0;left:0;width:2.6rem;height:2.6rem;border-radius:50%;
+  display:grid;place-items:center;font-size:.95rem;font-weight:700;color:#fff;
+  background:linear-gradient(130deg,var(--acd),var(--ac2));
+  box-shadow:0 0 0 5px var(--bg),0 8px 18px -6px color-mix(in srgb,var(--ac) 60%,transparent);
+  transition:transform .25s;
+}
+.lp-rail li:hover b{transform:scale(1.1)}
+.lp-rail h4{font-size:1rem;font-weight:650;letter-spacing:-.015em;margin-bottom:.35rem}
+.lp-rail p{font-size:.88rem}
+
+@media (max-width:860px){
+  .lp-vs{grid-template-columns:minmax(0,1fr)}
+  .lp-arrow{transform:rotate(90deg);margin:0 auto}
+  .lp-guar2 .gl{grid-template-columns:minmax(0,1fr);gap:.9rem}
+  .lp-rail{grid-template-columns:minmax(0,1fr);gap:1.4rem}
+  .lp-rail::before{left:1.3rem;right:auto;top:1.3rem;bottom:1.3rem;width:2px;height:auto;background:linear-gradient(180deg,var(--ac),color-mix(in srgb,var(--ac) 20%,transparent))}
+  .lp-rail li{padding-top:0;padding-left:3.6rem;min-height:2.6rem}
+}
+@media (prefers-reduced-motion:reduce){.lp-dark::after{animation:none}}
 </style>
 
 <div class="shell">
@@ -1581,6 +1687,7 @@ html,body{overflow-x:clip}
     </div>
 
     <div id="landing" hidden>
+      <div class="lp-bg" id="lp-bg" aria-hidden="true"><span class="mesh"></span><span class="spot"></span></div>
       <div class="lp-orbs" aria-hidden="true"><i class="o1"></i><i class="o2"></i><i class="o3"></i></div>
 
       <header class="lphead lp-nav">
@@ -1616,7 +1723,7 @@ html,body{overflow-x:clip}
                 <span class="lg"></span>
                 <span class="ln on"></span><span class="ln w7"></span><span class="ln w6"></span>
                 <span class="ln w8"></span><span class="ln w5"></span>
-                <span class="dotrow"><i style="background:#3FA457"></i><i style="background:#2E7CD6"></i><i style="background:#8B5CF6"></i><i style="background:#D9539B"></i></span>
+                <span class="dotrow"><i style="background:#3FA457"></i><i style="background:#2E7CD6"></i><i style="background:#12857A"></i><i style="background:#D9539B"></i></span>
               </aside>
               <div>
                 <div class="lp-hello"><b>Salut, Alex !</b><span>jeu. 20 août · session A26</span><em>Semaine suivante</em></div>
@@ -1640,7 +1747,7 @@ html,body{overflow-x:clip}
                     <div class="row"><i style="background:#E0483A"></i><div><b>Questionnaire médical</b><span class="cd" style="color:#C4392C">Dans 6 jours</span></div></div>
                     <div class="row"><i style="background:#E8912B"></i><div><b>Actualité géographique 1</b><span class="cd" style="color:#A2620F">Dans 8 jours</span></div></div>
                     <div class="row"><i style="background:#3FA457"></i><div><b>Examen 1 — Philo</b><span class="cd" style="color:#2E7D45">Dans 25 jours</span></div></div>
-                    <div class="row"><i style="background:#8B5CF6"></i><div><b>Rapport de laboratoire</b><span class="cd" style="color:#6D4FC8">Dans 32 jours</span></div></div>
+                    <div class="row"><i style="background:#12857A"></i><div><b>Rapport de laboratoire</b><span class="cd" style="color:#0B6B62">Dans 32 jours</span></div></div>
                   </div>
                 </div>
               </div>
@@ -1667,12 +1774,12 @@ html,body{overflow-x:clip}
 
       <section class="lp-row" data-rev>
         <figure class="lp-pic">
-          <img loading="lazy" src="img/app-echeances.jpg" width="878" height="1090"
+          <img loading="lazy" src="img/app-echeances.jpg" width="900" height="669"
                onerror="this.closest('.lp-row').classList.add('noimg')"
                alt="Les échéances, chacune avec son compte à rebours coloré">
         </figure>
         <div class="txt">
-          <span class="lp-kick" style="--k:#E0483A">Échéances</span>
+          <span class="lp-kick" style="--k:#D2503F">Échéances</span>
           <h3>L'urgence se calcule <em class="lp-grad">toute seule</em>.</h3>
           <p class="dim">Chaque remise et chaque évaluation arrive de Léa, datée et classée —
             du vert au rouge à mesure que la date approche.</p>
@@ -1681,92 +1788,78 @@ html,body{overflow-x:clip}
 
       <section class="lp-row flip" data-rev>
         <figure class="lp-pic">
-          <img loading="lazy" src="img/app-mios.jpg" width="1782" height="1090"
+          <img loading="lazy" src="img/app-mios.jpg" width="1060" height="749"
                onerror="this.closest('.lp-row').classList.add('noimg')"
                alt="Les MIO résumés en une phrase, avec leurs actions proposées">
         </figure>
         <div class="txt">
-          <span class="lp-kick" style="--k:#6D5AF0">MIO</span>
+          <span class="lp-kick" style="--k:var(--ac)">MIO</span>
           <h3>Chaque message, <em class="lp-grad">une phrase</em>.</h3>
           <p class="dim">L'agent lit les nouveaux MIO, en tire l'essentiel — et l'action
             qui s'y cache devient une échéance d'un clic.</p>
         </div>
       </section>
 
-      <section class="lp-row" data-rev>
-        <figure class="lp-pic">
-          <img loading="lazy" src="img/app-horaire.jpg" width="1800" height="1175"
-               onerror="this.closest('.lp-row').classList.add('noimg')"
-               alt="La grille d'horaire, cours en couleurs par matière">
-        </figure>
-        <div class="txt">
-          <span class="lp-kick" style="--k:#2E7CD6">Horaire</span>
+      <!-- Bandeau pleine largeur : l'horaire porte la pause à lui seul. -->
+      <section class="lp-band" data-rev>
+        <div class="lp-band-txt">
+          <span class="lp-kick" style="--k:var(--ac)">Horaire</span>
           <h3>Une photo, et chaque cours <em class="lp-grad">prend sa place</em>.</h3>
-          <p class="dim">Capture ta grille, l'agent la lit : heures réelles, locaux,
-            professeurs. Vérifié : 18 blocs sur 18.</p>
+          <p class="dim">Heures réelles, locaux, professeurs. Vérifié : 18 blocs sur 18.</p>
+        </div>
+        <figure class="lp-band-pic">
+          <img loading="lazy" src="img/app-horaire-mini.jpg" width="1500" height="1053"
+               onerror="this.closest('.lp-band').classList.add('noimg')"
+               alt="La grille d'horaire d'une semaine, chaque cours dans la couleur de sa matière">
+        </figure>
+      </section>
+
+      <!-- Bande sombre : rupture franche après trois sections claires. -->
+      <section class="lp-dark" data-rev>
+        <div class="lp-dark-head">
+          <span class="lp-kick" style="--k:var(--ac2)">Avant, après</span>
+          <h3>Six écrans, ou <em class="lp-grad">un seul</em>.</h3>
+        </div>
+        <div class="lp-vs">
+          <figure class="lp-vs-side whole">
+            <span class="lp-tag av">Avant</span>
+            <img loading="lazy" src="img/omnivox-login.png" width="896" height="1280"
+                 onerror="this.closest('.lp-vs').classList.add('noimg')"
+                 alt="Le formulaire de connexion d'Omnivox">
+            <figcaption>Connexion, code, Léa, un cours, l'onglet des travaux&#8230; puis pareil pour les MIO.</figcaption>
+          </figure>
+          <span class="lp-arrow" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+          </span>
+          <figure class="lp-vs-side">
+            <span class="lp-tag ap">Après</span>
+            <img loading="lazy" src="img/app-tableau.jpg" width="1800" height="1175"
+                 alt="Le même contenu rassemblé sur un seul tableau de bord">
+            <figcaption>L'agent a fait le trajet pendant la nuit. Tout est daté, trié, résumé.</figcaption>
+          </figure>
         </div>
       </section>
 
-      <div class="lp-story-gap"></div>
-      <div class="sect" id="comment"><h2>Avant, après</h2></div>
-      <div class="story lp-story">
-        <section class="card sto lp-sto" data-rev style="--d:0ms">
-          <span class="pill avant">Avant</span>
-          <div class="lp-omni" aria-hidden="true">
-            <b class="w">Omnivox</b><span class="s">Cégep de Trois-Rivières</span>
-            <div class="tabs"><span class="on">Étudiants</span><span>Employés</span></div>
-            <span class="lab"></span><span class="field"></span>
-            <span class="lab c"></span><span class="field"></span>
-            <span class="btn">Connexion</span>
-          </div>
-          <h4>Six écrans avant de savoir quoi faire</h4>
-          <p class="dim">Connexion, code, Léa, un cours, l'onglet des travaux… puis pareil
-            pour les MIO.</p>
-        </section>
-        <section class="card sto lp-sto" data-rev style="--d:120ms">
-          <span class="pill apres">Après</span>
-          <div class="lp-mini" aria-hidden="true">
-            <div class="col"><span class="h"></span><span class="r on"></span><span class="r"></span><span class="r"></span></div>
-            <div class="col g"><span class="h"></span>
-              <span class="e"><i style="background:#E0483A"></i></span><span class="e"><i style="background:#E8912B"></i></span>
-              <span class="e"><i style="background:#3FA457"></i></span><span class="e"><i style="background:#8B5CF6"></i></span></div>
-            <div class="col"><span class="h"></span><span class="r"></span><span class="r on"></span><span class="r"></span></div>
-          </div>
-          <h4>Un écran, déjà à jour</h4>
-          <p class="dim">L'agent a fait le trajet pendant la nuit. Tout est daté, trié, résumé.</p>
-        </section>
-      </div>
+      <!-- Étapes : un rail, pas trois cartes de plus. -->
+      <div class="sect" id="comment" style="padding-top:2.4rem"><h2>Trois étapes, une fois</h2></div>
+      <ol class="lp-rail">
+        <li data-rev style="--d:0ms"><b>1</b><h4>Installe l'agent</h4><p class="dim">Une commande dans le Terminal.</p></li>
+        <li data-rev style="--d:110ms"><b>2</b><h4>Il collecte, chaque heure</h4><p class="dim">Léa et MIO relus tout seuls.</p></li>
+        <li data-rev style="--d:220ms"><b>3</b><h4>Ton agenda se remplit</h4><p class="dim">Et te suit partout.</p></li>
+      </ol>
 
-      <div class="steps lp-steps">
-        <section class="card step lp-step" data-rev style="--d:0ms">
-          <span class="lp-no">1</span><h4>Installe l'agent</h4>
-          <p class="dim">Une commande dans le Terminal. Le code de vérification, c'est toi.</p>
-        </section>
-        <section class="card step lp-step" data-rev style="--d:90ms">
-          <span class="lp-no">2</span><h4>Il collecte, chaque heure</h4>
-          <p class="dim">Léa et MIO relus tout seuls ; l'IA résume les nouveaux messages.</p>
-        </section>
-        <section class="card step lp-step" data-rev style="--d:180ms">
-          <span class="lp-no">3</span><h4>Ton agenda se remplit</h4>
-          <p class="dim">Et te suit partout — portable, tablette, bibliothèque.</p>
-        </section>
-      </div>
-
-      <section class="card guar lp-guar" data-rev>
-        <div class="gh">
-          <svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><rect x="5" y="10.5" width="14" height="10" rx="3"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>
-          <h3>La garantie, en trois phrases</h3>
-        </div>
-        <div class="glist">
-          <div><svg class="i" viewBox="0 0 24 24" style="width:17px;height:17px"><path d="m5 12.5 4.5 4.5L19 7"/></svg>
-            <p class="dim"><b>Tes identifiants restent chez toi.</b> Un fichier local, lu par un
-              navigateur qui tourne sur ta machine.</p></div>
-          <div><svg class="i" viewBox="0 0 24 24" style="width:17px;height:17px"><path d="m5 12.5 4.5 4.5L19 7"/></svg>
-            <p class="dim"><b>La double authentification n'est jamais contournée.</b> Le code,
-              c'est toujours toi.</p></div>
-          <div><svg class="i" viewBox="0 0 24 24" style="width:17px;height:17px"><path d="m5 12.5 4.5 4.5L19 7"/></svg>
-            <p class="dim"><b>Ton compte ne transporte que le résultat.</b> Échéances et résumés —
-              rien d'Omnivox.</p></div>
+      <!-- Bande sombre : la garantie ferme la page avant l'appel final. -->
+      <section class="lp-dark tight" data-rev>
+        <div class="lp-guar2">
+          <div class="gh">
+            <svg class="i" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="3"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>
+            <h3>La garantie, en trois phrases</h3>
+          </div>
+          <div class="gl">
+            <p><b>Tes identifiants restent chez toi.</b> Un fichier local, sur ta machine.</p>
+            <p><b>La double authentification n'est jamais contournée.</b> Le code, c'est toujours toi.</p>
+            <p><b>Ton compte ne transporte que le résultat.</b> Échéances et résumés &#8212; rien d'Omnivox.</p>
+          </div>
         </div>
       </section>
 
@@ -4863,6 +4956,26 @@ html,body{overflow-x:clip}
       for (const en of entries) if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
     }, { rootMargin: "0px 0px -8% 0px", threshold: .12 });
     els.forEach(e => io.observe(e));
+  })();
+
+  /* Fond de la vitrine : un halo suit le curseur, calé sur le rafraîchissement
+     écran. Sans pointeur fin (mobile) ou en mouvement réduit, on n'arme rien. */
+  (() => {
+    const bg = document.getElementById("lp-bg");
+    if (!bg || !matchMedia("(pointer:fine)").matches
+            || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let x = 0, y = 0, pending = false;
+    addEventListener("pointermove", (e) => {
+      x = e.clientX; y = e.clientY;
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(() => {
+        pending = false;
+        bg.style.setProperty("--mx", x + "px");
+        bg.style.setProperty("--my", y + "px");
+        bg.classList.add("live");
+      });
+    }, { passive: true });
   })();
 })();
 </script>
