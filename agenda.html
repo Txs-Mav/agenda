@@ -3651,6 +3651,11 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
         b.addEventListener("click", async () => {
           msg.textContent = "…";
           try {
+            if (path === "signup") {
+              if (pw.value.length < 8) { msg.textContent = "Au moins 8 caractères."; return; }
+              const n = await pwnedCount(pw.value);
+              if (n) { msg.textContent = pwnedMsg(n); return; }
+            }
             const d = await sbAuth(path, { email: em.value.trim(), password: pw.value });
             if (d.access_token) { sbKeep(d); renderAccount(); closePop(); applyCloud(await sbFetchSnapshot()); }
             else msg.textContent = "Compte créé : clique le lien de confirmation reçu par courriel, puis connecte-toi.";
@@ -3758,6 +3763,23 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     showView("onboard");
     el("jo-email").focus();
   }
+  /* Le filtre « mot de passe compromis » de Supabase est réservé au plan
+     Pro ; même protection ici, gratuite et k-anonyme (HaveIBeenPwned) :
+     seuls les 5 premiers caractères du SHA-1 quittent le navigateur.
+     Service injoignable → on laisse passer plutôt que de bloquer. */
+  async function pwnedCount(pw) {
+    try {
+      const buf = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(pw));
+      const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+      const r = await fetch(`https://api.pwnedpasswords.com/range/${hex.slice(0, 5)}`);
+      if (!r.ok) return 0;
+      const hit = (await r.text()).split("\n").find(l => l.trim().startsWith(hex.slice(5)));
+      return hit ? Number(hit.split(":")[1]) || 1 : 0;
+    } catch { return 0; }
+  }
+  const pwnedMsg = n =>
+    `Ce mot de passe figure dans ${n.toLocaleString("fr-CA")} fuites de données connues — choisis-en un autre.`;
+
   function joSay(txt, bad) {
     const m = el("jo-msg"); m.textContent = txt; m.classList.toggle("bad", !!bad);
   }
@@ -3767,6 +3789,10 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     if (pw.length < 8) { joSay("Mot de passe : au moins 8 caractères.", true); return; }
     el("jo-go").disabled = true; joSay("…");
     try {
+      if (joMode === "signup") {
+        const n = await pwnedCount(pw);
+        if (n) { joSay(pwnedMsg(n), true); return; }
+      }
       const path = joMode === "signup" ? "signup" : "token?grant_type=password";
       const d = await sbAuth(path, { email, password: pw });
       if (d.access_token) {
@@ -3826,6 +3852,8 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     if (a !== b) { msg.textContent = "Les deux mots de passe ne correspondent pas."; return; }
     msg.textContent = "…";
     try {
+      const n = await pwnedCount(a);
+      if (n) { msg.textContent = pwnedMsg(n); return; }
       await sbUpdatePassword(a);
       el("p-pw1").value = ""; el("p-pw2").value = "";
       msg.textContent = "Mot de passe changé ✓";
