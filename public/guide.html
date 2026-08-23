@@ -3,196 +3,407 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Agenda Cégep — Guide d'installation</title>
+<title>Agenda — Omnivox, sans y penser</title>
+<meta name="description" content="Un agent sur ton ordinateur lit Léa et tes MIO chaque heure et tient ton tableau de bord à jour. Tes identifiants ne quittent jamais ta machine.">
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,380;0,9..144,500;0,9..144,600;1,9..144,380;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#E7E8EB;--surface:#FFF;--surface-2:#F3F4F6;--invert:#1B1C1E;--on-invert:#FFF;
-  --ink:#16171A;--dim:#666A70;--faint:#9BA0A6;--line:rgba(0,0,0,.08);
-  --ok:#3FA457;--warn:#E8912B;--bad:#E0483A;
-  --shadow:0 1px 2px rgba(16,18,20,.05),0 14px 34px -22px rgba(16,18,20,.45);
-  --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  color-scheme:light;
+  --nuit:#131417; --nuit-2:#1B1D21;
+  --papier:#F2EFE8; --papier-2:#E9E5DB;
+  --encre:#191A1D; --encre-2:#54565C; --encre-3:#8B8D93;
+  --creme:#F5F2EB; --creme-2:rgba(245,242,235,.62); --creme-3:rgba(245,242,235,.34);
+  --filet:rgba(25,26,29,.16); --filet-nuit:rgba(245,242,235,.14);
+  --accent:#C6472B; --accent-nuit:#E86A4A;
+  --serif:"Fraunces",Georgia,serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
-*{box-sizing:border-box} h1,h2,h3,p,ul,ol{margin:0}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--font);-webkit-font-smoothing:antialiased}
-.wrap{max-width:46rem;margin:0 auto;padding:2.5rem 1.2rem 5rem}
-.hero{text-align:center;padding:1.5rem 0 2.2rem}
-.hero .mk{width:3.4rem;height:3.4rem;border-radius:14px;background:var(--invert);color:var(--on-invert);display:inline-grid;place-items:center;margin-bottom:1rem}
-.hero h1{font-size:2rem;font-weight:650;letter-spacing:-.035em}
-.hero p{color:var(--dim);max-width:34rem;margin:.7rem auto 0}
-.hero .cta{display:inline-flex;gap:.6rem;margin-top:1.4rem}
-.btn{display:inline-flex;align-items:center;gap:.45rem;border-radius:999px;padding:.65rem 1.2rem;font-size:.9rem;font-weight:550;text-decoration:none;color:var(--ink);background:var(--surface);box-shadow:var(--shadow)}
-.btn.solid{background:var(--invert);color:var(--on-invert)}
-.card{background:var(--surface);border-radius:22px;box-shadow:var(--shadow);padding:1.5rem 1.6rem;margin-top:1.1rem}
-.card h2{font-size:1.12rem;font-weight:650;letter-spacing:-.02em;display:flex;align-items:center;gap:.6rem}
-.n{display:inline-grid;place-items:center;width:1.7rem;height:1.7rem;border-radius:50%;background:var(--invert);color:var(--on-invert);font-size:.85rem;flex:0 0 auto}
-.card p{color:var(--dim);margin-top:.6rem}
-.card b{color:var(--ink)}
-pre{background:var(--invert);color:#E8EAED;border-radius:14px;padding:.95rem 1.1rem;overflow-x:auto;font:12.5px/1.6 var(--mono);margin:.8rem 0 0;position:relative}
-pre .c{color:#8A9199}
-.pill{display:inline-block;font:11px/1 var(--mono);letter-spacing:.06em;padding:.3rem .6rem;border-radius:99px;margin-top:.8rem}
-.pill.ok{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
-.pill.warn{background:color-mix(in srgb,var(--warn) 16%,transparent);color:#9a5f0a}
-.callout{display:flex;gap:.7rem;background:var(--surface-2);border-radius:14px;padding:.85rem 1rem;margin-top:.9rem;font-size:.85rem;color:var(--dim)}
-.callout.mfa{background:color-mix(in srgb,var(--warn) 10%,var(--surface-2))}
-.callout b{color:var(--ink)}
-.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(12rem,1fr));gap:.8rem;margin-top:1rem}
-.mini{background:var(--surface-2);border-radius:14px;padding:.9rem 1rem}
-.mini b{font-size:.9rem}
-.mini p{font-size:.8rem;margin-top:.3rem}
-footer{text-align:center;color:var(--faint);font-size:.78rem;margin-top:3rem}
-footer a{color:var(--dim)}
-@media (prefers-color-scheme:dark){
-  :root{--bg:#141618;--surface:#1D2023;--surface-2:#24282B;--invert:#F2F3F5;--on-invert:#16171A;
-    --ink:#F1F3F5;--dim:#A2A8AF;--faint:#6E757C;--line:rgba(255,255,255,.09);
-    --shadow:0 1px 2px rgba(0,0,0,.35),0 14px 34px -22px rgba(0,0,0,.8);color-scheme:dark}
-  pre{background:#0E1012;color:#D7DBDF}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--papier);color:var(--encre);
+  font-family:var(--sans);font-size:16.5px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+h1,h2,h3,p,ul,ol,figure{margin:0}
+a{color:inherit}
+img{max-width:100%;height:auto;display:block}
+::selection{background:var(--accent);color:var(--creme)}
+
+/* grain photographique, discret */
+.grain{position:relative;isolation:isolate}
+.grain::after{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='2'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+  opacity:.05;mix-blend-mode:overlay;
+}
+.wrap{max-width:76rem;margin:0 auto;padding:0 clamp(1.2rem,4vw,3rem)}
+.ov{font-family:var(--mono);font-size:.68rem;letter-spacing:.24em;text-transform:uppercase}
+.num{font-family:var(--serif);font-style:italic;font-weight:380;color:var(--accent)}
+
+/* ── Héros ─────────────────────────────────────────────── */
+.hero{
+  background:radial-gradient(120% 90% at 78% -10%, var(--nuit-2) 0%, var(--nuit) 55%);
+  color:var(--creme);overflow:hidden;
+}
+nav{display:flex;align-items:center;gap:2rem;padding:1.6rem 0}
+.marque{font-family:var(--serif);font-weight:600;font-size:1.22rem;letter-spacing:-.01em;text-decoration:none}
+.marque i{font-weight:380;color:var(--accent-nuit)}
+nav .liens{margin-left:auto;display:flex;gap:1.8rem;align-items:center}
+nav .liens a{font-size:.85rem;color:var(--creme-2);text-decoration:none;transition:color .15s}
+nav .liens a:hover{color:var(--creme)}
+.cta{
+  background:var(--creme);color:var(--nuit)!important;text-decoration:none;
+  font-size:.85rem;font-weight:600;padding:.6rem 1.15rem;border-radius:999px;
+  transition:transform .15s;
+}
+.cta:hover{transform:translateY(-1px)}
+
+.hero-grid{
+  display:grid;grid-template-columns:minmax(0,30rem) minmax(0,1fr);
+  gap:3rem;align-items:center;padding:3rem 0 0;min-height:min(46rem,calc(100vh - 6.5rem));
+}
+.hero .ov{color:var(--accent-nuit)}
+.hero h1{
+  font-family:var(--serif);font-weight:500;font-size:clamp(2.6rem,5.4vw,4.3rem);
+  line-height:1.04;letter-spacing:-.022em;margin:1.1rem 0 1.3rem;
+}
+.hero h1 em{font-style:italic;font-weight:380}
+.hero .pitch{color:var(--creme-2);font-size:1.02rem;max-width:27rem}
+.hero .pitch b{color:var(--creme);font-weight:600}
+
+.cmd{
+  margin-top:1.9rem;max-width:29.5rem;
+  border:1px solid var(--filet-nuit);border-radius:12px;overflow:hidden;
+  background:rgba(0,0,0,.28);
+}
+.cmd .t{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:.5rem .9rem;border-bottom:1px solid var(--filet-nuit);
+  font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;color:var(--creme-3);
+}
+.cmd button{
+  font-family:var(--mono);font-size:.64rem;letter-spacing:.1em;color:var(--creme-2);
+  background:none;border:0;cursor:pointer;padding:.2rem 0;
+}
+.cmd button:hover{color:var(--creme)}
+.cmd pre{
+  margin:0;padding:.95rem .95rem 1.05rem;overflow-x:auto;
+  font-family:var(--mono);font-size:.74rem;line-height:1.5;color:var(--creme);
+}
+.cmd pre b{color:var(--accent-nuit);font-weight:500}
+.hero .apres{margin-top:1rem;font-size:.83rem;color:var(--creme-3)}
+.hero .apres a{color:var(--creme-2)}
+
+.vitrine{position:relative;align-self:end;min-width:0}
+.navig{
+  border-radius:14px 14px 0 0;overflow:hidden;
+  box-shadow:0 2px 0 rgba(255,255,255,.045) inset, 0 30px 80px -20px rgba(0,0,0,.85);
+  transform:rotate(-1.4deg) translateY(1.4rem);transform-origin:bottom left;
+}
+.navig .barre{
+  display:flex;align-items:center;gap:.5rem;
+  background:#26282C;padding:.6rem .9rem;
+}
+.navig .barre i{width:.68rem;height:.68rem;border-radius:50%;background:#3A3D42}
+.navig .barre span{
+  margin-left:.6rem;font-family:var(--mono);font-size:.66rem;color:var(--creme-3);
+  background:rgba(255,255,255,.06);border-radius:6px;padding:.22rem .8rem;
+}
+
+/* ── Bande de faits ───────────────────────────────────── */
+.faits{border-bottom:1px solid var(--filet)}
+.faits .wrap{
+  display:grid;grid-template-columns:repeat(4,1fr);
+}
+.fait{padding:1.5rem 1.4rem 1.6rem;border-left:1px solid var(--filet)}
+.fait:first-child{border-left:0;padding-left:0}
+.fait .ov{color:var(--encre-3)}
+.fait p{font-family:var(--serif);font-size:1.06rem;font-weight:500;line-height:1.3;margin-top:.45rem}
+
+/* ── Volets produit ───────────────────────────────────── */
+.volets{padding:4.5rem 0 1rem}
+.volets>.wrap>.ov{color:var(--encre-3)}
+.volet{
+  display:grid;grid-template-columns:minmax(0,24rem) minmax(0,1fr);
+  gap:clamp(2rem,5vw,4.5rem);align-items:center;
+  padding:3.4rem 0;border-top:1px solid var(--filet);margin-top:3.4rem;
+}
+.volets .volet:first-of-type{border-top:0;margin-top:1.6rem;padding-top:0}
+.volet:nth-child(odd of .volet){grid-template-columns:minmax(0,1fr) minmax(0,24rem)}
+.volet:nth-child(odd of .volet) .texte{order:2}
+.volet h3{
+  font-family:var(--serif);font-weight:500;font-size:clamp(1.6rem,2.6vw,2.15rem);
+  line-height:1.12;letter-spacing:-.015em;margin:.7rem 0 .9rem;
+}
+.volet .num{font-size:1.05rem}
+.volet p{color:var(--encre-2);font-size:.98rem;max-width:26rem}
+.volet p+p{margin-top:.75rem}
+.volet p b{color:var(--encre);font-weight:600}
+.cadre{
+  border:1px solid var(--filet);border-radius:10px;overflow:hidden;
+  box-shadow:0 24px 60px -28px rgba(25,26,29,.38);
+  background:#fff;
+}
+
+/* ── Installation ─────────────────────────────────────── */
+.installer{background:var(--nuit);color:var(--creme);padding:4.8rem 0 5rem;margin-top:4.5rem}
+.installer .ov{color:var(--accent-nuit)}
+.installer h2{
+  font-family:var(--serif);font-weight:500;font-size:clamp(2rem,3.6vw,2.9rem);
+  letter-spacing:-.02em;line-height:1.08;margin:.9rem 0 .6rem;
+}
+.installer .sous{color:var(--creme-2);max-width:34rem}
+.installer .cmd{max-width:44rem;margin-top:2.1rem}
+.gestes{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:2.4rem;
+  margin-top:3.2rem;padding-top:2.6rem;border-top:1px solid var(--filet-nuit);
+}
+.geste .num{font-size:1.6rem;color:var(--accent-nuit)}
+.geste h3{font-family:var(--serif);font-weight:500;font-size:1.25rem;margin:.55rem 0 .5rem}
+.geste p{font-size:.9rem;color:var(--creme-2)}
+.geste p code{font-family:var(--mono);font-size:.8rem;color:var(--creme)}
+.geste figure{
+  margin-top:1.2rem;max-width:13rem;border-radius:8px;overflow:hidden;
+  transform:rotate(1.6deg);
+  box-shadow:0 18px 40px -14px rgba(0,0,0,.8);
+  border:1px solid var(--filet-nuit);
+}
+.installer .note{
+  margin-top:2.8rem;font-size:.83rem;color:var(--creme-3);max-width:44rem;
+}
+.installer .note a{color:var(--creme-2)}
+
+/* ── Charte ───────────────────────────────────────────── */
+.charte{padding:5rem 0}
+.charte .cadre-double{
+  border:1px solid var(--encre);outline:1px solid var(--encre);outline-offset:4px;
+  padding:clamp(1.8rem,4.5vw,3.4rem);
+}
+.charte .ov{color:var(--accent)}
+.charte h2{
+  font-family:var(--serif);font-weight:500;font-size:clamp(1.8rem,3.2vw,2.6rem);
+  letter-spacing:-.018em;line-height:1.1;margin:.8rem 0 2rem;max-width:30rem;
+}
+.charte ul{list-style:none;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:1.6rem 3rem}
+.charte li{padding-top:1rem;border-top:1px solid var(--filet)}
+.charte li b{font-family:var(--serif);font-weight:600;font-size:1.04rem;display:block;margin-bottom:.3rem}
+.charte li{font-size:.93rem;color:var(--encre-2)}
+
+/* ── Pied ─────────────────────────────────────────────── */
+footer{border-top:1px solid var(--filet);padding:2.2rem 0 3rem}
+footer .wrap{display:flex;gap:2rem;align-items:baseline;flex-wrap:wrap}
+footer p{font-size:.83rem;color:var(--encre-3)}
+footer a{color:var(--encre-2)}
+footer .marque{color:var(--encre);font-size:1.05rem}
+footer .marque i{color:var(--accent)}
+footer .droite{margin-left:auto}
+
+@media (max-width:960px){
+  .hero-grid{grid-template-columns:minmax(0,1fr);padding-top:2.6rem;min-height:0}
+  .vitrine{margin:0 -8vw 0 6vw}
+  .faits .wrap{grid-template-columns:1fr 1fr}
+  .fait{padding-left:0;border-left:0;border-top:1px solid var(--filet)}
+  .fait:nth-child(-n+2){border-top:0}
+  .volet,.volet:nth-child(odd of .volet){grid-template-columns:minmax(0,1fr)}
+  .volet:nth-child(odd of .volet) .texte{order:0}
+  .gestes{grid-template-columns:1fr}
+  .charte ul{grid-template-columns:1fr}
+  nav .liens a:not(.cta){display:none}
 }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="hero">
-    <span class="mk"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h7M4 12h16M4 18h11"/></svg></span>
-    <h1>Ton agenda de cégep,<br>rempli tout seul depuis Omnivox</h1>
-    <p>Horaire, travaux, examens et MIO collectés chez toi, affichés dans un tableau de bord clair.
-       <b>Tes identifiants ne quittent jamais ta machine</b> — chacun fait tourner sa propre copie.</p>
-    <span class="cta">
-      <a class="btn solid" href="#install">Installer en 5 étapes</a>
-      <a class="btn" href="/">Voir l'agenda</a>
-      <a class="btn" href="#reconnexion">Ma session a expiré</a>
-    </span>
-  </div>
 
-  <div class="card">
-    <h2>Comment ça marche</h2>
-    <div class="grid3">
-      <div class="mini"><b>1 · Tu te connectes une fois</b><p>Fenêtre visible, tu tapes ton code de vérification toi-même. Le script ne le voit jamais.</p></div>
-      <div class="mini"><b>2 · La session est réutilisée</b><p>Une collecte automatique passe toutes les heures, sans jamais se reconnecter.</p></div>
-      <div class="mini"><b>3 · Ton agenda se remplit</b><p>Échéances datées avec compte à rebours, MIO résumés, pastilles sur les dates d'examen.</p></div>
+<header class="hero grain">
+  <div class="wrap">
+    <nav>
+      <a class="marque" href="/guide.html">Agenda <i>·</i> CTR</a>
+      <div class="liens">
+        <a href="#produit">Le tableau de bord</a>
+        <a href="#installer">Installation</a>
+        <a href="#charte">Sécurité</a>
+        <a href="https://github.com/Txs-Mav/agenda">Code source</a>
+        <a class="cta" href="/">Ouvrir l’app</a>
+      </div>
+    </nav>
+
+    <div class="hero-grid">
+      <div>
+        <p class="ov">Logiciel libre · Cégep de Trois-Rivières</p>
+        <h1>Omnivox,<br><em>sans y penser.</em></h1>
+        <p class="pitch">Un agent tourne sur <b>ton</b> ordinateur, lit Léa et tes MIO
+        chaque heure, calcule l’urgence de chaque échéance et tient ton tableau
+        de bord à jour. <b>Tes identifiants ne quittent jamais ta machine.</b></p>
+
+        <div class="cmd">
+          <div class="t"><span>TERMINAL — INSTALLATION MACOS</span>
+            <button id="copier" type="button">COPIER</button></div>
+          <pre><b>curl</b> -fsSL https://agenda-five-sigma.vercel.app/install.sh |
+  <b>bash</b></pre>
+        </div>
+        <p class="apres">Cmd + Espace, tape « Terminal », colle, Entrée.
+        Le reste est guidé — <a href="#installer">voir les trois gestes</a>.</p>
+      </div>
+
+      <figure class="vitrine">
+        <div class="navig">
+          <div class="barre"><i></i><i></i><i></i><span>agenda-five-sigma.vercel.app</span></div>
+          <img src="/img/app-tableau-clair.jpg" width="1800" height="1175"
+               alt="Le tableau de bord : aperçu de session, semaine, échéances, résumés de MIO" fetchpriority="high">
+        </div>
+      </figure>
     </div>
-    <div class="callout"><span>🔒</span><span><b>Modèle de sécurité :</b> aucun serveur central. Ton mot de passe vit dans un fichier <b>.env</b> chez toi, exclu de git. L'authentification multifacteur n'est <b>jamais contournée</b> — c'est toi qui saisis le code, le script attend.</span></div>
   </div>
+</header>
 
-  <div class="card" id="install">
-    <h2>Installation en une commande</h2>
-    <p>Ouvre le <b>Terminal</b> (Cmd + Espace, tape « Terminal », Entrée), colle cette ligne, Entrée — et laisse-toi guider :</p>
-    <pre>curl -fsSL https://agenda-five-sigma.vercel.app/install.sh | bash</pre>
-    <p>Le script vérifie les outils, télécharge le programme, ouvre le fichier où <b>toi seul</b> écris tes identifiants, lance la connexion (tu tapes le code de vérification toi-même) et installe la collecte automatique. Les étapes ci-dessous sont la version manuelle, si tu préfères tout faire toi-même.</p>
+<section class="faits">
+  <div class="wrap">
+    <div class="fait"><p class="ov">Cadence</p><p>Collecte automatique à chaque heure</p></div>
+    <div class="fait"><p class="ov">Lecture d’horaire</p><p>18 blocs sur 18 extraits d’une simple capture</p></div>
+    <div class="fait"><p class="ov">Connexion</p><p>Une seule tentative, jamais de réessai</p></div>
+    <div class="fait"><p class="ov">Second facteur</p><p>Le code, c’est toujours toi qui le tapes</p></div>
   </div>
+</section>
 
-  <div class="card">
-    <h2><span class="n">1</span> Prérequis</h2>
-    <p>Un Mac (la collecte automatique utilise launchd), <b>Node.js 20+</b> et <b>git</b>.</p>
-    <pre><span class="c"># vérifier :</span>
-node --version && git --version</pre>
-  </div>
+<section class="volets" id="produit">
+  <div class="wrap">
+    <p class="ov">Ce que l’agent tient à jour</p>
 
-  <div class="card">
-    <h2><span class="n">2</span> Cloner et installer</h2>
-    <pre>git clone https://github.com/Txs-Mav/agenda.git
-cd agenda
-npm install
-npx playwright install chromium</pre>
-  </div>
-
-  <div class="card">
-    <h2><span class="n">3</span> Tes identifiants — chez toi seulement</h2>
-    <p>Copie le gabarit, puis remplace les deux <b>REMPLACE_MOI</b> par ton matricule et ton mot de passe Omnivox. Ce fichier est déjà dans <b>.gitignore</b> : il ne peut pas être commité ni envoyé où que ce soit.</p>
-    <pre>cp .env.example .env
-open -e .env</pre>
-    <div class="callout"><span>💡</span><span>Tant que les valeurs d'exemple sont présentes, le programme <b>refuse</b> de tenter une connexion — impossible d'armer le captcha par accident.</span></div>
-  </div>
-
-  <div class="card">
-    <h2><span class="n">4</span> La connexion, guidée</h2>
-    <p>Une fenêtre s'ouvre, tes identifiants sont préremplis. Il ne reste que l'étape de vérification :</p>
-    <pre>npm run login</pre>
-    <div class="callout mfa"><span>📱</span><span><b>Quand le code apparaît :</b> saisis-le dans la fenêtre, puis coche <b>« se souvenir de cet appareil »</b> si l'option est proposée — c'est ce qui évite de refaire cette étape à chaque collecte. Le script attend jusqu'à 10 minutes, puis enregistre la session.</span></div>
-    <span class="pill ok">UNE SEULE FOIS · ENSUITE LA SESSION EST RÉUTILISÉE</span>
-  </div>
-
-  <div class="card">
-    <h2><span class="n">5</span> Collecter, puis automatiser</h2>
-    <p>Première collecte immédiate :</p>
-    <pre>npm run scrape</pre>
-    <p>Puis la collecte horaire automatique (une fois) :</p>
-    <pre>cp horaire.scrape.plist ~/Library/LaunchAgents/ca.qc.cegeptr.agenda.scrape.plist
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/ca.qc.cegeptr.agenda.scrape.plist</pre>
-    <p>Et pour voir ton tableau de bord avec tes données :</p>
-    <pre>cd public && python3 -m http.server 8899
-<span class="c"># puis ouvre http://localhost:8899</span></pre>
-  </div>
-
-  <div class="card">
-    <h2>Ton horaire par capture d'écran</h2>
-    <p>Pas besoin de saisir ton horaire à la main : <b>photographie-le</b>, l'agent le lit et remplit la grille.</p>
-    <p style="margin-top:.7rem"><b>1 · Prendre la capture (Mac)</b> — ouvre ton horaire dans Omnivox (Léa → Horaire), puis appuie sur <b>Cmd + Maj + 4</b> et trace un rectangle qui couvre <b>toute la grille, colonne des heures comprise</b> — sans elle, l'agent refuse de deviner. Le fichier apparaît sur le Bureau (« Capture d'écran … .png »). Une photo d'iPhone fonctionne aussi (HEIC converti automatiquement).</p>
-    <p style="margin-top:.7rem"><b>2 · La donner à l'agent</b> — dans le Terminal, tape la commande avec une espace à la fin, puis <b>glisse le fichier</b> dans la fenêtre et appuie sur Entrée :</p>
-    <pre>cd ~/AgendaCegep
-npm run horaire <span class="c">(glisse l'image ici)</span></pre>
-    <p>L'agent lit la grille (claude-opus-5, une image, quelques cents), l'enregistre, et si ton compte nuagique est configuré, la pousse dans la base — ton tableau de bord l'affiche partout où tu te connectes.</p>
-    <div class="callout"><span>👁️</span><span><b>Vérifie le résultat</b> : la commande liste chaque cours extrait. Un bloc absent ou décalé = reprends une capture plus nette, colonne des heures bien visible.</span></div>
-  </div>
-
-  <div class="card">
-    <h2>Facultatif · Synchroniser vers le nuage</h2>
-    <p>Pour retrouver tes échéances et MIO depuis n'importe où : crée un <b>compte d'agenda</b> (bouton « Connexion » dans la barre latérale de l'app), confirme le courriel reçu, puis donne ces deux variables à ton agent local :</p>
-    <pre>AGENDA_EMAIL=toi@exemple.com
-AGENDA_PASSWORD=ton-mot-de-passe-d-agenda</pre>
-    <div class="callout"><span>🔒</span><span>Ce compte ne transporte que les <b>données dérivées</b> (échéances, résumés). Tes identifiants Omnivox n'y sont <b>jamais</b> — ils restent dans ton .env local. Côté base, chaque compte ne peut lire que ses propres lignes.</span></div>
-  </div>
-
-  <div class="card" id="reconnexion">
-    <h2>Quand la session Omnivox se déconnecte</h2>
-    <p>Omnivox finit toujours par fermer la session : après quelques jours, après un changement de mot de passe, ou si tu te déconnectes depuis un autre appareil. La collecte automatique <b>ne se reconnecte jamais toute seule</b> — elle s'arrête net et te rend la main. C'est voulu : une tâche de fond qui réessaie une connexion arme le captcha d'Omnivox, puis verrouille ton dossier.</p>
-
-    <div class="callout" style="background:color-mix(in srgb,var(--warn) 12%,var(--surface-2))"><span>🔔</span><span><b>Tu n'as rien à surveiller.</b> Dès qu'un passage horaire échoue, une <b>notification macOS</b> te le dit, avec la commande exacte à taper. Elle revient au plus une fois toutes les 6 h tant que la panne dure — pas 24 fois par jour — et une dernière t'annonce que la collecte est rétablie.</span></div>
-
-    <p style="margin-top:.9rem"><b>1 · Reconnaître le symptôme</b> — ton agenda ne bouge plus depuis quelques heures. Le journal le dit franchement :</p>
-    <pre>cd ~/AgendaCegep
-tail -20 data/scrape.log</pre>
-    <div class="callout"><span>🔎</span><span>Tu cherches ces deux lignes : <b>✖ Aucune session valide</b>, puis <b>ARRÊT DÉFINITIF — aucun réessai automatique</b>. C'est ce cas-ci. Un doute ? <b>npm run check</b> tranche en dix secondes : « session réutilisée » = tout va bien, rien à faire.</span></div>
-
-    <p style="margin-top:.9rem"><b>2 · Refaire la session — et rien d'autre</b> — deux commandes, dans l'ordre :</p>
-    <pre>npm run login    <span class="c"># fenêtre visible : tu saisis le code de vérification</span>
-npm run scrape   <span class="c"># rattrape tout de suite la collecte manquée</span></pre>
-    <div class="callout mfa"><span>📱</span><span>Comme au premier jour : tes identifiants sont préremplis, le code de vérification s'affiche, <b>tu le tapes dans la fenêtre</b>. Coche <b>« se souvenir de cet appareil »</b> si l'option revient — c'est ce qui espace les reconnexions.</span></div>
-
-    <div class="callout"><span>✅</span><span><b>Il n'y a rien à réinstaller.</b> Ne relance pas <b>install.sh</b>, ni <b>npm install</b>, ni <b>npx playwright install</b>, ni la tâche <b>launchctl</b> : tout ça est déjà en place et le reste. Seule la session avait expiré. La collecte horaire repart d'elle-même à la prochaine heure — le <b>npm run scrape</b> ci-dessus sert seulement à ne pas attendre.</span></div>
-    <span class="pill ok">LA SESSION SEULEMENT · L'INSTALLATION RESTE INTACTE</span>
-
-    <p style="margin-top:1.1rem"><b>3 · Si la connexion résiste</b> — laisse tomber le préremplissage et fais tout à la main dans la fenêtre :</p>
-    <pre>npm run login -- --manuel</pre>
-    <div class="callout" style="background:color-mix(in srgb,var(--bad) 10%,var(--surface-2))"><span>⛔</span><span><b>Une seule tentative à la fois.</b> Si le login échoue, ne relance pas la commande en boucle : des essais répétés arment le captcha d'Omnivox, puis verrouillent ton dossier étudiant. Attends quelques minutes, connecte-toi d'abord à la main sur <b>omnivox.ca</b> dans ton navigateur habituel pour confirmer que ton compte va bien, et reviens ensuite à <b>npm run login</b>.</span></div>
-  </div>
-
-  <div class="card">
-    <h2>En cas de pépin</h2>
-    <div class="grid3">
-      <div class="mini"><b>« Aucune session valide »</b><p>La session a expiré : <b>npm run login</b> puis <b>npm run scrape</b>. La marche à suivre complète est <a href="#reconnexion" style="color:var(--ink)">juste au-dessus</a>.</p></div>
-      <div class="mini"><b>Captcha au login</b><p>Ferme, attends quelques minutes, puis <b>npm run login -- --manuel</b> et connecte-toi entièrement à la main dans la fenêtre. Jamais deux essais de suite.</p></div>
-      <div class="mini"><b>Rien ne se collecte</b><p>Regarde <b>data/scrape.log</b>. « session réutilisée » suivi de comptes = tout va bien ; « ARRÊT DÉFINITIF » = refais le login.</p></div>
+    <div class="volet">
+      <div class="texte">
+        <span class="num">01</span>
+        <h3>Les échéances savent quand s’inquiéter.</h3>
+        <p>Travaux et évaluations arrivent de Léa avec leur date, leur heure et leur
+        pondération. L’urgence se calcule seule — <b>« dans 8 jours »</b> devient
+        <b>« demain »</b>, puis <b>« aujourd’hui · 14 h »</b> — et la couleur suit,
+        du vert au rouge, jusque sur la date dans l’horaire.</p>
+        <p>Coche, c’est fait. Supprime, ça ne revient pas.</p>
+      </div>
+      <figure class="cadre"><img src="/img/app-echeances.jpg" width="878" height="1090" loading="lazy"
+        alt="La liste des échéances, chacune avec son compte à rebours coloré"></figure>
     </div>
 
-    <p style="margin-top:1.2rem"><b>La tâche horaire ne passe plus</b> — vérifie qu'elle existe encore, et relance-la sans attendre l'heure :</p>
-    <pre>launchctl print gui/$(id -u)/ca.qc.cegeptr.agenda.scrape
-<span class="c"># « state = not running » entre deux passages, c'est normal</span>
-launchctl kickstart -k gui/$(id -u)/ca.qc.cegeptr.agenda.scrape</pre>
-    <p style="margin-top:1.2rem"><b>Aucune notification n'arrive</b> — vérifie que le mécanisme fonctionne chez toi :</p>
-    <pre>osascript -e 'display notification "test" with title "Agenda Cégep"'</pre>
-    <p>Rien à l'écran ? macOS bloque les notifications de <b>Script Editor</b>. Ouvre <b>Réglages Système → Notifications → Script Editor</b> et autorise-les. L'état de la collecte reste de toute façon lisible dans <b>data/health.json</b>.</p>
+    <div class="volet">
+      <div class="texte">
+        <span class="num">02</span>
+        <h3>Chaque MIO, résumé en une phrase.</h3>
+        <p>L’agent ouvre les nouveaux messages, les résume, et propose ce qui en
+        découle : une échéance datée, une tâche, un bloc à l’horaire. Un prof
+        écrit <b>« l’examen est reporté au 21 »</b> ? L’échéance existante est
+        déplacée — pas dupliquée.</p>
+        <p>Seuls les nouveaux messages sont analysés. Jamais deux fois le même.</p>
+      </div>
+      <figure class="cadre"><img src="/img/app-mios.jpg" width="1782" height="1090" loading="lazy"
+        alt="Les résumés de MIO avec leurs actions proposées"></figure>
+    </div>
 
-    <p style="margin-top:1.2rem">Seul <b>« Could not find service »</b> veut dire que la tâche horaire a disparu. C'est alors la seule pièce à réinstaller — le reste du programme est intact :</p>
-    <pre>launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/ca.qc.cegeptr.agenda.scrape.plist</pre>
+    <div class="volet">
+      <div class="texte">
+        <span class="num">03</span>
+        <h3>L’horaire entre par une photo.</h3>
+        <p>Une capture d’écran de ta grille — <b>colonne des heures visible</b> —
+        et chaque cours prend sa place : heures réelles, local, professeur,
+        théorie ou labo. Vérifié sur une session complète : dix-huit blocs,
+        aucune erreur.</p>
+        <p>Glisse des cases vides pour ajouter étude, travail, entraînement.</p>
+      </div>
+      <figure class="cadre"><img src="/img/app-horaire.jpg" width="1800" height="1175" loading="lazy"
+        alt="La grille d’horaire, cours en couleurs par matière"></figure>
+    </div>
   </div>
+</section>
 
-  <footer>
-    Fait pour le Cégep de Trois-Rivières · le code est libre, tes données restent chez toi ·
-    <a href="/">ouvrir l'agenda</a>
-  </footer>
-</div>
+<section class="installer grain" id="installer">
+  <div class="wrap">
+    <p class="ov">Installation</p>
+    <h2>Une commande. Trois gestes humains.</h2>
+    <p class="sous">Le script vérifie les outils, télécharge le programme et installe la
+    collecte automatique. Il s’arrête exactement là où ta présence est requise —
+    c’est voulu, et c’est la sécurité du système.</p>
+
+    <div class="cmd">
+      <div class="t"><span>TERMINAL</span><button id="copier2" type="button">COPIER</button></div>
+      <pre><b>curl</b> -fsSL https://agenda-five-sigma.vercel.app/install.sh | <b>bash</b></pre>
+    </div>
+
+    <div class="gestes">
+      <div class="geste">
+        <span class="num">1</span>
+        <h3>Tes identifiants, chez toi</h3>
+        <p>Le fichier <code>.env</code> s’ouvre dans TextEdit. Tu y écris ton matricule
+        et ton mot de passe, <code>Cmd + S</code>. Ce fichier reste sur ton disque —
+        le script ne le lit jamais à voix haute, ne l’envoie nulle part.</p>
+      </div>
+      <div class="geste">
+        <span class="num">2</span>
+        <h3>La connexion, sous tes yeux</h3>
+        <p>Une fenêtre s’ouvre sur la vraie page Omnivox, champs déjà remplis.
+        Quand le code de vérification apparaît sur ton téléphone, tape-le, et
+        coche « se souvenir de cet appareil ».</p>
+        <figure><img src="/img/omnivox-login.png" width="884" height="1272" loading="lazy"
+          alt="La page de connexion Omnivox du Cégep de Trois-Rivières"></figure>
+      </div>
+      <div class="geste">
+        <span class="num">3</span>
+        <h3>Puis plus rien</h3>
+        <p>La collecte passe toutes les heures, en silence. Si la session expire,
+        une notification macOS te le dit — une seule, pas quarante — et te donne
+        la commande pour la rétablir.</p>
+      </div>
+    </div>
+
+    <p class="note">Prérequis : macOS et <a href="https://nodejs.org/fr">Node.js 20+</a>
+    (le script ouvre la page de téléchargement s’il manque). Méthode manuelle,
+    dépannage et synchronisation nuagique : <a href="https://github.com/Txs-Mav/agenda#readme">le README du dépôt</a>.</p>
+  </div>
+</section>
+
+<section class="charte" id="charte">
+  <div class="wrap">
+    <div class="cadre-double">
+      <p class="ov">Charte</p>
+      <h2>Ce que ce logiciel refuse de faire.</h2>
+      <ul>
+        <li><b>Centraliser des identifiants.</b> Personne — pas même l’auteur — ne
+        peut héberger ton matricule et ton mot de passe. Ils vivent dans un fichier
+        local, exclu du dépôt, lu par un navigateur qui tourne chez toi.</li>
+        <li><b>Contourner le second facteur.</b> Le code de vérification existe pour
+        qu’un mot de passe seul ne suffise pas. Le script attend que tu le tapes ;
+        il ne le lira jamais à ta place.</li>
+        <li><b>Réessayer une connexion échouée.</b> Les échecs répétés arment le
+        captcha d’Omnivox, puis verrouillent le dossier. Une tentative, une seule,
+        puis on te prévient.</li>
+        <li><b>Faire voyager plus que nécessaire.</b> Le compte nuagique, facultatif,
+        ne transporte que le dérivé — échéances, résumés — sous ton propre compte,
+        cloisonné par base de données. Jamais la source.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <a class="marque" href="/guide.html">Agenda <i>·</i> CTR</a>
+    <p><a href="https://github.com/Txs-Mav/agenda">Code source sur GitHub</a> — fais-le tourner chez toi, c’est le principe.</p>
+    <p class="droite">Fait à Trois-Rivières. Aucune affiliation avec Omnivox ni Skytech.</p>
+  </div>
+</footer>
+
+<script>
+for (const id of ["copier","copier2"]) {
+  const b = document.getElementById(id);
+  b.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText("curl -fsSL https://agenda-five-sigma.vercel.app/install.sh | bash");
+      b.textContent = "COPIÉ ✓";
+    } catch { b.textContent = "CMD+C CI-DESSOUS"; }
+    setTimeout(() => { b.textContent = "COPIER"; }, 1800);
+  });
+}
+</script>
 </body>
 </html>
