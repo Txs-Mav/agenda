@@ -2,6 +2,17 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "agenda-src",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "4223",
+        "."
+      ],
+      "port": 4223
+    },
+    {
       "name": "agenda-static-2",
       "runtimeExecutable": "npx",
       "runtimeArgs": [
@@ -44,6 +55,28 @@
         "public"
       ],
       "port": 4197
+    },
+    {
+      "name": "agenda-static-6",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "4201",
+        "public"
+      ],
+      "port": 4201
+    },
+    {
+      "name": "agenda-static-7",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "4211",
+        "public"
+      ],
+      "port": 4211
     }
   ]
 }
