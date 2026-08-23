@@ -76,6 +76,9 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 .hi{font-size:1.75rem;font-weight:650;letter-spacing:-.035em}
 .hi small{display:block;font-size:.78rem;font-weight:400;letter-spacing:0;color:var(--dim);margin-top:.1rem}
 .head .grow{flex:1 1 auto}
+/* Sans titre, l'en-tête n'est plus qu'une rangée de commandes : elle se serre
+   pour ne pas laisser un trou au-dessus du titre de la vue. */
+.head.bare{padding-bottom:.35rem}
 .pill{display:inline-flex;align-items:center;gap:.45rem;background:var(--invert);color:var(--on-invert);border-radius:999px;padding:.62rem 1.05rem;font-size:.87rem;font-weight:550;transition:opacity .15s}
 .pill:hover{opacity:.85}
 .rnd{width:2.75rem;height:2.75rem;border-radius:50%;background:var(--surface);box-shadow:var(--shadow);display:grid;place-items:center;color:var(--ink);position:relative;transition:transform .15s}
@@ -1015,7 +1018,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
 
   <div class="main">
     <header class="head" id="apphead">
-      <h1 class="hi">Salut, <span id="hi-name">Maverick</span>&nbsp;!<small id="stamp"></small></h1>
+      <h1 class="hi" id="greet">Salut, <span id="hi-name">Maverick</span>&nbsp;!<small id="stamp"></small></h1>
       <span class="grow"></span>
       <button class="pill" id="add-week"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Semaine</button>
       <button class="rnd" id="go-alerts" title="Échéances"><svg class="i" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 13 6 9zM10 18.5a2 2 0 0 0 4 0"/></svg><span class="dot" id="bell-dot" hidden></span></button>
@@ -4143,6 +4146,12 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     for (const v of ["board","profil","matiere","landing","onboard"]) el(v).hidden = v !== name;
     const hors = name === "landing" || name === "onboard";
     el("apphead").hidden = hors;
+    /* La salutation et la date n'appartiennent qu'au tableau de bord. Ailleurs,
+       la vue annonce déjà ce qu'elle est — « Conférences », « Mon profil » — et
+       un « Salut, Maverick ! » au-dessus ne ferait que repousser le contenu.
+       L'en-tête garde ses commandes, il perd son titre. */
+    el("greet").hidden = name !== "board";
+    el("apphead").classList.toggle("bare", name !== "board");
     document.body.classList.toggle("lp", hors);
     if (name !== "board") scrollTo({ top:0, behavior:"smooth" });
   }
