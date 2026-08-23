@@ -371,7 +371,7 @@ li:hover .kill{opacity:1}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{
   body{background:#fff;padding:0}
-  .side,.head,.sect .link,.wnav,.fchip,.newrow,.kill,.ghostcard,.pop{display:none}
+  .side,.head,.sect .link,.wnav,.fchip,.newrow,.kill,.ghostcard,.pop,.tools{display:none}
   .shell{display:block}
   .card,.work,.course{box-shadow:none;border:1px solid #bbb}
   .course{background:#fff;color:#000}
@@ -869,10 +869,83 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
   width:100%;min-height:24rem;background:none;border:none;resize:none;
   color:var(--ink);font:inherit;font-size:.92rem;line-height:1.7;
   padding:.1rem 1.35rem 1.5rem;overflow:hidden;display:block;
+  position:relative;z-index:1;
 }
 .page:focus{outline:none}
 .page::placeholder{color:var(--faint)}
 @media (max-width:900px){.page{min-height:15rem}}
+
+/* ── Écrire, dessiner, surligner, annoter ────────────────────────
+   Quatre couches empilées comme sur du papier. L'ordre de peinture est tout
+   le propos : le surlignage passe SOUS le texte — c'est ce qui en fait un
+   marqueur et non un barbouillage — et l'encre par-dessus. Sans z-index
+   explicite, une couche positionnée passerait devant le texte en flux ;
+   d'où la pile déclarée noir sur blanc. */
+.pagewrap{position:relative}
+/* width/height explicites, et pas seulement inset:0 : un <svg> est un élément
+   remplacé — sans dimension imposée, il garde la hauteur intrinsèque déduite
+   de son viewBox au lieu de s'étirer, et toute l'encre se tasse vers le haut. */
+.inklayer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.inklayer.hl{z-index:0}
+.inklayer.pen{z-index:2}
+.inklayer.hl path{stroke-opacity:var(--hlo)}
+.annos{position:absolute;inset:0;pointer-events:none;z-index:3}
+.cap{position:absolute;inset:0;pointer-events:none;z-index:4}
+/* Le calque de capture ne prend le pointeur qu'une fois un outil choisi :
+   en mode Écrire, la page redevient un simple champ de texte. */
+.pagewrap.drawing .cap{pointer-events:auto;touch-action:none}
+.pagewrap.drawing .page{pointer-events:none}
+/* Les états d'outil sont préfixés : « anno » tout court désignerait aussi la
+   boîte d'annotation, et le conteneur en prendrait la largeur. */
+.pagewrap.t-pen .cap,.pagewrap.t-hl .cap{cursor:crosshair}
+.pagewrap.t-erase .cap{cursor:cell}
+.pagewrap.t-anno .cap{cursor:copy}
+
+/* Encres. Chaque teinte a sa version sombre : un bleu à 48 % de clarté
+   disparaît sur une carte noire. */
+:root{
+  --hlo:.30;
+  --ic-ink:var(--ink);       --ic-rouge:hsl(2 74% 47%);   --ic-ambre:hsl(36 92% 42%);
+  --ic-vert:hsl(148 62% 33%); --ic-bleu:hsl(214 80% 47%); --ic-violet:hsl(272 60% 52%);
+}
+:root[data-theme="dark"]{
+  --hlo:.40;
+  --ic-rouge:hsl(2 90% 69%);  --ic-ambre:hsl(38 94% 62%);
+  --ic-vert:hsl(148 62% 56%); --ic-bleu:hsl(212 92% 68%); --ic-violet:hsl(274 82% 74%);
+}
+
+.tools{display:flex;align-items:center;gap:.25rem;flex-wrap:wrap;padding:.1rem 1.2rem .55rem}
+.tools .grow{flex:1 1 auto}
+.tools .sep{width:1px;height:1.15rem;background:var(--line-hi);margin:0 .3rem;flex:0 0 auto}
+.tl{width:2rem;height:2rem;border-radius:10px;display:grid;place-items:center;
+  color:var(--dim);transition:background .15s,color .15s,opacity .15s;flex:0 0 auto}
+.tl:hover:not(:disabled){background:var(--surface-2);color:var(--ink)}
+.tl.on{background:var(--invert);color:var(--on-invert)}
+.tl:disabled{opacity:.28}
+.tl .i{width:16px;height:16px}
+.swz{display:flex;gap:.3rem;align-items:center}
+.swz[hidden]{display:none}
+.sw{width:1.05rem;height:1.05rem;border-radius:50%;background:var(--c);flex:0 0 auto;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 16%,transparent);transition:transform .12s}
+.sw:hover{transform:scale(1.18)}
+.sw.on{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px var(--c)}
+
+/* Une annotation se pose où on clique, se déplace par sa poignée et
+   s'efface par sa croix. Elle flotte au-dessus de tout le reste. */
+.anno{position:absolute;pointer-events:auto;width:min(46%,12.5rem);
+  background:var(--surface-2);border-radius:12px;padding:.2rem .5rem .1rem;
+  border-left:3px solid var(--c);box-shadow:var(--shadow)}
+.anno .ah{display:flex;align-items:center;gap:.3rem;height:.95rem}
+.anno .grab{flex:1 1 auto;height:100%;cursor:grab;border-radius:4px}
+.anno .grab:hover{background:color-mix(in srgb,var(--ink) 7%,transparent)}
+.anno.drag{cursor:grabbing;box-shadow:0 8px 22px rgba(0,0,0,.18)}
+.anno.drag .grab{cursor:grabbing}
+.anno textarea{width:100%;background:none;border:none;resize:none;color:var(--ink);
+  font:inherit;font-size:.76rem;line-height:1.4;padding:0 0 .3rem;overflow:hidden}
+.anno textarea:focus{outline:none}
+.anno textarea::placeholder{color:var(--faint)}
+.anno .kill{opacity:0}
+.anno:hover .kill,.anno:focus-within .kill{opacity:1}
 
 /* Où le cours tombe dans la semaine. La grille de l'horaire répond « qu'est-ce
    que j'ai mardi ? » ; celle-ci répond « quand ai-je CE cours ? » — d'où les
@@ -1153,8 +1226,26 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
           <section class="card fx">
             <div class="ch"><h3>Notes</h3><span class="grow"></span>
               <span class="dim mono" id="m-pat" style="font-size:.66rem"></span></div>
-            <textarea id="m-page" class="page" spellcheck="true"
-              placeholder="Page blanche. Consignes du prof, pages à lire, ce qui est tombé à l'examen — tout reste sur cet appareil."></textarea>
+            <div class="tools" id="m-tools">
+              <button class="tl on" data-tool="write" title="Écrire — le texte de la page"><svg class="i" viewBox="0 0 24 24"><path d="M5.5 7V4.5h13V7M12 4.5v15M9 19.5h6"/></svg></button>
+              <button class="tl" data-tool="pen" title="Dessiner"><svg class="i" viewBox="0 0 24 24"><path d="M4 20.5l1.2-4.2L16.6 4.9a2 2 0 0 1 2.8 0l.7.7a2 2 0 0 1 0 2.8L8.7 19.8z"/><path d="M15.4 6.1l3.2 3.2"/></svg></button>
+              <button class="tl" data-tool="hl" title="Surligner"><svg class="i" viewBox="0 0 24 24"><path d="M12.5 4.6l6.4 6.4-6.6 6.6H7.9l-2.4-2.4z"/><path d="M4 20.5h9"/></svg></button>
+              <button class="tl" data-tool="anno" title="Annoter — poser une note où tu veux"><svg class="i" viewBox="0 0 24 24"><path d="M4.5 5h15v9.5l-5 5h-10z"/><path d="M19.5 14.5h-5v5"/><path d="M8 9h8M8 12h5"/></svg></button>
+              <button class="tl" data-tool="erase" title="Effacer un trait"><svg class="i" viewBox="0 0 24 24"><path d="M9.5 20.5H20"/><path d="M4.6 16.1l7.6-7.6 5.8 5.8-6.3 6.2H7.1z"/><path d="M12.2 8.5l3.1-3.1a1.7 1.7 0 0 1 2.4 0l3.4 3.4a1.7 1.7 0 0 1 0 2.4l-3.3 3.2"/></svg></button>
+              <span class="sep"></span>
+              <div class="swz" id="m-swz" hidden></div>
+              <span class="grow"></span>
+              <button class="tl" id="m-undo" title="Annuler le dernier trait"><svg class="i" viewBox="0 0 24 24"><path d="M8.5 7.5L4.5 11.5l4 4"/><path d="M4.5 11.5h9.8a4.7 4.7 0 1 1 0 9.4H10"/></svg></button>
+              <button class="tl" id="m-redo" title="Rétablir"><svg class="i" viewBox="0 0 24 24"><path d="M15.5 7.5l4 4-4 4"/><path d="M19.5 11.5H9.7a4.7 4.7 0 1 0 0 9.4H14"/></svg></button>
+            </div>
+            <div class="pagewrap" id="m-wrap">
+              <svg class="inklayer hl" id="m-hl" aria-hidden="true"></svg>
+              <textarea id="m-page" class="page" spellcheck="true"
+                placeholder="Page blanche. Écris, dessine, surligne, annote — tout reste sur cet appareil."></textarea>
+              <svg class="inklayer pen" id="m-pen" aria-hidden="true"></svg>
+              <div class="annos" id="m-annos"></div>
+              <div class="cap" id="m-cap"></div>
+            </div>
           </section>
           <section class="card fx">
             <div class="ch"><h3>Semaine type</h3><span class="grow"></span>
@@ -1592,7 +1683,11 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
   /* L'horaire n'est complet qu'une fois les retouches connues : c'est ici,
      l'état chargé, que la source et le calque se rejoignent. */
   applyTT();
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} };
+  /* Rend compte de son sort : une page couverte de traits peut saturer le
+     stockage de l'appareil, et un échec avalé en silence, c'est du travail
+     perdu sans un mot. */
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); return true; }
+    catch { return false; } };
   const uid = () => "x" + Math.random().toString(36).slice(2,9);
 
   const el = id => document.getElementById(id);
@@ -3017,11 +3112,66 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
       if (!(new Date(at).getTime() > seuil)) delete state.rappels.vus[k];
   }
 
+  /* Le son : deux notes qui montent, pas le « pouet » du système ────
+     L'option `sound` de l'API de notification n'est lue par aucun
+     navigateur — on ne choisit donc pas le son du système, on le tait et
+     on joue le sien. Synthétisé plutôt que téléchargé : rien à mettre en
+     cache, rien à charger, ça sonne aussi hors ligne. */
+  const SON_NOTES = [[784, 0], [1175, .12]];   // sol5 puis ré6 : une quinte qui monte, brève
+  let sonCtx = null;
+  const sonPret = () => !!sonCtx && sonCtx.state === "running";
+  /* Un contexte audio ne s'ouvre que sur un vrai geste — d'où l'appel depuis
+     le clic du bouton. Une fois ouvert il reste jouable, onglet au fond de
+     l'écran compris, ce qui est exactement le cas d'usage du rappel. */
+  async function sonOuvre() {
+    try {
+      sonCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+      /* `resume` est une promesse : sans l'attendre, le carillon d'essai du
+         bouton partirait sur un contexte encore endormi, donc muet. */
+      if (sonCtx.state === "suspended") await sonCtx.resume();
+    } catch { sonCtx = null; }
+    return sonPret();
+  }
+
+  let sonAt = -Infinity;   // et non 0 : l'horloge d'un contexte neuf part de 0, le tout premier carillon se ferait manger
+  function rapSon() {
+    if (!sonPret()) return;
+    /* Un réveil après une longue veille annonce jusqu'à trois choses d'un
+       coup : un seul carillon pour la volée, sinon les trois se superposent. */
+    if (sonCtx.currentTime - sonAt < 1.5) return;
+    sonAt = sonCtx.currentTime;
+    const t0 = sonCtx.currentTime + .02;
+    for (const [hz, dt] of SON_NOTES) {
+      const o = sonCtx.createOscillator(), g = sonCtx.createGain();
+      o.type = "sine";
+      o.frequency.value = hz;
+      /* Attaque nette puis longue décroissance : c'est ce qui fait entendre
+         une cloche et non le bip d'une minuterie de four. */
+      g.gain.setValueAtTime(0, t0 + dt);
+      g.gain.linearRampToValueAtTime(.14, t0 + dt + .008);
+      g.gain.exponentialRampToValueAtTime(.0001, t0 + dt + .45);
+      o.connect(g).connect(sonCtx.destination);
+      o.start(t0 + dt);
+      o.stop(t0 + dt + .5);
+    }
+  }
+
+  /* Rappels déjà allumés au chargement de la page : le contexte audio attend
+     quand même un geste. Le premier de la session, où qu'il tombe, l'ouvre. */
+  const sonAmorce = () => { if (state.rappels.on) sonOuvre(); };
+  addEventListener("pointerdown", sonAmorce, { once:true });
+  addEventListener("keydown", sonAmorce, { once:true });
+
   /* Par le service worker quand il y en a un : une notification postée par lui
      survit à la fermeture de l'onglet et sait le rouvrir au clic. Sinon,
      l'API directe — c'est le cas de agenda.html ouvert seul. */
   async function rapShow(titre, corps, tag) {
-    const opts = { body:corps, tag, lang:"fr-CA", icon:"icon-192.png", badge:"icon-192.png" };
+    /* On ne coupe le son du système que si le nôtre part vraiment : contexte
+       audio jamais ouvert, ou refermé par le navigateur, et une notification
+       muette serait un rappel qu'on n'entend pas. */
+    const mien = sonPret();
+    const opts = { body:corps, tag, lang:"fr-CA", icon:"icon-192.png", badge:"icon-192.png", silent:mien };
+    if (mien) rapSon();
     try {
       const reg = await navigator.serviceWorker?.getRegistration?.();
       if (reg?.showNotification) { await reg.showNotification(titre, opts); return; }
@@ -3081,6 +3231,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
        navigateur, et c'est aussi la seule façon honnête de la poser. */
     if (Notification.permission === "default") { try { await Notification.requestPermission(); } catch {} }
     if (Notification.permission !== "granted") { renderRappel(); return; }
+    await sonOuvre();   /* ce clic-ci est le geste qui autorise le son */
     state.rappels.on = true;
     rapPrime();
     renderRappel();
@@ -3100,14 +3251,20 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
      ouvre sa fiche. Les dates qu'on y ajoute ne sont pas un carnet à part :
      ce sont les mêmes échéances que partout ailleurs, d'où le rappel qui
      s'allume et la case qui se pose dans l'horaire. */
-  const MSHEET = { prof:"", mail:"", room:"", link:"", memo:"", page:"", at:"" };
+  const MSHEET = { prof:"", mail:"", room:"", link:"", memo:"", page:"", at:"", ink:[], annos:[] };
   /* Clés possibles d'une fiche, la meilleure en tête. Un horaire lu sur photo
      laisse souvent le sigle vide : la fiche s'ouvre alors sous le nom du
      cours, puis déménage sous le sigle dès qu'une collecte le fait
      apparaître — sans que les notes déjà prises restent en arrière. */
   const mKeys = c => { const code = courseInfo(c).code; return code ? [code, c] : [c]; };
   const mRaw = c => { const ks = mKeys(c); return state.sheets[ks.find(k => state.sheets[k])] || {}; };
-  const mSheet = c => ({ ...MSHEET, ...mRaw(c) });
+  /* Les deux listes sont recopiées à la lecture : le gabarit MSHEET partage
+     ses tableaux vides entre toutes les fiches, les muter en place les
+     mélangerait toutes. Toute écriture passe donc par un tableau NEUF. */
+  const mSheet = c => { const r = mRaw(c);
+    return { ...MSHEET, ...r,
+      ink:   Array.isArray(r.ink)   ? r.ink   : [],
+      annos: Array.isArray(r.annos) ? r.annos : [] }; };
   const mWrite = (c, patch) => { const ks = mKeys(c);
     state.sheets[ks[0]] = { ...MSHEET, ...mRaw(c), ...patch };
     for (const old of ks.slice(1)) delete state.sheets[old]; };
@@ -3117,17 +3274,35 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
      descend sur le disque un instant plus tard — et sans faute dès qu'on
      quitte le champ ou la fiche. */
   let mSaveT = 0;
-  const mSoon = () => { clearTimeout(mSaveT); mSaveT = setTimeout(() => { mSaveT = 0; save(); }, 400); };
-  const mFlush = () => { if (!mSaveT) return; clearTimeout(mSaveT); mSaveT = 0; save(); };
+  const mSaved = ok => { if (!ok && mCur && !el("matiere").hidden)
+    el("m-pat").textContent = "⚠ mémoire de l'appareil pleine — page non enregistrée"; };
+  const mSoon = () => { clearTimeout(mSaveT); mSaveT = setTimeout(() => { mSaveT = 0; mSaved(save()); }, 400); };
+  const mFlush = () => { if (!mSaveT) return; clearTimeout(mSaveT); mSaveT = 0; mSaved(save()); };
   const mDates = c => state.deadlines.filter(d => courseOf(d) === c);
-  /* La page fait exactement la hauteur de son texte : rien à dérouler à
-     l'intérieur, rien de coupé. À recalculer dès que la largeur change, sinon
-     une page écrite au large se tronque une fois la fenêtre rétrécie. */
-  const mGrow = ta => { ta.style.height = "auto"; ta.style.height = `${ta.scrollHeight}px`; };
+  /* La page fait la hauteur de ce qu'elle porte : son texte, mais aussi le
+     trait le plus bas et l'annotation la plus basse — sinon on ne pourrait
+     plus rien ajouter sous ce qu'on vient de dessiner. Rien à dérouler à
+     l'intérieur, rien de coupé. À recalculer dès que la largeur change. */
+  function mGrow() {
+    const ta = el("m-page"); if (!ta) return;
+    ta.style.height = "auto";
+    let need = ta.scrollHeight;
+    if (mCur) {
+      const sh = mSheet(mCur);
+      let deep = 0;   // y est déjà en pixels : rien à convertir
+      for (const st of sh.ink) for (let i = 1; i < st.p.length; i += 2) if (st.p[i] > deep) deep = st.p[i];
+      for (const a of sh.annos) if (a.y > deep) deep = a.y;
+      if (deep) need = Math.max(need, deep + 96);
+    }
+    ta.style.height = `${need}px`;
+    drawInk(); layoutAnnos();
+  }
   const mStamp = () => { const t = new Date();
     return `${t.getDate()} ${MONTH[t.getMonth()].slice(0,4)} · ${pad(t.getHours())}:${pad(t.getMinutes())}`; };
   /* Ce qu'une fiche contient déjà : sert aux compteurs des cartes « Mes cours ». */
-  const mCount = c => ({ page: !!mSheet(c).page.trim(), dates: mDates(c).length });
+  const mFull = c => { const sh = mSheet(c);
+    return !!(sh.page.trim() || sh.ink.length || sh.annos.length); };
+  const mCount = c => ({ page: mFull(c), dates: mDates(c).length });
   let mCur = null;                     // matière dont la fiche est ouverte
 
   function openMatiere(c) {
@@ -3227,18 +3402,282 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     renderMDates(); renderCourses(); refreshAll();
     el("m-dt").focus();
   }
-  /* La page d'une matière : on l'ouvre, elle est là, on écrit. Rien à créer,
-     rien à valider — la seule trace du travail de la machine est la date de
-     dernière modification, en petit dans l'en-tête. */
+  /* ── La page : écrire, dessiner, surligner, annoter ───────────────
+     Le texte reste un vrai champ de texte — c'est ce qui garde la frappe,
+     la sélection et le correcteur intacts. Autour de lui, trois calques :
+     le surlignage dessous, l'encre dessus, les annotations au-dessus de
+     tout.
+
+     Coordonnées, et c'est tout le sujet. x est rangé en millièmes de la
+     LARGEUR de la page ; y, lui, en pixels bruts. Ce mélange n'est pas une
+     étourderie : une ligne de texte garde sa hauteur quelle que soit la
+     largeur de la fenêtre, mais se décale horizontalement avec elle. Un y
+     mis à l'échelle ferait glisser tous les surlignages d'une ligne dès la
+     première fenêtre redimensionnée — or surligner, c'est justement poser
+     une barre SUR une ligne. Le prix : un cercle dessiné large devient un
+     ovale une fois la fenêtre rétrécie. Un dessin déformé vaut mieux qu'un
+     surlignage qui ne surligne plus rien.
+
+     L'épaisseur ne suit aucune échelle non plus (vector-effect) : le
+     marqueur doit couvrir une ligne de texte, dont la taille ne bouge pas. */
+  const MTOOLS = ["write","pen","hl","anno","erase"];
+  const MCOL = { ink:"Encre", rouge:"Rouge", ambre:"Ambre", vert:"Vert", bleu:"Bleu", violet:"Violet" };
+  const colOf = id => `var(--ic-${id in MCOL ? id : "ink"})`;
+  /* En pixels d'écran : la plume écrit fin, le marqueur couvre une ligne de
+     texte (0,92 rem × 1,7 ≈ 25 px). */
+  const PEN_W = 2.2, HL_W = 20, ERASE_R = 10;
+  let mTool = "write", mCol = "ink";
+  let mStroke = null, mLive = null, mErasing = false;
+
+  /* Lissage par points milieux : un trait relié en segments droits accroche
+     l'œil à chaque échantillon du pointeur. Un point seul devient un point,
+     pas un trait de longueur nulle qu'on ne verrait pas. */
+  function pathD(p) {
+    if (p.length < 4) return `M${p[0]} ${p[1]}l.01 0`;
+    let d = `M${p[0]} ${p[1]}`;
+    for (let i = 2; i < p.length - 2; i += 2)
+      d += `Q${p[i]} ${p[i+1]} ${(p[i]+p[i+2])/2} ${(p[i+1]+p[i+3])/2}`;
+    return d + `L${p[p.length-2]} ${p[p.length-1]}`;
+  }
+  /* La teinte passe par le style et non par l'attribut : une variable CSS
+     n'est pas comprise dans un attribut de présentation SVG. */
+  function inkPath(st) {
+    const n = svgEl("path", { d: pathD(st.p), fill:"none",
+      "stroke-width": st.w || (st.k === "hl" ? HL_W : PEN_W),
+      "stroke-linecap":"round", "stroke-linejoin":"round",
+      "vector-effect":"non-scaling-stroke" });
+    n.style.stroke = colOf(st.c);
+    return n;
+  }
+  const mBoxW = () => el("m-wrap").clientWidth || 1;
+  const toLog = ev => { const r = el("m-wrap").getBoundingClientRect();
+    return [ +((ev.clientX - r.left) * 1000 / (r.width || 1)).toFixed(1),
+             +(ev.clientY - r.top).toFixed(1) ]; };
+
+  function drawInk() {
+    const wrap = el("m-wrap");
+    /* Mille unités en largeur, des pixels en hauteur : le repère du stockage
+       tel quel. D'où « none » — l'aspect ne doit surtout PAS être préservé. */
+    const vb = `0 0 1000 ${wrap.clientHeight || 1}`;
+    const ink = mCur ? mSheet(mCur).ink : [];
+    for (const [id, kind] of [["m-hl","hl"], ["m-pen","pen"]]) {
+      const svg = el(id);
+      svg.setAttribute("viewBox", vb);
+      svg.setAttribute("preserveAspectRatio", "none");
+      svg.textContent = "";
+      for (const st of ink) if ((st.k || "pen") === kind) svg.append(inkPath(st));
+    }
+  }
+  function layoutAnnos() {
+    const k = mBoxW() / 1000;
+    for (const n of el("m-annos").children) {
+      n.style.left = `${(+n.dataset.x) * k}px`;
+      n.style.top  = `${+n.dataset.y}px`;
+    }
+  }
+  function drawAnnos() {
+    const c = mCur, box = el("m-annos"); box.textContent = "";
+    if (!c) return;
+    for (const a of mSheet(c).annos) {
+      const n = mk("div","anno");
+      n.dataset.x = a.x; n.dataset.y = a.y; n.dataset.id = a.id;
+      n.style.setProperty("--c", colOf(a.c));
+      const hd = mk("div","ah");
+      const grab = mk("span","grab"); grab.title = "Déplacer l'annotation";
+      const kill = mk("button","kill","×"); kill.title = "Retirer l'annotation";
+      kill.addEventListener("click", () => {
+        mWrite(c, { annos: mSheet(c).annos.filter(x => x.id !== a.id) });
+        drawAnnos(); mGrow(); histSave(); mTouched();
+      });
+      hd.append(grab, kill);
+      const ta = mk("textarea"); ta.value = a.t || ""; ta.rows = 1;
+      ta.placeholder = "Annotation…";
+      const g = () => { ta.style.height = "auto"; ta.style.height = `${ta.scrollHeight}px`; };
+      ta.addEventListener("input", () => { g();
+        mWrite(c, { annos: mSheet(c).annos.map(x => x.id === a.id ? { ...x, t: ta.value } : x) });
+        mTouched();
+        /* Le texte d'une annotation doit entrer dans l'historique lui aussi :
+           sans ça, annuler un trait ramènerait un état antérieur à ce qu'on
+           vient d'écrire — et effacerait la phrase sans prévenir. Groupé par
+           pauses de frappe, pour qu'un « annuler » ne recule pas d'une lettre. */
+        histSoon(); });
+      ta.addEventListener("blur", histSave);
+      n.append(hd, ta); box.append(n);
+      g(); requestAnimationFrame(g);
+      dragAnno(n, grab, a.id);
+    }
+    layoutAnnos();
+  }
+  /* Une annotation mal posée se rattrape : la poignée la déplace, et seul un
+     vrai déplacement entre dans l'historique. */
+  function dragAnno(node, handle, id) {
+    handle.addEventListener("pointerdown", ev => {
+      const c = mCur; if (!c) return;
+      ev.preventDefault();
+      try { handle.setPointerCapture(ev.pointerId); } catch {}
+      node.classList.add("drag");
+      const k = 1000 / mBoxW(), sx = ev.clientX, sy = ev.clientY;
+      const o = mSheet(c).annos.find(x => x.id === id) || { x:0, y:0 };
+      let moved = false;
+      const mv = e2 => {
+        if (Math.abs(e2.clientX - sx) + Math.abs(e2.clientY - sy) < 3) return;
+        moved = true;
+        node.dataset.x = Math.max(0, Math.min(880, o.x + (e2.clientX - sx) * k)).toFixed(1);
+        node.dataset.y = Math.max(0, o.y + (e2.clientY - sy)).toFixed(1);
+        layoutAnnos();
+      };
+      const up = () => {
+        handle.removeEventListener("pointermove", mv);
+        handle.removeEventListener("pointerup", up);
+        handle.removeEventListener("pointercancel", up);
+        node.classList.remove("drag");
+        if (!moved) return;
+        mWrite(c, { annos: mSheet(c).annos.map(x => x.id === id
+          ? { ...x, x:+node.dataset.x, y:+node.dataset.y } : x) });
+        mGrow(); histSave(); mTouched();
+      };
+      handle.addEventListener("pointermove", mv);
+      handle.addEventListener("pointerup", up);
+      handle.addEventListener("pointercancel", up);
+    });
+  }
+  function addAnno(x, y) {
+    const c = mCur; if (!c) return;
+    const a = { id: uid(), x: +Math.max(0, Math.min(880, x)).toFixed(1),
+                y: +Math.max(0, y).toFixed(1), t:"", c: mCol };
+    mWrite(c, { annos: [...mSheet(c).annos, a] });
+    drawAnnos(); mGrow(); histSave(); mTouched();
+    /* Poser une annotation, c'est vouloir écrire dedans : on repasse à
+       l'écriture, sinon le clic suivant en sème une deuxième. */
+    setTool("write");
+    el("m-annos").querySelector(`.anno[data-id="${a.id}"] textarea`)?.focus();
+  }
+
+  /* Gomme au trait entier plutôt qu'au pixel : c'est ce qu'on veut presque
+     toujours, et ça reste prévisible — on efface ce qu'on a tracé. */
+  /* Le test se fait en pixels d'écran : x est rangé sur mille, y en pixels —
+     les comparer tels quels donnerait une gomme ovale. */
+  const strokeHit = (st, x, y, k) => {
+    const px = x * k, r = ERASE_R + (st.w || PEN_W) / 2;
+    for (let i = 0; i < st.p.length; i += 2)
+      if (Math.hypot(st.p[i] * k - px, st.p[i+1] - y) <= r) return true;
+    return false;
+  };
+  function eraseAt(x, y) {
+    const c = mCur; if (!c) return;
+    const k = mBoxW() / 1000;
+    const ink = mSheet(c).ink, keep = ink.filter(st => !strokeHit(st, x, y, k));
+    if (keep.length === ink.length) return;
+    mWrite(c, { ink: keep });
+    drawInk();
+  }
+
+  function capDown(ev) {
+    if (!mCur || mTool === "write") return;
+    ev.preventDefault();
+    try { el("m-cap").setPointerCapture(ev.pointerId); } catch {}
+    const [x, y] = toLog(ev);
+    if (mTool === "anno")  { addAnno(x, y); return; }
+    if (mTool === "erase") { mErasing = true; eraseAt(x, y); return; }
+    mStroke = { k: mTool === "hl" ? "hl" : "pen", c: mCol,
+                w: mTool === "hl" ? HL_W : PEN_W, p: [x, y] };
+    mLive = inkPath(mStroke);
+    el(mStroke.k === "hl" ? "m-hl" : "m-pen").append(mLive);
+  }
+  function capMove(ev) {
+    if (!mCur) return;
+    const [x, y] = toLog(ev);
+    if (mErasing) { eraseAt(x, y); return; }
+    if (!mStroke) return;
+    /* On ne garde pas chaque échantillon : deux points collés n'ajoutent
+       rien au trait et alourdissent la page pour rien. */
+    const p = mStroke.p, n = p.length, k = mBoxW() / 1000;
+    if (Math.hypot((x - p[n-2]) * k, y - p[n-1]) < 2) return;
+    p.push(x, y);
+    mLive.setAttribute("d", pathD(p));
+  }
+  function capUp() {
+    const c = mCur;
+    if (mErasing) { mErasing = false; if (c) { histSave(); mTouched(); mGrow(); } return; }
+    if (!mStroke) return;
+    const st = mStroke; mStroke = null; mLive = null;
+    if (!c) { drawInk(); return; }
+    mWrite(c, { ink: [...mSheet(c).ink, st] });
+    mGrow(); histSave(); mTouched();
+  }
+
+  /* Historique des traits et des annotations seulement : ⌘Z rend au champ de
+     texte son propre défaire tant qu'on écrit, et pilote l'encre dès qu'un
+     outil de dessin est choisi. */
+  let mHist = [], mHPos = -1;
+  const mSnap = () => { const s = mSheet(mCur); return JSON.stringify({ ink:s.ink, annos:s.annos }); };
+  const histBtns = () => { el("m-undo").disabled = mHPos <= 0;
+    el("m-redo").disabled = mHPos >= mHist.length - 1; };
+  function histInit() { mHist = mCur ? [mSnap()] : []; mHPos = mHist.length - 1; histBtns(); }
+  let mHistT = 0;
+  const histSoon = () => { clearTimeout(mHistT); mHistT = setTimeout(() => { mHistT = 0; histSave(); }, 700); };
+  function histSave() {
+    clearTimeout(mHistT); mHistT = 0;
+    if (!mCur) return;
+    const now = mSnap();
+    if (now === mHist[mHPos]) return;
+    mHist = mHist.slice(0, mHPos + 1);
+    mHist.push(now);
+    if (mHist.length > 40) mHist.shift();
+    mHPos = mHist.length - 1;
+    histBtns();
+  }
+  function histGo(d) {
+    const i = mHPos + d;
+    if (!mCur || i < 0 || i >= mHist.length) return;
+    mHPos = i;
+    const s = JSON.parse(mHist[i]);
+    mWrite(mCur, { ink: s.ink, annos: s.annos });
+    drawAnnos(); mGrow(); mTouched(); histBtns();
+  }
+
+  /* Un geste vient de changer la page : on tamponne l'heure et on programme
+     l'écriture sur disque. Un seul endroit, donc jamais de page modifiée
+     sans que la date le dise. */
+  function mTouched() {
+    const c = mCur; if (!c) return;
+    const at = mStamp();
+    mWrite(c, { at });
+    el("m-pat").textContent = mFull(c) ? `modifiée ${at}` : "";
+    mSoon();
+  }
+  function setTool(t, focus) {
+    mTool = MTOOLS.includes(t) ? t : "write";
+    for (const b of el("m-tools").querySelectorAll("[data-tool]"))
+      b.classList.toggle("on", b.dataset.tool === mTool);
+    el("m-wrap").className = "pagewrap" + (mTool === "write" ? "" : ` drawing t-${mTool}`);
+    el("m-swz").hidden = mTool === "write" || mTool === "erase";
+    if (focus && mTool === "write") el("m-page").focus({ preventScroll:true });
+  }
+  function drawSwatches() {
+    const box = el("m-swz"); box.textContent = "";
+    for (const id of Object.keys(MCOL)) {
+      const b = mk("button","sw" + (mCol === id ? " on" : ""));
+      b.style.setProperty("--c", colOf(id));
+      b.title = MCOL[id]; b.setAttribute("aria-label", MCOL[id]);
+      b.addEventListener("click", () => { mCol = id; drawSwatches(); });
+      box.append(b);
+    }
+  }
+
+  /* La page d'une matière : on l'ouvre, elle est là, on écrit — ou on
+     dessine. La seule trace du travail de la machine est la date de dernière
+     modification, en petit dans l'en-tête. */
   function renderMPage() {
     const c = mCur; if (!c) return;
-    const sh = mSheet(c), ta = el("m-page");
-    ta.value = sh.page || "";
-    el("m-pat").textContent = sh.page.trim() && sh.at ? `modifiée ${sh.at}` : "";
+    const sh = mSheet(c);
+    el("m-page").value = sh.page || "";
+    el("m-pat").textContent = mFull(c) && sh.at ? `modifiée ${sh.at}` : "";
+    setTool("write"); drawSwatches(); drawAnnos(); histInit();
     /* Tout de suite, pour que la page soit à sa taille dès le premier
        affichage ; puis au cadre suivant, une fois la police posée. Un onglet
        en arrière-plan ne rend jamais ce cadre — d'où les deux. */
-    mGrow(ta); requestAnimationFrame(() => mGrow(ta));
+    mGrow(); requestAnimationFrame(mGrow);
   }
   /* La semaine type du cours : les mêmes blocs que dans l'horaire, à l'échelle
      d'une carte. Seul le cours ouvert garde sa couleur ; les autres restent en
@@ -3308,7 +3747,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     save(); renderWeeks(); renderCourses();
     closeMatiere(); goto("horaire");
   }
-  addEventListener("resize", () => { if (!el("matiere").hidden) mGrow(el("m-page")); });
+  addEventListener("resize", () => { if (!el("matiere").hidden) mGrow(); });
 
   el("m-back").addEventListener("click", () => { closeMatiere(); scrollTo({ top:0, behavior:"smooth" }); });
   el("m-filter").addEventListener("click", () => {
@@ -3329,13 +3768,31 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
   el("m-dt").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addMDate(); } });
   el("m-page").addEventListener("input", () => {
     if (!mCur) return;
-    mGrow(el("m-page"));
-    const at = mStamp();
-    mWrite(mCur, { page: el("m-page").value, at });
-    el("m-pat").textContent = el("m-page").value.trim() ? `modifiée ${at}` : "";
-    mSoon();
+    mWrite(mCur, { page: el("m-page").value });
+    mGrow(); mTouched();
   });
   el("m-page").addEventListener("blur", () => { mFlush(); renderCourses(); });
+
+  for (const b of el("m-tools").querySelectorAll("[data-tool]"))
+    b.addEventListener("click", () => setTool(b.dataset.tool, true));
+  el("m-undo").addEventListener("click", () => histGo(-1));
+  el("m-redo").addEventListener("click", () => histGo(1));
+  for (const [ev, fn] of [["pointerdown",capDown], ["pointermove",capMove],
+                          ["pointerup",capUp], ["pointercancel",capUp],
+                          /* Relâcher hors de la fenêtre ne déclenche pas
+                             toujours pointerup : la perte de capture, si. */
+                          ["lostpointercapture",capUp]])
+    el("m-cap").addEventListener(ev, fn);
+
+  addEventListener("keydown", ev => {
+    if (el("matiere").hidden || !mCur) return;
+    if (ev.key === "Escape" && mTool !== "write") { ev.preventDefault(); setTool("write"); return; }
+    if (/^(TEXTAREA|INPUT|SELECT)$/.test(ev.target.tagName)) return;
+    if (mTool === "write") return;
+    if (!(ev.metaKey || ev.ctrlKey) || ev.key.toLowerCase() !== "z") return;
+    ev.preventDefault();
+    histGo(ev.shiftKey ? 1 : -1);
+  });
 
   /* ── Thème + commandes ────────────────────────────────────────── */
   function applyTheme() {
