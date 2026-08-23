@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Classes — Agenda Cégep</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f2123">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<style>
+/* Page sœur de l'agenda : mêmes jetons, même langage — cartes blanches à
+   grand rayon, une carte inversée comme point focal, étiquettes mono. */
+:root{
+  --bg:#E7E8EB; --bg-2:#F2F3F5; --bg-3:#DEDFE3;
+  --surface:#FFFFFF; --surface-2:#F3F4F6; --surface-3:#EAEBEE;
+  --invert:#1B1C1E; --invert-2:#2A2C2F; --on-invert:#FFFFFF;
+  --ink:#16171A; --dim:#666A70; --faint:#9BA0A6;
+  --line:rgba(0,0,0,.075); --line-hi:rgba(0,0,0,.14);
+  --live:#E0483A;
+  --evt-bg:.20; --evt-bd:.42; --evt-tx:32%;
+  --shadow:0 1px 2px rgba(16,18,20,.05), 0 14px 34px -22px rgba(16,18,20,.45);
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#141618; --bg-2:#1E2124; --bg-3:#0F1113;
+  --surface:#1D2023; --surface-2:#24282B; --surface-3:#2B2F33;
+  --invert:#F2F3F5; --invert-2:#E4E6E9; --on-invert:#16171A;
+  --ink:#F1F3F5; --dim:#A2A8AF; --faint:#6E757C;
+  --line:rgba(255,255,255,.09); --line-hi:rgba(255,255,255,.19);
+  --live:#FF6B58;
+  --evt-bg:.26; --evt-bd:.40; --evt-tx:78%;
+  --shadow:0 1px 2px rgba(0,0,0,.35), 0 14px 34px -22px rgba(0,0,0,.8);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+h1,h2,h3,h4,p,ul,ol{margin:0}
+body{
+  margin:0;padding:clamp(.6rem,1.4vw,1.3rem);min-height:100vh;
+  background:var(--bg);
+  background-image:radial-gradient(90% 70% at 78% -8%, var(--bg-2) 0%, transparent 60%),
+                   radial-gradient(80% 60% at 8% 105%, var(--bg-3) 0%, transparent 65%);
+  background-attachment:fixed;
+  color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+
+.wrap{max-width:62rem;margin:0 auto;display:flex;flex-direction:column;gap:1.1rem}
+.grow{flex:1 1 auto}
+.dim{color:var(--dim)}
+.mono{font-family:var(--mono)}
+
+/* ── En-tête ── */
+.head{display:flex;align-items:center;gap:.8rem;padding:.4rem .2rem 0;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:.6rem;text-decoration:none}
+.brand .mk{width:2.1rem;height:2.1rem;border-radius:9px;background:var(--invert);color:var(--on-invert);display:grid;place-items:center;flex:0 0 auto}
+.brand b{font-size:1.18rem;font-weight:650;letter-spacing:-.03em}
+.who{font-size:.72rem;color:var(--faint)}
+.crumbs{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;padding:0 .2rem;font-size:.85rem;color:var(--dim);min-height:1.3rem}
+.crumbs a{text-decoration:none;transition:color .15s}
+.crumbs a:hover{color:var(--ink)}
+.crumbs b{color:var(--ink);font-weight:600;letter-spacing:-.015em}
+.crumbs .sep{color:var(--faint)}
+.flash{
+  margin:0 .2rem;padding:.7rem 1rem;border-radius:14px;font-size:.85rem;
+  background:var(--surface);box-shadow:var(--shadow);
+}
+.flash.err{color:var(--live)}
+
+/* ── Sections + cartes ── */
+.sect{display:flex;align-items:center;gap:.6rem;padding:.5rem .35rem .6rem;flex-wrap:wrap}
+.sect h2{font-size:1.06rem;font-weight:650;letter-spacing:-.02em}
+.card{background:var(--surface);border-radius:26px;box-shadow:var(--shadow);overflow:hidden}
+.card.dark{background:var(--invert);color:var(--on-invert)}
+.card.dark .dim{color:rgba(255,255,255,.62)}
+:root[data-theme="dark"] .card.dark .dim{color:rgba(0,0,0,.6)}
+.pad{padding:1.3rem 1.45rem 1.4rem;display:flex;flex-direction:column;gap:.7rem}
+
+/* ── Boutons + champs ── */
+.btn{display:inline-flex;align-items:center;gap:.45rem;background:var(--surface-2);border-radius:12px;padding:.55rem .95rem;font-size:.85rem;font-weight:550;transition:opacity .15s,background .15s}
+.btn:hover{background:var(--surface-3)}
+.btn.solid{background:var(--invert);color:var(--on-invert)}
+.btn.solid:hover{background:var(--invert);opacity:.85}
+.btn.quiet{background:none;color:var(--dim)}
+.btn.quiet:hover{color:var(--ink);background:var(--surface-2)}
+.btn.danger{background:none;color:var(--live)}
+.btn.danger:hover{background:var(--surface-2)}
+.card.dark .btn{background:var(--invert-2);color:var(--on-invert)}
+.field{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:.58rem .85rem;font:inherit;color:var(--ink);min-width:0}
+.field::placeholder{color:var(--faint)}
+.field:focus{outline:2px solid var(--ink);outline-offset:1px}
+.frow{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.frow .field{flex:1 1 10rem}
+
+/* ── Tuiles (classes, matières) ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:.85rem}
+.tile{display:flex;flex-direction:column;gap:.35rem;padding:1.15rem 1.3rem 1.2rem;text-decoration:none;transition:transform .15s}
+.tile:hover{transform:translateY(-2px)}
+.tile b{font-size:1rem;font-weight:600;letter-spacing:-.015em}
+.tile .meta{font-size:.8rem;color:var(--dim)}
+.pipline{display:flex;align-items:center;gap:.55rem}
+.pip{width:.62rem;height:.62rem;border-radius:50%;flex:0 0 auto;background:hsl(var(--h,222) 62% 55%)}
+.chipcode{font-size:.72rem;letter-spacing:.14em;color:var(--faint);margin-top:.25rem}
+
+/* Le code d'adhésion, gros et copiable : c'est la porte de la classe. */
+.codebox{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+.codebox .code{font-family:var(--mono);font-size:1.65rem;font-weight:650;letter-spacing:.3em;padding-left:.3em}
+
+/* ── Rangées (cours, révisions, membres) ── */
+.rows{display:flex;flex-direction:column;padding:.3rem .55rem .75rem}
+.row{display:flex;align-items:center;gap:.85rem;padding:.72rem .75rem;border-radius:14px;text-decoration:none;transition:background .15s}
+.row:hover{background:var(--surface-2)}
+.row .stamp{font-family:var(--mono);font-size:.68rem;color:var(--faint);width:5.4rem;flex:0 0 auto}
+.row b{font-weight:550;font-size:.92rem;letter-spacing:-.01em}
+.row .chev{color:var(--faint)}
+.vide{padding:1rem 1.3rem 1.3rem;font-size:.85rem;color:var(--faint)}
+
+/* ── Page d'écriture : une surface blanche qui grandit avec le texte. ── */
+.page{
+  width:100%;min-height:22rem;background:none;border:none;resize:none;
+  color:var(--ink);font:inherit;font-size:.92rem;line-height:1.7;
+  padding:.2rem 1.45rem 1.5rem;overflow:hidden;display:block;
+}
+.page:focus{outline:none}
+.page::placeholder{color:var(--faint)}
+.titre{
+  width:100%;background:none;border:none;color:var(--ink);
+  font-family:var(--font);font-size:1.35rem;font-weight:650;letter-spacing:-.025em;
+  padding:1.15rem 1.45rem .1rem;
+}
+.titre:focus{outline:none}
+.titre::placeholder{color:var(--faint)}
+.pmeta{display:flex;align-items:center;gap:.7rem;padding:.15rem 1.45rem .6rem;flex-wrap:wrap}
+.pmeta .field{padding:.3rem .6rem;font-size:.8rem}
+.pat{font-family:var(--mono);font-size:.66rem;color:var(--faint)}
+
+/* ── Révision : la page à gauche, la fouille à droite. ── */
+.split{display:grid;grid-template-columns:minmax(0,1fr) 19rem;gap:.85rem;align-items:start}
+.fouille{display:flex;flex-direction:column;gap:.1rem;padding:.55rem .8rem .9rem}
+.fouille details{border-radius:14px}
+.fouille summary{
+  display:flex;align-items:center;gap:.7rem;padding:.6rem .6rem;border-radius:14px;
+  cursor:pointer;list-style:none;transition:background .15s;
+}
+.fouille summary::-webkit-details-marker{display:none}
+.fouille summary:hover{background:var(--surface-2)}
+.fouille summary .stamp{font-family:var(--mono);font-size:.66rem;color:var(--faint);flex:0 0 auto}
+.fouille summary b{font-size:.84rem;font-weight:550}
+.exc{
+  margin:.15rem .6rem .6rem;padding:.7rem .8rem;border-radius:12px;background:var(--surface-2);
+  font-size:.8rem;line-height:1.55;white-space:pre-wrap;max-height:14rem;overflow:auto;
+}
+.exc.off{color:var(--faint);white-space:normal}
+.fouille .btn{margin:.1rem .6rem .5rem;align-self:flex-start}
+.fouille details>*:not(summary){display:flex;flex-direction:column}
+
+.acts{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.footacts{display:flex;gap:.5rem;padding:.2rem .35rem 1rem;flex-wrap:wrap}
+
+@media (max-width:760px){
+  .split{grid-template-columns:minmax(0,1fr)}
+  .row .stamp{width:4.6rem}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="head">
+    <a class="brand" href="/" title="Retour à l'agenda">
+      <span class="mk"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4"/></svg></span>
+      <b>Classes</b>
+    </a>
+    <span class="grow"></span>
+    <span class="who mono" id="who"></span>
+  </header>
+  <nav class="crumbs" id="crumbs"></nav>
+  <p class="flash" id="flash" hidden></p>
+  <main class="wrap" id="vue" style="padding:0"></main>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ── Petits outils ─────────────────────────────────────────────── */
+  const el = id => document.getElementById(id);
+  const mk = (t, c, x) => { const n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; };
+  const HUES = [150,190,222,264,312,344,22,48];
+  const DOW = ["dim.","lun.","mar.","mer.","jeu.","ven.","sam."];
+  const MOIS = ["janv","févr","mars","avril","mai","juin","juil","août","sept","oct","nov","déc"];
+  const pad = n => String(n).padStart(2, "0");
+  const fmtJour = s => {
+    if (!s) return "";
+    const [y, m, d] = s.split("-").map(Number);
+    return `${DOW[new Date(y, m - 1, d).getDay()]} ${d} ${MOIS[m - 1]}`;
+  };
+  const aujourdhui = () => { const t = new Date(); return `${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`; };
+  const heure = () => { const t = new Date(); return `${pad(t.getHours())}:${pad(t.getMinutes())}`; };
+  const grow = t => { t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; };
+
+  /* Même thème que l'agenda : on le lit, on n'y touche pas. */
+  try {
+    const th = JSON.parse(localStorage.getItem("agenda.v5"))?.theme;
+    if (th === "dark") document.documentElement.setAttribute("data-theme", "dark");
+  } catch {}
+
+  let flashTimer = null;
+  function flash(msg, err = true) {
+    const f = el("flash");
+    f.textContent = msg; f.hidden = false; f.classList.toggle("err", err);
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(() => { f.hidden = true; }, 5000);
+  }
+
+  /* ── Session : la même que l'agenda, jamais une deuxième. ──────── */
+  const SB_URL = "https://olkbhrbyubejetqygdcy.supabase.co";
+  const SB_KEY = "sb_publishable_3aYnT7wlRlEEzraSpmgbVA_WytRBC3X";
+  const SB_STORE = "agenda.sb";
+  const sbSession = () => { try { return JSON.parse(localStorage.getItem(SB_STORE)) || null; } catch { return null; } };
+  const sbSave = s => localStorage.setItem(SB_STORE, JSON.stringify(s));
+  const sbClear = () => localStorage.removeItem(SB_STORE);
+  const uid = () => sbSession()?.uid;
+
+  const SB_FR = [
+    [/failed to fetch|networkerror/i, "Pas de réseau — réessaie dans un instant."],
+    [/code introuvable/i, "Ce code ne mène à aucune classe. Vérifie-le avec la personne qui te l'a donné."],
+    [/JWT|token/i, "Session expirée — reconnecte-toi dans l'agenda."],
+  ];
+  const frErr = e => {
+    const m = String(e?.message || e || "");
+    for (const [re, fr] of SB_FR) if (re.test(m)) return fr;
+    return m;
+  };
+
+  async function sbRefresh() {
+    const s0 = sbSession();
+    const r = await fetch(`${SB_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: "POST",
+      headers: { apikey: SB_KEY, "content-type": "application/json" },
+      body: JSON.stringify({ refresh_token: s0.rt }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.access_token) throw new Error("refresh raté");
+    sbSave({ at: d.access_token, rt: d.refresh_token, uid: d.user?.id, email: d.user?.email });
+  }
+
+  /* Un seul chemin vers la base ; le 401 se soigne une fois par refresh,
+     sinon on renvoie vers la connexion de l'agenda. */
+  async function api(path, init = {}, retry = true) {
+    const s0 = sbSession();
+    if (!s0) { vueLogin(); throw new Error("pas de session"); }
+    const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
+      ...init,
+      headers: { apikey: SB_KEY, authorization: `Bearer ${s0.at}`,
+                 "content-type": "application/json", ...(init.headers || {}) },
+    });
+    if (r.status === 401 && retry && s0.rt) {
+      try { await sbRefresh(); }
+      catch { sbClear(); vueLogin(); throw new Error("session expirée"); }
+      return api(path, init, false);
+    }
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      throw new Error(d.message || d.msg || d.hint || `erreur ${r.status}`);
+    }
+    if (r.status === 204) return null;
+    return r.json().catch(() => null);
+  }
+  const rpc = (fn, body) => api(`rpc/${fn}`, { method: "POST", body: JSON.stringify(body) });
+
+  /* ── Navigation ────────────────────────────────────────────────── */
+  function setCrumbs(items) {
+    const c = el("crumbs");
+    c.replaceChildren();
+    items.forEach(([label, href], i) => {
+      if (i) c.append(mk("span", "sep", "›"));
+      if (href != null && i < items.length - 1) {
+        const a = mk("a", null, label); a.href = href; c.append(a);
+      } else c.append(mk("b", null, label));
+    });
+  }
+
+  function sect(titre, ...extras) {
+    const s = mk("div", "sect");
+    s.append(mk("h2", null, titre), mk("span", "grow"), ...extras);
+    return s;
+  }
+
+  const chargement = () => { el("vue").replaceChildren(mk("p", "vide", "…")); };
+
+  /* Supprimer se confirme sur le même bouton : un clic arme, le second agit. */
+  function armer(btn, fn) {
+    let arme = false, t = null;
+    const label = btn.textContent;
+    btn.addEventListener("click", async () => {
+      if (!arme) {
+        arme = true; btn.textContent = "Confirmer ?";
+        t = setTimeout(() => { arme = false; btn.textContent = label; }, 3000);
+        return;
+      }
+      clearTimeout(t);
+      try { await fn(); } catch (e) { flash(frErr(e)); arme = false; btn.textContent = label; }
+    });
+  }
+
+  /* La RLS refuse en silence : un DELETE non permis "réussit" sans rien
+     effacer. On demande les lignes retirées pour pouvoir le dire. */
+  async function suppr(path) {
+    const r = await api(path, { method: "DELETE", headers: { prefer: "return=representation" } });
+    if (!r || !r.length) throw new Error("Seul l'auteur ou le proprio de la classe peut supprimer ça.");
+  }
+
+  /* Une sauvegarde par page : élastique (900 ms), jamais deux en vol. */
+  let saver = null;
+  function faireSaver(fn, apres) {
+    let t = null, busy = false, encore = false;
+    const run = async () => {
+      if (busy) { encore = true; return; }
+      busy = true;
+      try { await fn(); apres?.(); } catch (e) { flash(frErr(e)); }
+      busy = false;
+      if (encore) { encore = false; run(); }
+    };
+    return { poke() { clearTimeout(t); t = setTimeout(run, 900); }, flush() { clearTimeout(t); return run(); } };
+  }
+  addEventListener("pagehide", () => saver?.flush());
+  document.addEventListener("visibilitychange", () => { if (document.hidden) saver?.flush(); });
+
+  /* ── Vues ──────────────────────────────────────────────────────── */
+
+  function vueLogin() {
+    setCrumbs([["Classes"]]);
+    const v = el("vue");
+    const c = mk("div", "card"); const p = mk("div", "pad");
+    p.append(mk("h2", null, "Connecte-toi d'abord"));
+    p.append(mk("p", "dim", "Les classes vivent sous ton compte d'agenda. Ouvre l'agenda, connecte-toi, puis reviens ici — la session suivra toute seule."));
+    const a = mk("a", "btn solid", "Ouvrir l'agenda"); a.href = "/"; a.style.textDecoration = "none";
+    p.append(mk("div", "acts")); p.lastChild.append(a);
+    c.append(p); v.replaceChildren(c);
+  }
+
+  async function vueClasses() {
+    setCrumbs([["Mes classes"]]);
+    chargement();
+    const rows = await api("agenda_classes?select=id,nom,code,agenda_class_members(count)&order=created_at.asc");
+    const v = el("vue"); v.replaceChildren();
+
+    if (rows.length) {
+      const grid = mk("div", "grid");
+      for (const c of rows) {
+        const t = mk("a", "card tile"); t.href = `#c/${c.id}`;
+        t.append(mk("b", null, c.nom));
+        const n = c.agenda_class_members?.[0]?.count ?? 0;
+        t.append(mk("span", "meta", `${n} membre${n > 1 ? "s" : ""}`));
+        t.append(mk("span", "chipcode mono", c.code));
+        grid.append(t);
+      }
+      v.append(sect("Mes classes"), grid);
+    } else {
+      const c = mk("div", "card");
+      c.append(mk("p", "vide", "Aucune classe pour l'instant. Crée la tienne, ou entre le code qu'un ami t'a passé."));
+      v.append(sect("Mes classes"), c);
+    }
+
+    /* Créer et rejoindre côte à côte : les deux gestes qui ouvrent tout. */
+    const c2 = mk("div", "card"); const p = mk("div", "pad");
+    const f1 = mk("div", "frow");
+    const nom = mk("input", "field"); nom.placeholder = "Nom de la classe (ex. Sciences nature gr. 1234)"; nom.maxLength = 80;
+    const cr = mk("button", "btn solid", "Créer");
+    f1.append(nom, cr);
+    const f2 = mk("div", "frow");
+    const code = mk("input", "field mono"); code.placeholder = "Code reçu (6 lettres)"; code.maxLength = 6;
+    code.style.textTransform = "uppercase"; code.style.letterSpacing = ".2em";
+    const jo = mk("button", "btn", "Rejoindre");
+    f2.append(code, jo);
+    p.append(mk("h3", null, "Créer ou rejoindre"), f1, f2);
+    c2.append(p); v.append(c2);
+
+    cr.addEventListener("click", async () => {
+      const n = nom.value.trim();
+      if (!n) { nom.focus(); return; }
+      cr.disabled = true;
+      try {
+        const d = await rpc("agenda_create_class", { p_nom: n });
+        flash(`Classe créée — partage le code ${d.code}.`, false);
+        location.hash = `c/${d.id}`;
+      } catch (e) { flash(frErr(e)); cr.disabled = false; }
+    });
+    nom.addEventListener("keydown", e => { if (e.key === "Enter") cr.click(); });
+    jo.addEventListener("click", async () => {
+      const k = code.value.trim();
+      if (!k) { code.focus(); return; }
+      jo.disabled = true;
+      try {
+        const d = await rpc("agenda_join_class", { p_code: k });
+        location.hash = `c/${d.id}`;
+      } catch (e) { flash(frErr(e)); jo.disabled = false; }
+    });
+    code.addEventListener("keydown", e => { if (e.key === "Enter") jo.click(); });
+  }
+
+  async function vueClasse(id) {
+    chargement();
+    const rows = await api(`agenda_classes?id=eq.${id}&select=*,agenda_class_members(user_id,pseudo,role),agenda_matieres(id,nom,hue,ordre,agenda_cours(count),agenda_revisions(count))`);
+    const c = rows[0];
+    if (!c) { flash("Classe introuvable — en fais-tu encore partie ?"); location.hash = ""; return; }
+    setCrumbs([["Mes classes", "#"], [c.nom]]);
+    const moi = c.agenda_class_members.find(m => m.user_id === uid());
+    const proprio = moi?.role === "proprio";
+    const v = el("vue"); v.replaceChildren();
+
+    /* La carte inversée : le nom, le monde, et la porte (le code). */
+    const hd = mk("div", "card dark"); const p = mk("div", "pad");
+    p.append(mk("h2", null, c.nom));
+    p.append(mk("p", "dim", c.agenda_class_members.map(m => m.pseudo).sort((a, b) => a.localeCompare(b, "fr")).join(" · ")));
+    const cb = mk("div", "codebox");
+    cb.append(mk("span", "code", c.code));
+    const cp = mk("button", "btn", "Copier le code");
+    cp.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(c.code); flash("Code copié — passe-le à ta classe.", false); }
+      catch { flash("Copie refusée par le navigateur — note-le à la main."); }
+    });
+    cb.append(cp);
+    if (proprio) {
+      const rg = mk("button", "btn quiet", "Nouveau code");
+      armer(rg, async () => { await rpc("agenda_regen_code", { p_class: c.id }); vueClasse(id); });
+      cb.append(rg);
+    }
+    p.append(cb); hd.append(p); v.append(hd);
+
+    /* Matières. */
+    const semerB = mk("button", "btn quiet", "Semer depuis mon horaire");
+    v.append(sect("Matières", semerB));
+    const mats = [...c.agenda_matieres].sort((a, b) => (a.ordre - b.ordre) || a.nom.localeCompare(b.nom, "fr"));
+    if (mats.length) {
+      const grid = mk("div", "grid");
+      for (const m of mats) {
+        const t = mk("a", "card tile"); t.href = `#m/${m.id}`;
+        const pl = mk("div", "pipline");
+        const pip = mk("span", "pip"); pip.style.setProperty("--h", m.hue ?? 222);
+        pl.append(pip, mk("b", null, m.nom));
+        const nc = m.agenda_cours?.[0]?.count ?? 0, nr = m.agenda_revisions?.[0]?.count ?? 0;
+        t.append(pl, mk("span", "meta", `${nc} cours · ${nr} révision${nr > 1 ? "s" : ""}`));
+        grid.append(t);
+      }
+      v.append(grid);
+    } else {
+      const vide = mk("div", "card");
+      vide.append(mk("p", "vide", "Aucune matière. Sème-les depuis ton horaire, ou ajoute-les à la main."));
+      v.append(vide);
+    }
+
+    const cf = mk("div", "card"); const pf = mk("div", "pad");
+    const fr = mk("div", "frow");
+    const nomM = mk("input", "field"); nomM.placeholder = "Nouvelle matière (ex. Calcul différentiel)"; nomM.maxLength = 80;
+    const aj = mk("button", "btn", "Ajouter");
+    fr.append(nomM, aj); pf.append(fr); cf.append(pf); v.append(cf);
+
+    aj.addEventListener("click", async () => {
+      const n = nomM.value.trim(); if (!n) { nomM.focus(); return; }
+      aj.disabled = true;
+      try {
+        await api("agenda_matieres", { method: "POST", body: JSON.stringify([{
+          class_id: c.id, nom: n, hue: HUES[mats.length % HUES.length], ordre: mats.length, created_by: uid(),
+        }])});
+        vueClasse(id);
+      } catch (e) { flash(frErr(e)); aj.disabled = false; }
+    });
+    nomM.addEventListener("keydown", e => { if (e.key === "Enter") aj.click(); });
+
+    /* L'horaire scrapé connaît déjà les matières : autant s'en servir. */
+    semerB.addEventListener("click", async () => {
+      semerB.disabled = true;
+      try {
+        const snap = await api("agenda_snapshots?kind=eq.horaire&select=payload");
+        const tt = snap?.[0]?.payload?.tt;
+        if (!Array.isArray(tt) || !tt.length) { flash("Aucun horaire dans le nuage — ouvre d'abord l'agenda pour qu'il s'y pousse."); semerB.disabled = false; return; }
+        const vus = new Map();
+        for (const e of tt) if (e.code && e.t && !vus.has(e.code)) vus.set(e.code, e.t);
+        const deja = new Set(mats.map(m => m.nom.toLowerCase()));
+        const neuves = [...vus.entries()].map(([cc, t]) => ({ code_cours: cc, nom: t }))
+          .filter(x => !deja.has(x.nom.toLowerCase()))
+          .sort((a, b) => a.nom.localeCompare(b.nom, "fr"));
+        if (!neuves.length) { flash("Toutes les matières de l'horaire sont déjà là.", false); semerB.disabled = false; return; }
+        await api("agenda_matieres", { method: "POST", body: JSON.stringify(neuves.map((x, i) => ({
+          class_id: c.id, nom: x.nom, code_cours: x.code_cours,
+          hue: HUES[(mats.length + i) % HUES.length], ordre: mats.length + i, created_by: uid(),
+        })))});
+        vueClasse(id);
+      } catch (e) { flash(frErr(e)); semerB.disabled = false; }
+    });
+
+    /* Partir, ou tout fermer. */
+    const foot = mk("div", "footacts");
+    if (proprio) {
+      const del = mk("button", "btn danger", "Supprimer la classe");
+      armer(del, async () => { await suppr(`agenda_classes?id=eq.${c.id}`); location.hash = ""; });
+      foot.append(del);
+    } else {
+      const out = mk("button", "btn danger", "Quitter la classe");
+      armer(out, async () => {
+        await api(`agenda_class_members?class_id=eq.${c.id}&user_id=eq.${uid()}`, { method: "DELETE" });
+        location.hash = "";
+      });
+      foot.append(out);
+    }
+    v.append(foot);
+  }
+
+  async function vueMatiere(id) {
+    chargement();
+    const rows = await api(`agenda_matieres?id=eq.${id}&select=*,agenda_classes(id,nom),agenda_cours(id,titre,jour,created_at),agenda_revisions(id,titre,date_examen)`);
+    const m = rows[0];
+    if (!m) { flash("Matière introuvable."); location.hash = ""; return; }
+    setCrumbs([["Mes classes", "#"], [m.agenda_classes.nom, `#c/${m.class_id}`], [m.nom]]);
+    const v = el("vue"); v.replaceChildren();
+
+    /* Cours : du plus récent au plus vieux — on cherche celui d'hier. */
+    const nb = mk("button", "btn solid", "+ Nouveau cours");
+    v.append(sect("Cours", nb));
+    const cours = [...m.agenda_cours].sort((a, b) =>
+      (b.jour || "").localeCompare(a.jour || "") || (b.created_at || "").localeCompare(a.created_at || ""));
+    const cc = mk("div", "card");
+    if (cours.length) {
+      const rl = mk("div", "rows");
+      for (const k of cours) {
+        const r = mk("a", "row"); r.href = `#k/${k.id}`;
+        r.append(mk("span", "stamp", fmtJour(k.jour) || "—"));
+        r.append(mk("b", null, k.titre || "Sans titre"));
+        r.append(mk("span", "grow"), mk("span", "chev", "›"));
+        rl.append(r);
+      }
+      cc.append(rl);
+    } else cc.append(mk("p", "vide", "Aucun cours encore. Le premier se crée en un clic, daté d'aujourd'hui."));
+    v.append(cc);
+
+    nb.addEventListener("click", async () => {
+      nb.disabled = true;
+      try {
+        const d = await api("agenda_cours", { method: "POST", headers: { prefer: "return=representation" },
+          body: JSON.stringify([{ matiere_id: m.id, titre: "", jour: aujourdhui(), created_by: uid() }]) });
+        location.hash = `k/${d[0].id}`;
+      } catch (e) { flash(frErr(e)); nb.disabled = false; }
+    });
+
+    /* Pages de révision : une par examen. */
+    v.append(sect("Pages de révision"));
+    const revs = [...m.agenda_revisions].sort((a, b) => (a.date_examen || "9999").localeCompare(b.date_examen || "9999"));
+    const rc = mk("div", "card");
+    if (revs.length) {
+      const rl = mk("div", "rows");
+      for (const r0 of revs) {
+        const r = mk("a", "row"); r.href = `#r/${r0.id}`;
+        r.append(mk("span", "stamp", fmtJour(r0.date_examen) || "—"));
+        r.append(mk("b", null, r0.titre));
+        r.append(mk("span", "grow"), mk("span", "chev", "›"));
+        rl.append(r);
+      }
+      rc.append(rl);
+    } else rc.append(mk("p", "vide", "Aucune page de révision. Crée-en une par examen : elle fouille ensuite tous les cours de la matière."));
+    const pf = mk("div", "pad");
+    const fr = mk("div", "frow");
+    const ti = mk("input", "field"); ti.placeholder = "Examen (ex. Examen 1 — dérivées)"; ti.maxLength = 120;
+    const da = mk("input", "field"); da.type = "date"; da.style.flex = "0 1 auto";
+    const cr = mk("button", "btn", "Créer");
+    fr.append(ti, da, cr); pf.append(fr); rc.append(pf); v.append(rc);
+
+    cr.addEventListener("click", async () => {
+      const t = ti.value.trim(); if (!t) { ti.focus(); return; }
+      cr.disabled = true;
+      try {
+        const d = await api("agenda_revisions", { method: "POST", headers: { prefer: "return=representation" },
+          body: JSON.stringify([{ matiere_id: m.id, titre: t, date_examen: da.value || null, created_by: uid(), updated_by: uid() }]) });
+        location.hash = `r/${d[0].id}`;
+      } catch (e) { flash(frErr(e)); cr.disabled = false; }
+    });
+    ti.addEventListener("keydown", e => { if (e.key === "Enter") cr.click(); });
+
+    const foot = mk("div", "footacts");
+    const del = mk("button", "btn danger", "Supprimer la matière");
+    armer(del, async () => { await suppr(`agenda_matieres?id=eq.${m.id}`); location.hash = `c/${m.class_id}`; });
+    foot.append(del); v.append(foot);
+  }
+
+  async function vueCours(id) {
+    chargement();
+    const rows = await api(`agenda_cours?id=eq.${id}&select=*,agenda_matieres(id,nom,class_id,agenda_classes(id,nom,agenda_class_members(user_id,pseudo))),agenda_notes(id,contenu,created_at,updated_at,updated_by)`);
+    const k = rows[0];
+    if (!k) { flash("Cours introuvable."); location.hash = ""; return; }
+    const mat = k.agenda_matieres;
+    setCrumbs([["Mes classes", "#"], [mat.agenda_classes.nom, `#c/${mat.class_id}`], [mat.nom, `#m/${mat.id}`], [k.titre || fmtJour(k.jour) || "Cours"]]);
+    const pseudos = new Map(mat.agenda_classes.agenda_class_members.map(x => [x.user_id, x.pseudo]));
+    const v = el("vue"); v.replaceChildren();
+
+    const c = mk("div", "card");
+    const ti = mk("input", "titre"); ti.placeholder = "Titre du cours (ex. Cinématique, ch. 2)"; ti.value = k.titre || ""; ti.maxLength = 120;
+    const meta = mk("div", "pmeta");
+    const da = mk("input", "field"); da.type = "date"; da.value = k.jour || "";
+    const pat = mk("span", "pat");
+    meta.append(da, mk("span", "grow"), pat);
+    const page = mk("textarea", "page");
+    page.placeholder = "La page du cours — tout le monde dans la classe la voit et peut y écrire.";
+
+    /* Une seule note de page par cours : la plus ancienne fait foi, elle
+       naît au premier caractère tapé, jamais avant. */
+    const notes = [...k.agenda_notes].sort((a, b) => (a.created_at || "").localeCompare(b.created_at || ""));
+    let noteId = notes[0]?.id || null;
+    page.value = notes[0]?.contenu || "";
+    if (notes[0]?.updated_at) {
+      const t = new Date(notes[0].updated_at);
+      const qui = pseudos.get(notes[0].updated_by);
+      pat.textContent = `modifiée ${pad(t.getHours())}:${pad(t.getMinutes())}${qui ? ` par ${qui}` : ""}`;
+    }
+
+    c.append(ti, meta, page); v.append(c);
+    requestAnimationFrame(() => grow(page));
+
+    let creation = null;
+    saver = faireSaver(async () => {
+      const contenu = page.value;
+      if (!noteId) {
+        if (creation) { await creation; }
+        if (!noteId) {
+          creation = api("agenda_notes", { method: "POST", headers: { prefer: "return=representation" },
+            body: JSON.stringify([{ cours_id: k.id, contenu, created_by: uid(), updated_by: uid() }]) })
+            .then(d => { noteId = d[0].id; });
+          await creation; creation = null;
+          return;
+        }
+      }
+      await api(`agenda_notes?id=eq.${noteId}`, { method: "PATCH",
+        body: JSON.stringify({ contenu, updated_by: uid() }) });
+    }, () => { pat.textContent = `enregistrée ${heure()}`; });
+
+    page.addEventListener("input", () => { grow(page); saver.poke(); });
+    ti.addEventListener("input", () => { tiSaver.poke(); });
+    const tiSaver = faireSaver(async () => {
+      await api(`agenda_cours?id=eq.${k.id}`, { method: "PATCH", body: JSON.stringify({ titre: ti.value.trim() }) });
+    });
+    da.addEventListener("change", async () => {
+      try { await api(`agenda_cours?id=eq.${k.id}`, { method: "PATCH", body: JSON.stringify({ jour: da.value || null }) }); }
+      catch (e) { flash(frErr(e)); }
+    });
+
+    const foot = mk("div", "footacts");
+    const del = mk("button", "btn danger", "Supprimer ce cours");
+    armer(del, async () => { await suppr(`agenda_cours?id=eq.${k.id}`); location.hash = `m/${mat.id}`; });
+    foot.append(del); v.append(foot);
+  }
+
+  async function vueRevision(id) {
+    chargement();
+    const rows = await api(`agenda_revisions?id=eq.${id}&select=*,agenda_matieres(id,nom,class_id,agenda_classes(id,nom),agenda_cours(id,titre,jour,agenda_notes(contenu,created_at)))`);
+    const r0 = rows[0];
+    if (!r0) { flash("Page de révision introuvable."); location.hash = ""; return; }
+    const mat = r0.agenda_matieres;
+    setCrumbs([["Mes classes", "#"], [mat.agenda_classes.nom, `#c/${mat.class_id}`], [mat.nom, `#m/${mat.id}`], [r0.titre]]);
+    const v = el("vue"); v.replaceChildren();
+
+    const split = mk("div", "split");
+
+    /* La page de révision elle-même. */
+    const c = mk("div", "card");
+    const ti = mk("input", "titre"); ti.value = r0.titre; ti.maxLength = 120;
+    const meta = mk("div", "pmeta");
+    const da = mk("input", "field"); da.type = "date"; da.value = r0.date_examen || ""; da.title = "Date de l'examen";
+    const pat = mk("span", "pat");
+    meta.append(mk("span", "pat", "examen le"), da, mk("span", "grow"), pat);
+    const page = mk("textarea", "page");
+    page.placeholder = "Ce qui rentre à l'examen : fouille les cours à droite et rassemble ici.";
+    page.value = r0.contenu || "";
+    c.append(ti, meta, page);
+    split.append(c);
+
+    saver = faireSaver(async () => {
+      await api(`agenda_revisions?id=eq.${r0.id}`, { method: "PATCH",
+        body: JSON.stringify({ contenu: page.value, titre: ti.value.trim() || r0.titre,
+                               date_examen: da.value || null, updated_by: uid() }) });
+    }, () => { pat.textContent = `enregistrée ${heure()}`; });
+    page.addEventListener("input", () => { grow(page); saver.poke(); });
+    ti.addEventListener("input", () => saver.poke());
+    da.addEventListener("change", () => saver.poke());
+
+    /* La fouille : tous les cours de la matière, dépliables, insérables. */
+    const rail = mk("div", "card");
+    rail.append(sect("Fouiller la matière"));
+    const fl = mk("div", "fouille");
+    const cours = [...mat.agenda_cours].sort((a, b) => (a.jour || "").localeCompare(b.jour || ""));
+    if (!cours.length) fl.append(mk("p", "vide", "Aucun cours dans cette matière encore."));
+    for (const k of cours) {
+      const d = mk("details");
+      const su = mk("summary");
+      su.append(mk("span", "stamp", fmtJour(k.jour) || "—"), mk("b", null, k.titre || "Sans titre"));
+      d.append(su);
+      const notes = [...(k.agenda_notes || [])].sort((a, b) => (a.created_at || "").localeCompare(b.created_at || ""));
+      const texte = notes.map(n => n.contenu).filter(Boolean).join("\n\n").trim();
+      if (texte) {
+        d.append(mk("div", "exc", texte));
+        const ins = mk("button", "btn", "Insérer dans la page");
+        ins.addEventListener("click", () => {
+          const bloc = `— ${k.titre || "Cours"}${k.jour ? ` (${fmtJour(k.jour)})` : ""} —\n${texte}`;
+          page.value = (page.value.trim() ? page.value.replace(/\s*$/, "\n\n") : "") + bloc + "\n";
+          grow(page); saver.poke();
+          flash("Inséré au bas de la page.", false);
+        });
+        d.append(ins);
+      } else d.append(mk("div", "exc off", "Page encore vide."));
+      fl.append(d);
+    }
+    rail.append(fl);
+    split.append(rail);
+    v.append(split);
+
+    const foot = mk("div", "footacts");
+    const del = mk("button", "btn danger", "Supprimer cette page");
+    armer(del, async () => { await suppr(`agenda_revisions?id=eq.${r0.id}`); location.hash = `m/${mat.id}`; });
+    foot.append(del); v.append(foot);
+  }
+
+  /* ── Routage par ancre : #c/id, #m/id, #k/id, #r/id ────────────── */
+  async function route() {
+    saver?.flush(); saver = null;
+    const s0 = sbSession();
+    el("who").textContent = s0?.email ? s0.email.split("@")[0] : "";
+    if (!s0) { vueLogin(); return; }
+    const [k, id] = location.hash.slice(1).split("/");
+    try {
+      if (k === "c" && id) await vueClasse(id);
+      else if (k === "m" && id) await vueMatiere(id);
+      else if (k === "k" && id) await vueCours(id);
+      else if (k === "r" && id) await vueRevision(id);
+      else await vueClasses();
+    } catch (e) {
+      if (!/pas de session|session expirée/.test(String(e?.message))) flash(frErr(e));
+    }
+  }
+  addEventListener("hashchange", route);
+  route();
+})();
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+}
+</script>
+</body>
+</html>

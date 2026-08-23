@@ -723,29 +723,25 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
   box-shadow:0 -30px 70px -30px rgba(0,0,0,.75);
 }
 
-/* 3. Bénéfices : une capture réelle par promesse. */
+/* Bande de capacités, à la place d'une rangée de logos qu'on n'a pas. */
+.strip{
+  display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.5rem .9rem;
+  padding:1rem .8rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--faint);
+}
+.strip i{width:3px;height:3px;border-radius:50%;background:currentColor;opacity:.5}
+
+/* 3. Bénéfices : une icône, une promesse, trois lignes. */
 .bens{display:grid;grid-template-columns:repeat(auto-fit,minmax(17rem,1fr));gap:.85rem}
-.ben{display:flex;flex-direction:column;padding:0;overflow:hidden}
-.benshot{
-  background:var(--surface-2);padding:1.1rem 1.1rem 0;height:11.5rem;overflow:hidden;
-  border-bottom:1px solid var(--line);
-}
-.benshot img{
-  display:block;width:100%;height:auto;border-radius:10px 10px 0 0;
-  border:1px solid var(--line-hi);border-bottom:0;box-shadow:0 10px 26px -18px rgba(0,0,0,.6);
-}
-.bentxt{padding:1.15rem 1.25rem 1.35rem;display:flex;flex-direction:column;gap:.5rem}
-.bentxt .fic{
-  width:2.1rem;height:2.1rem;border-radius:11px;display:grid;place-items:center;
+.ben{padding:1.4rem 1.45rem 1.5rem;display:flex;flex-direction:column;gap:.6rem}
+.ben .fic{
+  width:2.3rem;height:2.3rem;border-radius:12px;display:grid;place-items:center;
   background:hsl(var(--h,222) 62% 55% / .16);color:hsl(var(--h,222) 62% var(--evt-tx));
 }
-.bentxt h4{font-size:.99rem;font-weight:600;letter-spacing:-.015em}
-.bentxt p{font-size:.83rem;line-height:1.5}
+.ben h4{font-size:1rem;font-weight:600;letter-spacing:-.015em;margin-top:.2rem}
+.ben p{font-size:.85rem;line-height:1.52}
 
-/* 4. La preuve : des faits vérifiables, pas des témoignages inventés. */
-.proof{padding:1.6rem 1.7rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:1.2rem}
-.pf b{display:block;font-size:1.9rem;font-weight:650;letter-spacing:-.035em;line-height:1.1}
-.pf>span{display:block;font-size:.8rem;line-height:1.45;margin-top:.3rem}
+/* 4. Preuve : une citation, pas un tableau de bord de chiffres. */
 .quote{margin:0;padding:1.7rem 1.9rem;display:flex;flex-direction:column;gap:.8rem}
 .quote .qm{font-size:2.4rem;line-height:.6;color:var(--faint);font-family:Georgia,serif}
 .quote blockquote{font-size:1.05rem;line-height:1.5;letter-spacing:-.015em;margin:0;max-width:44rem}
@@ -803,7 +799,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
   .hero{padding:2.4rem 1.4rem 0}
   .heroshot{margin-top:1.6rem}
   .benshot{height:9rem;padding:.8rem .8rem 0}
-  .proof,.guar,.quote{padding:1.3rem 1.3rem}
+  .guar,.quote{padding:1.3rem 1.3rem}
   .lphead .lplink{display:none}
 }
 
@@ -866,14 +862,17 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
 .dhint b{color:var(--dim);font-weight:600}
 
 /* Une note : un tampon de date, puis un texte qui grandit tout seul. */
-.notes{display:flex;flex-direction:column;gap:.5rem;padding:.35rem 1.25rem 1.15rem}
-.note{background:var(--surface-2);border-radius:15px;padding:.5rem .7rem .2rem}
-.note .nh{display:flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.62rem;color:var(--faint)}
-.note .nh .grow{flex:1 1 auto}
-.note:hover .kill,.note:focus-within .kill{opacity:1}
-.note textarea{width:100%;background:none;border:none;resize:none;color:var(--ink);font:inherit;font-size:.86rem;line-height:1.45;padding:.2rem 0 .5rem;overflow:hidden}
-.note textarea:focus{outline:none}
-.note textarea::placeholder{color:var(--faint)}
+/* Les notes sont une page blanche : pas de bulles, pas d'entrées datées, pas
+   de bouton pour commencer — une surface où écrire, qui grandit avec le texte
+   et n'a jamais de barre de défilement à elle. */
+.page{
+  width:100%;min-height:24rem;background:none;border:none;resize:none;
+  color:var(--ink);font:inherit;font-size:.92rem;line-height:1.7;
+  padding:.1rem 1.35rem 1.5rem;overflow:hidden;display:block;
+}
+.page:focus{outline:none}
+.page::placeholder{color:var(--faint)}
+@media (max-width:900px){.page{min-height:15rem}}
 
 /* Où le cours tombe dans la semaine. La grille de l'horaire répond « qu'est-ce
    que j'ai mardi ? » ; celle-ci répond « quand ai-je CE cours ? » — d'où les
@@ -926,6 +925,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     <button class="navi" data-go="echeances"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg> Échéances <span class="cnt" id="n-e"></span></button>
     <button class="navi" data-go="mios"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 8.2 6 8.2-6"/></svg> MIO <span class="cnt" id="n-m"></span></button>
     <button class="navi" data-go="cours"><svg class="i" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 18.5V21h16"/></svg> Mes cours <span class="cnt" id="n-c"></span></button>
+    <a class="navi" href="classes.html" style="text-decoration:none"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M15.5 5.8a3 3 0 0 1 0 5.4M17.5 13.6a5.5 5.5 0 0 1 3 4.9"/></svg> Classes</a>
 
     <p class="grp">Matières</p>
     <div id="subjects"></div>
@@ -1152,9 +1152,9 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
         <div class="mcol">
           <section class="card fx">
             <div class="ch"><h3>Notes</h3><span class="grow"></span>
-              <button class="link" id="m-nadd"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg> Nouvelle note</button></div>
-            <div class="notes" id="m-notes"></div>
-            <p class="empty" id="m-nempty">Rien de noté pour l'instant. Consignes du prof, pages à lire, ce qui est tombé à l'examen — tout reste sur cet appareil.</p>
+              <span class="dim mono" id="m-pat" style="font-size:.66rem"></span></div>
+            <textarea id="m-page" class="page" spellcheck="true"
+              placeholder="Page blanche. Consignes du prof, pages à lire, ce qui est tombé à l'examen — tout reste sur cet appareil."></textarea>
           </section>
           <section class="card fx">
             <div class="ch"><h3>Semaine type</h3><span class="grow"></span>
@@ -1196,57 +1196,35 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
         </div>
       </section>
 
-      <!-- 3) Bénéfices — une capture réelle par promesse. -->
-      <div class="sect" style="padding-top:1.6rem"><h2>Ce que tu gagnes</h2>
-        <span class="grow"></span><span class="link mono" style="font-size:.7rem">trois écrans, zéro fouille</span></div>
-      <div class="bens">
-        <section class="card ben fx">
-          <div class="benshot"><img loading="lazy" src="img/app-echeances.jpg" width="1127" height="1400" alt="Liste d'échéances triées par urgence, avec compte à rebours coloré."></div>
-          <div class="bentxt" style="--h:344">
-            <span class="fic"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg></span>
-            <h4>Les échéances se datent toutes seules</h4>
-            <p class="dim">En retard, aujourd'hui, demain, cette semaine : chaque remise et chaque
-              évaluation relevée dans Léa arrive datée, classée, avec son compte à rebours en couleur.</p>
-          </div>
-        </section>
-        <section class="card ben fx">
-          <div class="benshot"><img loading="lazy" src="img/app-mios.jpg" width="1400" height="856" alt="Résumés de MIO : chaque message tient en une phrase, avec l'action à en tirer."></div>
-          <div class="bentxt" style="--h:264">
-            <span class="fic"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 8.2 6 8.2-6"/></svg></span>
-            <h4>Treize pavés deviennent treize phrases</h4>
-            <p class="dim">Chaque MIO est résumé en une ligne, et l'action qu'il cachait — un formulaire,
-              une date, un local — se transforme en tâche ou en échéance d'un seul clic.</p>
-          </div>
-        </section>
-        <section class="card ben fx">
-          <div class="benshot"><img loading="lazy" src="img/app-horaire-mini.jpg" width="1500" height="1054" alt="Grille d'horaire hebdomadaire avec les cours colorés par matière."></div>
-          <div class="bentxt" style="--h:190">
-            <span class="fic"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4"/></svg></span>
-            <h4>Un horaire qui vit avec ta session</h4>
-            <p class="dim">Tes cours sur la grille, tes blocs perso au glisser, une pastille sur les
-              journées chargées, et l'export .ics quand tu veux tout dans Calendrier.</p>
-          </div>
-        </section>
+      <!-- Bande de capacités : ce que la page couvre, en un souffle. -->
+      <div class="strip fx">
+        <span>Échéances</span><i></i><span>Évaluations</span><i></i><span>MIO</span><i></i>
+        <span>Horaire</span><i></i><span>Blocs perso</span><i></i><span>Export .ics</span>
       </div>
 
-      <!-- 4) La preuve : des faits vérifiables, pas des témoignages. -->
-      <div class="sect" style="padding-top:1.6rem"><h2>La preuve</h2></div>
-      <section class="card proof fx">
-        <div class="pf"><b>1&thinsp;×&thinsp;/&thinsp;h</b>
-          <span class="dim">L'agent relit Léa et MIO chaque heure via <span class="mono">launchd</span>.
-            Chaque passage est écrit dans un journal que tu peux ouvrir.</span></div>
-        <div class="pf"><b>0</b>
-          <span class="dim">identifiant Omnivox transmis, centralisé ou visible par qui que ce soit.
-            Ils vivent dans un fichier local, exclu de git.</span></div>
-        <div class="pf"><b>1</b>
-          <span class="dim">seule tentative de connexion, jamais de réessai — c'est précisément ce qui
-            garde ton dossier étudiant déverrouillé.</span></div>
-      </section>
-      <figure class="card quote fx">
-        <span class="qm">&ldquo;</span>
-        <blockquote>Ce n'est pas de la prudence décorative : c'est ce qui protège ton dossier étudiant.</blockquote>
-        <figcaption>README du projet — section « Ce que ce projet refuse de faire »</figcaption>
-      </figure>
+      <!-- 3) Bénéfices — trois promesses, sans étalage de chiffres. -->
+      <div class="sect" style="padding-top:1.6rem"><h2>Ce que tu gagnes</h2>
+        <span class="grow"></span><span class="link mono" style="font-size:.7rem">un écran, zéro fouille</span></div>
+      <div class="bens">
+        <section class="card ben fx" style="--h:344">
+          <span class="fic"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg></span>
+          <h4>Les échéances se datent toutes seules</h4>
+          <p class="dim">En retard, aujourd'hui, demain, cette semaine : chaque remise et chaque
+            évaluation relevée dans Léa arrive datée, classée, avec son compte à rebours en couleur.</p>
+        </section>
+        <section class="card ben fx" style="--h:264">
+          <span class="fic"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 8.2 6 8.2-6"/></svg></span>
+          <h4>Les pavés deviennent des phrases</h4>
+          <p class="dim">Chaque MIO est résumé en une ligne, et l'action qu'il cachait — un formulaire,
+            une date, un local — se transforme en tâche ou en échéance d'un seul clic.</p>
+        </section>
+        <section class="card ben fx" style="--h:190">
+          <span class="fic"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4"/></svg></span>
+          <h4>Un horaire qui vit avec ta session</h4>
+          <p class="dim">Tes cours sur la grille, tes blocs perso au glisser, une pastille sur les
+            journées chargées, et l'export .ics quand tu veux tout dans Calendrier.</p>
+        </section>
+      </div>
 
       <!-- 5) Avant / après, puis les trois étapes. -->
       <div class="sect" id="comment" style="padding-top:1.6rem"><h2>Avant, après</h2></div>
@@ -1288,7 +1266,13 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
         </section>
       </div>
 
-      <!-- 6) La garantie. -->
+      <!-- 4) La preuve, adossée à 6) la garantie : ce que le projet s'interdit. -->
+      <figure class="card quote fx">
+        <span class="qm">&ldquo;</span>
+        <blockquote>Ce n'est pas de la prudence décorative : c'est ce qui protège ton dossier étudiant.</blockquote>
+        <figcaption>README du projet — section « Ce que ce projet refuse de faire »</figcaption>
+      </figure>
+
       <section class="card guar fx">
         <div class="gh">
           <svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><rect x="5" y="10.5" width="14" height="10" rx="3"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>
@@ -1590,6 +1574,15 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
   if (!state.rappels.vus || typeof state.rappels.vus !== "object") state.rappels.vus = {};
   if (!state.ttEdits || typeof state.ttEdits !== "object") state.ttEdits = {};
   if (!state.sheets || typeof state.sheets !== "object") state.sheets = {};
+  /* Première forme des fiches : une pile de notes datées. La page blanche les
+     remplace — on recolle ce qui était écrit, dans l'ordre où c'était empilé,
+     plutôt que de le perdre. */
+  for (const sh of Object.values(state.sheets)) {
+    if (!Array.isArray(sh.notes)) continue;
+    const txt = sh.notes.map(n => (n.t || "").trim()).filter(Boolean).join("\n\n");
+    if (txt && !sh.page) { sh.page = txt; sh.at = sh.notes[0]?.at || ""; }
+    delete sh.notes;
+  }
   if (state.wview !== "pile") state.wview = "une";
   if (!Number.isInteger(state.wcur)) state.wcur = 0;
   /* Le filtre de matière est une loupe, pas un réglage. Le retrouver actif au
@@ -2840,7 +2833,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
       card.append(top, st, mk("p","dsc", sh.prof || info.prof || "Aucun professeur inscrit"));
       /* Ce que la fiche contient déjà, dit sur la carte : sans ça, rien
          n'indique qu'il y a quelque chose à aller voir. */
-      const bits = [n.notes && `${n.notes} note${n.notes > 1 ? "s" : ""}`,
+      const bits = [n.page && "Page de notes",
                     n.dates && `${n.dates} date${n.dates > 1 ? "s" : ""}`].filter(Boolean);
       if (bits.length) card.append(mk("p","dsc", bits.join(" · ")));
       card.style.cursor = "pointer";
@@ -3107,29 +3100,34 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
      ouvre sa fiche. Les dates qu'on y ajoute ne sont pas un carnet à part :
      ce sont les mêmes échéances que partout ailleurs, d'où le rappel qui
      s'allume et la case qui se pose dans l'horaire. */
-  const MSHEET = { prof:"", mail:"", room:"", link:"", memo:"", notes:[] };
+  const MSHEET = { prof:"", mail:"", room:"", link:"", memo:"", page:"", at:"" };
   /* Clés possibles d'une fiche, la meilleure en tête. Un horaire lu sur photo
      laisse souvent le sigle vide : la fiche s'ouvre alors sous le nom du
      cours, puis déménage sous le sigle dès qu'une collecte le fait
      apparaître — sans que les notes déjà prises restent en arrière. */
   const mKeys = c => { const code = courseInfo(c).code; return code ? [code, c] : [c]; };
   const mRaw = c => { const ks = mKeys(c); return state.sheets[ks.find(k => state.sheets[k])] || {}; };
-  const mSheet = c => { const r = mRaw(c);
-    return { ...MSHEET, ...r, notes: Array.isArray(r.notes) ? r.notes : [] }; };
-  const mPatch = (c, patch) => { const ks = mKeys(c);
+  const mSheet = c => ({ ...MSHEET, ...mRaw(c) });
+  const mWrite = (c, patch) => { const ks = mKeys(c);
     state.sheets[ks[0]] = { ...MSHEET, ...mRaw(c), ...patch };
-    for (const old of ks.slice(1)) delete state.sheets[old];
-    save(); };
+    for (const old of ks.slice(1)) delete state.sheets[old]; };
+  const mPatch = (c, patch) => { mWrite(c, patch); save(); };
+  /* Une page se tape en continu : réécrire tout l'état à chaque touche ferait
+     saccader les longues pages. Le texte entre en mémoire tout de suite, il
+     descend sur le disque un instant plus tard — et sans faute dès qu'on
+     quitte le champ ou la fiche. */
+  let mSaveT = 0;
+  const mSoon = () => { clearTimeout(mSaveT); mSaveT = setTimeout(() => { mSaveT = 0; save(); }, 400); };
+  const mFlush = () => { if (!mSaveT) return; clearTimeout(mSaveT); mSaveT = 0; save(); };
   const mDates = c => state.deadlines.filter(d => courseOf(d) === c);
-  /* Un champ de note fait exactement la hauteur de son texte : rien à
-     dérouler, rien de coupé. À recalculer dès que la largeur change, sinon
-     une note écrite au large se tronque une fois la fenêtre rétrécie. */
+  /* La page fait exactement la hauteur de son texte : rien à dérouler à
+     l'intérieur, rien de coupé. À recalculer dès que la largeur change, sinon
+     une page écrite au large se tronque une fois la fenêtre rétrécie. */
   const mGrow = ta => { ta.style.height = "auto"; ta.style.height = `${ta.scrollHeight}px`; };
   const mStamp = () => { const t = new Date();
     return `${t.getDate()} ${MONTH[t.getMonth()].slice(0,4)} · ${pad(t.getHours())}:${pad(t.getMinutes())}`; };
   /* Ce qu'une fiche contient déjà : sert aux compteurs des cartes « Mes cours ». */
-  const mCount = c => { const sh = mSheet(c);
-    return { notes: sh.notes.filter(n => (n.t || "").trim()).length, dates: mDates(c).length }; };
+  const mCount = c => ({ page: !!mSheet(c).page.trim(), dates: mDates(c).length });
   let mCur = null;                     // matière dont la fiche est ouverte
 
   function openMatiere(c) {
@@ -3185,7 +3183,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     hint.style.setProperty("--h", hueOf(c));
     hint.append(mk("i"), document.createTextNode("S'ajoute à "), mk("b", null, c),
       document.createTextNode(" · elle portera ce nom dans tes échéances."));
-    renderMDates(); renderMNotes(); renderMTT();
+    renderMDates(); renderMPage(); renderMTT();
   }
   function renderMDates() {
     const c = mCur; if (!c) return;
@@ -3229,34 +3227,18 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     renderMDates(); renderCourses(); refreshAll();
     el("m-dt").focus();
   }
-  /* Une note se modifie là où on la lit : pas de mode « édition », le champ
-     EST la note. La hauteur suit le texte pour qu'aucune ligne ne se cache. */
-  function renderMNotes() {
+  /* La page d'une matière : on l'ouvre, elle est là, on écrit. Rien à créer,
+     rien à valider — la seule trace du travail de la machine est la date de
+     dernière modification, en petit dans l'en-tête. */
+  function renderMPage() {
     const c = mCur; if (!c) return;
-    const box = el("m-notes"); box.textContent = "";
-    const notes = mSheet(c).notes;
-    for (const n of notes) {
-      const w = mk("div","note");
-      const h = mk("div","nh");
-      const kill = mk("button","kill","×"); kill.title = "Supprimer la note";
-      kill.addEventListener("click", () => {
-        mPatch(c, { notes: mSheet(c).notes.filter(x => x.id !== n.id) });
-        renderMNotes(); renderCourses();
-      });
-      h.append(mk("span", null, n.at || ""), mk("span","grow"), kill);
-      const ta = mk("textarea");
-      ta.value = n.t || ""; ta.rows = 1; ta.placeholder = "Écris ta note…";
-      ta.addEventListener("input", () => {
-        mGrow(ta);
-        mPatch(c, { notes: mSheet(c).notes.map(x => x.id === n.id ? { ...x, t: ta.value } : x) });
-      });
-      w.append(h, ta); box.append(w);
-      /* Tout de suite, pour que la note soit à sa taille dès le premier
-         affichage ; puis au cadre suivant, une fois la police posée. Un
-         onglet en arrière-plan ne rend jamais ce cadre — d'où les deux. */
-      mGrow(ta); requestAnimationFrame(() => mGrow(ta));
-    }
-    el("m-nempty").hidden = notes.length > 0;
+    const sh = mSheet(c), ta = el("m-page");
+    ta.value = sh.page || "";
+    el("m-pat").textContent = sh.page.trim() && sh.at ? `modifiée ${sh.at}` : "";
+    /* Tout de suite, pour que la page soit à sa taille dès le premier
+       affichage ; puis au cadre suivant, une fois la police posée. Un onglet
+       en arrière-plan ne rend jamais ce cadre — d'où les deux. */
+    mGrow(ta); requestAnimationFrame(() => mGrow(ta));
   }
   /* La semaine type du cours : les mêmes blocs que dans l'horaire, à l'échelle
      d'une carte. Seul le cours ouvert garde sa couleur ; les autres restent en
@@ -3326,10 +3308,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
     save(); renderWeeks(); renderCourses();
     closeMatiere(); goto("horaire");
   }
-  addEventListener("resize", () => {
-    if (el("matiere").hidden) return;
-    el("m-notes").querySelectorAll("textarea").forEach(mGrow);
-  });
+  addEventListener("resize", () => { if (!el("matiere").hidden) mGrow(el("m-page")); });
 
   el("m-back").addEventListener("click", () => { closeMatiere(); scrollTo({ top:0, behavior:"smooth" }); });
   el("m-filter").addEventListener("click", () => {
@@ -3348,12 +3327,15 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
   });
   el("m-dgo").addEventListener("click", addMDate);
   el("m-dt").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addMDate(); } });
-  el("m-nadd").addEventListener("click", () => {
+  el("m-page").addEventListener("input", () => {
     if (!mCur) return;
-    mPatch(mCur, { notes: [{ id:uid(), t:"", at:mStamp() }, ...mSheet(mCur).notes] });
-    renderMNotes();
-    el("m-notes").querySelector("textarea")?.focus();
+    mGrow(el("m-page"));
+    const at = mStamp();
+    mWrite(mCur, { page: el("m-page").value, at });
+    el("m-pat").textContent = el("m-page").value.trim() ? `modifiée ${at}` : "";
+    mSoon();
   });
+  el("m-page").addEventListener("blur", () => { mFlush(); renderCourses(); });
 
   /* ── Thème + commandes ────────────────────────────────────────── */
   function applyTheme() {
@@ -3695,7 +3677,7 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
   function showView(name) {
     /* Quitter la fiche d'une matière la referme : les cartes de « Mes cours »
        reprennent alors les notes et les dates qu'on vient d'y écrire. */
-    if (name !== "matiere" && mCur) { mCur = null; renderSubjects(); renderCourses(); }
+    if (name !== "matiere" && mCur) { mFlush(); mCur = null; renderSubjects(); renderCourses(); }
     for (const v of ["board","profil","matiere","landing","onboard"]) el(v).hidden = v !== name;
     const hors = name === "landing" || name === "onboard";
     el("apphead").hidden = hors;
