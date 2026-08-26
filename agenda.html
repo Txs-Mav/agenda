@@ -1043,11 +1043,11 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
 /* Les orbes et cartes flottantes dépassent leurs boîtes par design : le
    rognage se fait au niveau de la page, jamais par barre de défilement. */
 html,body{overflow-x:clip}
-:root{--ac:#12857A;--ac2:#2FBFA8;--acd:#0B6B62;--wa:#DE9038;--nuit:#0C1620}
+:root{--ac:#3A6EA5;--ac2:#7FA8CF;--acd:#1C3D5D;--wa:#DE9038;--nuit:#0D1B2A}
 #landing{position:relative}
 .lp-orbs{position:absolute;inset:0;overflow:visible;pointer-events:none;z-index:-1}
 .lp-orbs i{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5}
-.lp-orbs .o1{width:34rem;height:34rem;top:-10rem;right:-8rem;background:radial-gradient(circle,#9EE0D3,transparent 65%);animation:lp-drift 16s ease-in-out infinite alternate}
+.lp-orbs .o1{width:34rem;height:34rem;top:-10rem;right:-8rem;background:radial-gradient(circle,#B7D3EC,transparent 65%);animation:lp-drift 16s ease-in-out infinite alternate}
 .lp-orbs .o2{width:22rem;height:22rem;top:22rem;left:-10rem;background:radial-gradient(circle,#FFE2BC,transparent 65%);animation:lp-drift 20s ease-in-out infinite alternate-reverse}
 .lp-orbs .o3{width:18rem;height:18rem;top:60rem;right:-4rem;background:radial-gradient(circle,#C9E4FF,transparent 65%);animation:lp-drift 24s ease-in-out infinite alternate}
 @keyframes lp-drift{from{transform:translate(0,0)}to{transform:translate(2.4rem,1.6rem)}}
@@ -1077,10 +1077,8 @@ html,body{overflow-x:clip}
 .lp-badge:hover{border-color:var(--ac);box-shadow:0 6px 20px -8px color-mix(in srgb,var(--ac) 55%,transparent);transform:translateY(-1px)}
 .lp-badge:hover .i{transform:translateX(3px)}
 .lp-hero h2{font-size:clamp(2.5rem,6vw,4.1rem);font-weight:700;letter-spacing:-.035em;line-height:1.04;margin:1.3rem 0 1.1rem}
-.lp-grad{
-  background:linear-gradient(100deg,var(--acd) 10%,var(--ac2) 55%,var(--wa) 95%);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-}
+.lp-grad{color:var(--ac)}
+.lp-dark .lp-grad,:root[data-theme="dark"] .lp-grad{color:var(--ac2)}
 .lp-lead{color:var(--dim);font-size:1.05rem;max-width:36rem;margin:0 auto}
 .lp-ctas{justify-content:center;margin-top:1.6rem}
 .lp-cta{
@@ -1216,7 +1214,7 @@ html,body{overflow-x:clip}
 
 .lp-final{
   position:relative;overflow:hidden;border-radius:26px;text-align:center;color:#fff;
-  background:linear-gradient(125deg,#08131B 0%,var(--acd) 52%,#17A390 100%);
+  background:linear-gradient(125deg,#08131B 0%,var(--acd) 52%,#4E8CC9 100%);
   padding:3.6rem 1.6rem 3.8rem;
 }
 .lp-final h2{font-size:clamp(1.7rem,3.6vw,2.5rem);font-weight:700;letter-spacing:-.03em;line-height:1.12}
@@ -1258,9 +1256,9 @@ html,body{overflow-x:clip}
 .lp-row .txt p{max-width:26rem;font-size:1rem}
 .lp-kick{
   font-family:var(--mono);font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--k,#12857A);display:inline-flex;align-items:center;gap:.5rem;
+  color:var(--k,#3A6EA5);display:inline-flex;align-items:center;gap:.5rem;
 }
-.lp-kick::before{content:"";width:1.4rem;height:2px;border-radius:99px;background:var(--k,#12857A)}
+.lp-kick::before{content:"";width:1.4rem;height:2px;border-radius:99px;background:var(--k,#3A6EA5)}
 .lp-pic{
   margin:0;border-radius:16px;overflow:hidden;background:var(--surface);
   border:1px solid var(--line);
@@ -1322,8 +1320,8 @@ html,body{overflow-x:clip}
 
 /* ═══ Bandes sombres : la rupture qui aère ════════════════════════ */
 .lp-dark{
-  position:relative;overflow:hidden;border-radius:26px;color:#EAF2F0;
-  background:linear-gradient(150deg,#0A121A 0%,var(--nuit) 45%,#102A2C 100%);
+  position:relative;overflow:hidden;border-radius:26px;color:#F0F5FA;
+  background:linear-gradient(150deg,#0A121A 0%,var(--nuit) 45%,#14304A 100%);
   padding:clamp(2rem,5vw,3.4rem);margin:clamp(2.4rem,6vw,4.4rem) 0;
 }
 .lp-dark.tight{padding:clamp(1.6rem,4vw,2.4rem)}
@@ -1343,14 +1341,14 @@ html,body{overflow-x:clip}
    laisse remplir sa boite. Rogner le premier coupait « No de matricule ». */
 .lp-vs-side img{display:block;width:100%;height:clamp(15rem,25vw,21rem);object-fit:cover;object-position:top center;border-radius:14px;border:1px solid rgba(255,255,255,.09)}
 .lp-vs-side.whole img{object-fit:contain;background:#fff;padding:.9rem}
-.lp-vs-side figcaption{margin-top:.8rem;font-size:.82rem;line-height:1.45;color:rgba(234,242,240,.62)}
+.lp-vs-side figcaption{margin-top:.8rem;font-size:.82rem;line-height:1.45;color:rgba(240,245,250,.62)}
 .lp-tag{
   position:absolute;top:.7rem;left:.7rem;z-index:1;
   font-family:var(--mono);font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;
   padding:.28rem .62rem;border-radius:999px;backdrop-filter:blur(6px);
 }
 .lp-tag.av{background:rgba(222,144,56,.22);color:#F2C489;border:1px solid rgba(222,144,56,.4)}
-.lp-tag.ap{background:rgba(47,191,168,.2);color:#8BE6D2;border:1px solid rgba(47,191,168,.42)}
+.lp-tag.ap{background:rgba(127,168,207,.2);color:#AECDE9;border:1px solid rgba(127,168,207,.45)}
 .lp-arrow{display:grid;place-items:center;width:2.4rem;height:2.4rem;border-radius:50%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13)}
 .lp-arrow svg{width:17px;height:17px;fill:none;stroke:var(--ac2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .lp-vs.noimg{grid-template-columns:minmax(0,1fr)}
@@ -1360,8 +1358,8 @@ html,body{overflow-x:clip}
 .lp-guar2 .gh svg{width:21px;height:21px;fill:none;stroke:var(--ac2);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .lp-guar2 .gh h3{font-size:1.05rem;font-weight:650;letter-spacing:-.015em}
 .lp-guar2 .gl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.4rem}
-.lp-guar2 .gl p{font-size:.84rem;line-height:1.5;color:rgba(234,242,240,.6);padding-left:.85rem;border-left:2px solid rgba(47,191,168,.4)}
-.lp-guar2 .gl b{color:#EAF2F0;font-weight:600}
+.lp-guar2 .gl p{font-size:.84rem;line-height:1.5;color:rgba(240,245,250,.6);padding-left:.85rem;border-left:2px solid rgba(127,168,207,.4)}
+.lp-guar2 .gl b{color:#F0F5FA;font-weight:600}
 
 /* ═══ Rail d'étapes : trois jalons, pas trois cartes ══════════════ */
 .lp-rail{list-style:none;margin:1.2rem 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(1rem,3vw,2.4rem);position:relative}
@@ -1723,7 +1721,7 @@ html,body{overflow-x:clip}
                 <span class="lg"></span>
                 <span class="ln on"></span><span class="ln w7"></span><span class="ln w6"></span>
                 <span class="ln w8"></span><span class="ln w5"></span>
-                <span class="dotrow"><i style="background:#3FA457"></i><i style="background:#2E7CD6"></i><i style="background:#12857A"></i><i style="background:#D9539B"></i></span>
+                <span class="dotrow"><i style="background:#3FA457"></i><i style="background:#2E7CD6"></i><i style="background:#E8912B"></i><i style="background:#D9539B"></i></span>
               </aside>
               <div>
                 <div class="lp-hello"><b>Salut, Alex !</b><span>jeu. 20 août · session A26</span><em>Semaine suivante</em></div>
@@ -1747,7 +1745,7 @@ html,body{overflow-x:clip}
                     <div class="row"><i style="background:#E0483A"></i><div><b>Questionnaire médical</b><span class="cd" style="color:#C4392C">Dans 6 jours</span></div></div>
                     <div class="row"><i style="background:#E8912B"></i><div><b>Actualité géographique 1</b><span class="cd" style="color:#A2620F">Dans 8 jours</span></div></div>
                     <div class="row"><i style="background:#3FA457"></i><div><b>Examen 1 — Philo</b><span class="cd" style="color:#2E7D45">Dans 25 jours</span></div></div>
-                    <div class="row"><i style="background:#12857A"></i><div><b>Rapport de laboratoire</b><span class="cd" style="color:#0B6B62">Dans 32 jours</span></div></div>
+                    <div class="row"><i style="background:#3A6EA5"></i><div><b>Rapport de laboratoire</b><span class="cd" style="color:#1C3D5D">Dans 32 jours</span></div></div>
                   </div>
                 </div>
               </div>
