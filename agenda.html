@@ -995,6 +995,25 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
   color:#8a8f98;font-size:.8rem;padding:1rem}
 .pagewrap.hasdoc .page{display:none}
 
+/* ── La page en plein écran ──────────────────────────────────────
+   Le même papier, la même carte — elle vient couvrir l'écran, sans rien
+   cloner : c'est le vrai DOM qui passe en fixed, donc l'encre, les
+   annotations et l'historique continuent sans se douter de rien. La barre
+   d'outils reste collée en haut pendant que la page défile. La colonne
+   garde une largeur de lecture : « au maximum » vaut pour la hauteur et le
+   calme autour, pas pour des lignes d'un mètre. */
+body.nzen{overflow:hidden}
+body.nzen #m-notecard{position:fixed;inset:0;z-index:80;border-radius:0;overflow:auto;
+  overscroll-behavior:contain;animation:none}
+body.nzen #m-notecard .ch,body.nzen #m-notecard .tools,
+body.nzen #m-notecard .pagewrap{width:100%;max-width:64rem;margin-inline:auto}
+body.nzen #m-notecard .tools{position:sticky;top:0;z-index:6;background:var(--surface);
+  border-bottom:1px solid var(--line);padding-top:calc(.45rem + env(safe-area-inset-top, 0px));padding-bottom:.45rem}
+#m-zen.on{background:var(--invert);color:var(--on-invert)}
+/* L'en-tête de la carte des notes porte cinq gestes : quand la place vient
+   à manquer, ils passent à la ligne au lieu de se pousser dehors. */
+#m-notecard .ch{flex-wrap:wrap}
+
 /* ── Toutes les notes ────────────────────────────────────────────
    Un dossier par matière, ses pages dedans. Chaque rangée dit ce que la page
    porte déjà — sa première ligne, sa date — et n'offre qu'un geste : l'ouvrir. */
@@ -1755,13 +1774,14 @@ html,body{overflow-x:clip}
           </section>
         </div>
         <div class="mcol">
-          <section class="card fx fill">
+          <section class="card fx fill" id="m-notecard">
             <div class="ch"><h3>Notes</h3>
               <select class="pgsel" id="m-pgsel" title="Changer de page"></select>
               <button class="link" id="m-pgadd" title="Ouvrir une page blanche de plus"><svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M12 5v14M5 12h14"/></svg> Page</button>
               <button class="link" id="m-pgcat"><svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M3.5 7A2.5 2.5 0 0 1 6 4.5h3.6l2 2.5H18a2.5 2.5 0 0 1 2.5 2.5v7.5A2.5 2.5 0 0 1 18 19.5H6A2.5 2.5 0 0 1 3.5 17z"/></svg> <span id="m-pgcat-t">Ranger</span></button>
               <button class="link" id="m-imp" title="Importer un PDF ou une image — la page le porte, et on écrit dessus"><svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9"/><path d="M4.5 15.5v3A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5v-3"/></svg> Importer</button>
               <input id="m-file" type="file" accept="application/pdf,image/*" hidden>
+              <button class="link" id="m-share" title="Stocker cette page dans une classe — choisis la classe, le cours, la séance"><svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M15.5 5.8a3 3 0 0 1 0 5.4M17.5 13.6a5.5 5.5 0 0 1 3 4.9"/></svg> Partager</button>
               <span class="grow"></span>
               <span class="dim mono" id="m-pat" style="font-size:.66rem"></span></div>
             <div class="tools" id="m-tools">
@@ -1775,6 +1795,8 @@ html,body{overflow-x:clip}
               <span class="grow"></span>
               <button class="tl" id="m-undo" title="Annuler le dernier trait"><svg class="i" viewBox="0 0 24 24"><path d="M8.5 7.5L4.5 11.5l4 4"/><path d="M4.5 11.5h9.8a4.7 4.7 0 1 1 0 9.4H10"/></svg></button>
               <button class="tl" id="m-redo" title="Rétablir"><svg class="i" viewBox="0 0 24 24"><path d="M15.5 7.5l4 4-4 4"/><path d="M19.5 11.5H9.7a4.7 4.7 0 1 0 0 9.4H14"/></svg></button>
+              <span class="sep"></span>
+              <button class="tl" id="m-zen" title="Plein écran — la page prend tout l'écran (Échap pour revenir)"><svg class="i" viewBox="0 0 24 24"><path d="M9 4.5H4.5V9M15 4.5h4.5V9M9 19.5H4.5V15M15 19.5h4.5V15"/></svg></button>
             </div>
             <div class="pagewrap" id="m-wrap">
               <div class="mdoc" id="m-doc"></div>
@@ -4924,6 +4946,188 @@ html,body{overflow-x:clip}
     if (p.id) catPop(c, p.id, el("m-pgcat"));
   });
 
+  /* ── La page en plein écran ──────────────────────────────────────
+     Un seul booléen, une seule classe sur body : la carte des notes vient
+     couvrir l'écran, et tout le reste — outils, encre, historique — est
+     déjà là, puisque c'est la même carte. Toute navigation qui quitte la
+     fiche replie d'abord le plein écran, sinon body garderait son
+     overflow:hidden devant une carte devenue invisible. */
+  let mZen = false;
+  const ZEN_IN  = '<svg class="i" viewBox="0 0 24 24"><path d="M9 4.5H4.5V9M15 4.5h4.5V9M9 19.5H4.5V15M15 19.5h4.5V15"/></svg>';
+  const ZEN_OUT = '<svg class="i" viewBox="0 0 24 24"><path d="M4.5 9H9V4.5M19.5 9H15V4.5M4.5 15H9v4.5M19.5 15H15v4.5"/></svg>';
+  function setZen(on) {
+    if (mZen === !!on) return;
+    mZen = !!on;
+    document.body.classList.toggle("nzen", mZen);
+    const b = el("m-zen");
+    b.classList.toggle("on", mZen);
+    b.innerHTML = mZen ? ZEN_OUT : ZEN_IN;
+    b.title = mZen ? "Revenir à la fiche (Échap)" : "Plein écran — la page prend tout l'écran (Échap pour revenir)";
+    /* La colonne change de largeur : l'encre et les annotations se recalent
+       tout de suite, puis au cadre suivant une fois la mise en page posée. */
+    mGrow(); requestAnimationFrame(mGrow);
+    if (mZen) el("m-notecard").scrollTop = 0;
+  }
+  el("m-zen").addEventListener("click", () => setZen(!mZen));
+
+  /* ── Partager vers une classe ────────────────────────────────────
+     « Stocker cette note dans une classe, puis un cours » : la classe, le
+     cours qu'on y suit, la séance — et le TEXTE de la page part dans la
+     page de séance partagée (classes.html). L'encre, les dessins et les
+     documents restent sur cet appareil : la page de classe est du texte que
+     toute la classe édite, pas un calque à moi. On complète, on n'écrase
+     jamais : ce que la classe a déjà écrit reste au-dessus. */
+  async function sbApi(pathQ, init = {}, retry = true) {
+    const s0 = sbSession();
+    if (!s0?.at) throw new Error("pas de session");
+    const r = await fetch(`${SB_URL}/rest/v1/${pathQ}`, { ...init,
+      headers: { apikey: SB_KEY, authorization: `Bearer ${s0.at}`,
+                 "content-type": "application/json", ...(init.headers || {}) } });
+    if (r.status === 401 && retry && s0.rt) {
+      try { sbKeep(await sbAuth("token?grant_type=refresh_token", { refresh_token: s0.rt })); }
+      catch { throw new Error("Session expirée — reconnecte-toi."); }
+      return sbApi(pathQ, init, false);
+    }
+    if (!r.ok) { const d = await r.json().catch(() => ({}));
+      throw new Error(d.message || d.hint || `erreur ${r.status}`); }
+    return r.status === 204 ? null : r.json();
+  }
+  /* Ce que la page a à dire : son texte, puis ses annotations — chacune est
+     une phrase posée quelque part, elle mérite de partir aussi. */
+  const pageTexte = p => [(p.page || "").trim(),
+    ...p.annos.map(a => (a.t || "").trim()).filter(Boolean).map(t => `• ${t}`)]
+    .filter(Boolean).join("\n\n");
+  const NEUF = "·neuf·";       // valeur d'option : créer plutôt que choisir
+  function sharePop(anchor) {
+    const c = mCur; if (!c) return;
+    mFlush();
+    const p = mPage(c);
+    pop?.remove(); pop = null; popAnchor = null;
+    const box = mk("div","pop fx");
+    box.append(mk("h4", null, "Vers ta classe"));
+    box.append(mk("p","when", [p.t || "Page", c].join(" · ")));
+    const acts = mk("div","acts");
+    const fin = mk("button","btn quiet","Annuler");
+    fin.addEventListener("click", closePop);
+    /* Sans compte, rien ne peut partir ; sans texte, rien n'a de sens à
+       partir — deux culs-de-sac dits tout de suite, sans formulaire. */
+    const texte = pageTexte(p);
+    if (!sbSession()) {
+      box.append(mk("p","hint dim","Connecte-toi pour envoyer une note vers une classe."));
+      const go = mk("button","btn solid","Se connecter");
+      go.addEventListener("click", () => { closePop(); showJoin("signin"); });
+      acts.append(mk("span","grow"), fin, go); box.append(acts);
+      pop = box; place(box, anchor, false); return;
+    }
+    if (!texte) {
+      box.append(mk("p","hint dim","Cette page n'a pas encore de texte. C'est lui qui part vers la classe — l'encre, les dessins et les documents restent sur cet appareil."));
+      acts.append(mk("span","grow"), fin); box.append(acts);
+      pop = box; place(box, anchor, false); return;
+    }
+    const fld = (lab) => { const l = mk("label","fld"); l.append(mk("span", null, lab));
+      const s = mk("select"); l.append(s); box.append(l); return s; };
+    const selC = fld("Classe"), selM = fld("Cours"), selK = fld("Séance");
+    const hint = mk("p","hint dim", "Le texte de la page part dans la page de séance — toute la classe le voit. Ce qui y est déjà écrit reste au-dessus.");
+    box.append(hint);
+    const err = mk("p","hint"); err.style.color = "var(--live)"; err.hidden = true; box.append(err);
+    const ok = mk("button","btn solid","Envoyer");
+    acts.append(mk("span","grow"), fin, ok); box.append(acts);
+    const opt = (sel, v, t) => { const o = mk("option", null, t); o.value = v; sel.append(o); };
+    for (const s of [selC, selM, selK]) { s.disabled = true; opt(s, "", "…"); }
+    ok.disabled = true;
+    pop = box; place(box, anchor, false);
+
+    let classes = [];
+    const matsDe  = id => (classes.find(x => x.id === id)?.agenda_matieres || [])
+      .slice().sort((a, b) => (a.ordre - b.ordre) || a.nom.localeCompare(b.nom, "fr"));
+    const coursDe = (cid, mid) => (matsDe(cid).find(m => m.id === mid)?.agenda_cours || [])
+      .slice().sort((a, b) => (b.jour || "").localeCompare(a.jour || ""));
+    function majM() {
+      selM.textContent = "";
+      opt(selM, NEUF, `Nouveau — ${c}`);
+      const mats = matsDe(selC.value);
+      for (const m of mats) opt(selM, m.id, m.nom);
+      /* Le cours local retrouve son jumeau dans la classe : même sigle
+         d'abord, même nom sinon — et « Nouveau » seulement à défaut. */
+      const code = (courseInfo(c).code || "").toLowerCase();
+      const twin = mats.find(m => code && (m.code_cours || "").toLowerCase() === code)
+        || mats.find(m => m.nom.toLowerCase() === c.toLowerCase());
+      if (twin) selM.value = twin.id;
+      majK();
+    }
+    function majK() {
+      selK.textContent = "";
+      opt(selK, NEUF, `Nouvelle séance — ${p.t || "Page"}`);
+      if (selM.value !== NEUF)
+        for (const k of coursDe(selC.value, selM.value))
+          opt(selK, k.id, `${k.titre || "Séance"}${k.jour ? ` · ${frDate(k.jour)}` : ""}`);
+    }
+    selC.addEventListener("change", majM);
+    selM.addEventListener("change", majK);
+    sbApi("agenda_classes?select=id,nom,agenda_matieres(id,nom,code_cours,ordre,agenda_cours(id,titre,jour))&order=created_at.asc")
+      .then(rows => {
+        classes = rows || [];
+        if (!classes.length) {
+          for (const s of [selC, selM, selK]) s.closest(".fld").hidden = true;
+          hint.textContent = "Tu n'es dans aucune classe encore. Crée-la ou rejoins-la par son code, puis reviens — la page t'attendra.";
+          const go = mk("a","btn solid"); go.textContent = "Ouvrir les classes"; go.href = "classes.html";
+          acts.insertBefore(go, ok); ok.remove();
+          return;
+        }
+        selC.textContent = "";
+        for (const x of classes) opt(selC, x.id, x.nom);
+        for (const s of [selC, selM, selK]) s.disabled = false;
+        ok.disabled = false;
+        majM();
+      })
+      .catch(e => { err.textContent = frErr(e); err.hidden = false; });
+
+    ok.addEventListener("click", async () => {
+      ok.disabled = true; ok.textContent = "Envoi…"; err.hidden = true;
+      try {
+        const uid0 = sbSession().uid;
+        let matId = selM.value, coursId = selK.value;
+        if (matId === NEUF) {
+          const mats = matsDe(selC.value);
+          const d = await sbApi("agenda_matieres", { method:"POST", headers:{ prefer:"return=representation" },
+            body: JSON.stringify([{ class_id: selC.value, nom: c, code_cours: courseInfo(c).code || null,
+              hue: HUES[mats.length % HUES.length], ordre: mats.length, created_by: uid0 }]) });
+          matId = d[0].id;
+        }
+        if (coursId === NEUF) {
+          const d = await sbApi("agenda_cours", { method:"POST", headers:{ prefer:"return=representation" },
+            body: JSON.stringify([{ matiere_id: matId, titre: p.t || "", jour: iso(today0), created_by: uid0 }]) });
+          coursId = d[0].id;
+        }
+        /* Une seule note de page par séance, la plus ancienne fait foi —
+           même règle que dans classes.html. On s'ajoute à sa suite. */
+        const notes = await sbApi(`agenda_notes?cours_id=eq.${coursId}&select=id,contenu&order=created_at.asc&limit=1`);
+        if (notes.length) {
+          const avant = (notes[0].contenu || "").replace(/\s+$/, "");
+          await sbApi(`agenda_notes?id=eq.${notes[0].id}`, { method:"PATCH",
+            body: JSON.stringify({ contenu: avant ? `${avant}\n\n${texte}` : texte, updated_by: uid0 }) });
+        } else {
+          await sbApi("agenda_notes", { method:"POST",
+            body: JSON.stringify([{ cours_id: coursId, contenu: texte, created_by: uid0, updated_by: uid0 }]) });
+        }
+        /* Réussi : le panneau le dit et offre d'aller voir — sur place, pas
+           une redirection qu'on n'a pas demandée. */
+        box.replaceChildren(mk("h4", null, "Envoyée ✓"),
+          mk("p","when", `${selC.selectedOptions[0].textContent} · la classe la voit maintenant.`));
+        const a2 = mk("div","acts");
+        const voir = mk("a","btn solid"); voir.textContent = "Ouvrir la séance";
+        voir.href = `classes.html#k/${coursId}`;
+        const fermer = mk("button","btn quiet","Fermer");
+        fermer.addEventListener("click", closePop);
+        a2.append(mk("span","grow"), fermer, voir); box.append(a2);
+      } catch (e) {
+        err.textContent = frErr(e); err.hidden = false;
+        ok.disabled = false; ok.textContent = "Envoyer";
+      }
+    });
+  }
+  el("m-share").addEventListener("click", () => { if (mCur) sharePop(el("m-share")); });
+
   for (const b of el("m-tools").querySelectorAll("[data-tool]"))
     b.addEventListener("click", () => setTool(b.dataset.tool, true));
   el("m-undo").addEventListener("click", () => histGo(-1));
@@ -4937,7 +5141,15 @@ html,body{overflow-x:clip}
 
   addEventListener("keydown", ev => {
     if (el("matiere").hidden || !mCur) return;
-    if (ev.key === "Escape" && mTool !== "write") { ev.preventDefault(); setTool("write"); return; }
+    /* Échap remonte d'un cran à la fois : l'outil de dessin d'abord, le
+       plein écran ensuite — et un panneau ouvert garde la main, il se ferme
+       par son propre Échap. Sur un document le stylo EST l'outil de repos :
+       le tenir n'empêche pas de replier. */
+    if (ev.key === "Escape" && !pop) {
+      const repos = mTool === "write" || (mDocOpen() && mTool === "pen");
+      if (!repos) { ev.preventDefault(); setTool("write"); return; }
+      if (mZen) { ev.preventDefault(); setZen(false); return; }
+    }
     if (/^(TEXTAREA|INPUT|SELECT)$/.test(ev.target.tagName)) return;
     if (mTool === "write") return;
     if (!(ev.metaKey || ev.ctrlKey) || ev.key.toLowerCase() !== "z") return;
@@ -5566,6 +5778,9 @@ html,body{overflow-x:clip}
       mCur = null; renderSubjects(); renderCourses();
       if (name === "board" || name === "notes") catNudge(c, p);
     }
+    /* Quitter la fiche replie d'abord le plein écran des notes : sans ça,
+       body garderait overflow:hidden devant une carte devenue invisible. */
+    if (name !== "matiere") setZen(false);
     for (const v of ["board","profil","matiere","landing","onboard","notes"]) el(v).hidden = v !== name;
     /* L'entrée « Toutes les notes » n'est pas une ancre du tableau : elle
        s'allume avec sa vue, et éteint les ancres qui croiraient l'être encore. */
