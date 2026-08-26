@@ -10,6 +10,8 @@
     "discover": "tsx src/cli.ts discover",
     "scrape": "tsx src/cli.ts scrape",
     "horaire": "tsx src/cli.ts horaire",
+    "moodle-login": "tsx src/moodle/token.ts",
+    "moodle": "tsx src/moodle/collect.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

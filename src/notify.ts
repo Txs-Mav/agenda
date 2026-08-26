@@ -110,6 +110,21 @@ export async function reportFailure(kind: "session" | "autre", reason: string): 
 }
 
 /**
+ * Nouveaux contenus de cours repérés sur Moodle. Une notification discrète,
+ * jamais bloquante — le détail (titres et URL exactes) vit dans
+ * data/moodle-nouveautes.json en attendant son panneau dans le tableau de bord.
+ */
+export async function reportNouveautes(n: number, exemple: string): Promise<void> {
+  if (!n) return;
+  await notify(
+    "Agenda Cégep — Moodle",
+    `${n} nouveau${n > 1 ? "x" : ""} contenu${n > 1 ? "s" : ""} de cours`,
+    exemple.slice(0, 90),
+    "Glass",
+  );
+}
+
+/**
  * Collecte réussie. Ne notifie QUE si une panne avait été signalée : confirmer
  * que le `npm run login` a bien tout relancé vaut une notification, mais pas
  * vingt-quatre par jour.

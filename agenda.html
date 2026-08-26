@@ -5707,10 +5707,15 @@ a,button{touch-action:manipulation}
      applique les actions encore jamais vues. */
   function ingest(d) {
     if (!d || (!d.deadlines && !d.mios)) return;
-    const kept = state.deadlines.filter(x => x.src !== "lea");
+    /* Le scrapé remplace le scrapé — PAR SOURCE. L'extension ne pousse que du
+       Léa, le collecteur Moodle que du Moodle : chacun ne remplace que ce
+       qu'il apporte, sinon la poussée de l'un effacerait l'autre. */
+    const SCRAPEES = new Set(["lea", "moodle"]);
+    const arrivees = new Set((d.deadlines || []).map(x => x.src).filter(s => SCRAPEES.has(s)));
+    const kept = state.deadlines.filter(x => !arrivees.has(x.src));
     const doneIds = new Set(state.deadlines.filter(x => x.done).map(x => x.id));
-    /* Le scraper repousse TOUT Léa à chaque collecte : sans ce filtre, une
-       échéance supprimée ici reparaît à l'ingestion suivante. */
+    /* Le scraper repousse TOUT ce qu'il voit à chaque collecte : sans ce
+       filtre, une échéance supprimée ici reparaîtrait à l'ingestion suivante. */
     const frais = (d.deadlines || []).filter(x => !estSupprime(x.id));
     state.deadlines = [...kept, ...frais.map(x => ({ ...x, done: x.done || doneIds.has(x.id) }))];
     state.mios = d.mios || [];

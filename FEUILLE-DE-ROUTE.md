@@ -14,7 +14,7 @@ Reste à faire au fil de l'usage : vérifier la stabilité des URL profondes de
 MIO d'une session à l'autre, et couvrir la section **Documents** de Léa (les
 notes de cours) — page à visiter une fois pour relever sa structure.
 
-## Étape 2 — Moodle par API (côté serveur, aucun appareil requis)
+## ✅ Étape 2 — Moodle par API (code fait ; reste ton premier `npm run moodle-login`)
 
 Instance vérifiée le 2026-08-26 : **https://cegeptr.moodle.decclic.qc.ca**
 (connexion M365 ou compte local ; services web mobiles actifs —
