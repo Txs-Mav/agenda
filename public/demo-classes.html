@@ -20,6 +20,7 @@
   --invert-soft:rgba(255,255,255,.10); --invert-soft-2:rgba(255,255,255,.19);
   --evt-bg:.20; --evt-bd:.42; --evt-tx:32%;
   --shadow:0 1px 2px rgba(16,18,20,.05), 0 14px 34px -22px rgba(16,18,20,.45);
+  --shadow-hi:0 2px 4px rgba(16,18,20,.08), 0 26px 48px -20px rgba(16,18,20,.5);
   --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
   color-scheme:light;
@@ -34,6 +35,7 @@
   --invert-soft:rgba(0,0,0,.06); --invert-soft-2:rgba(0,0,0,.12);
   --evt-bg:.26; --evt-bd:.40; --evt-tx:78%;
   --shadow:0 1px 2px rgba(0,0,0,.35), 0 14px 34px -22px rgba(0,0,0,.8);
+  --shadow-hi:0 2px 4px rgba(0,0,0,.45), 0 26px 48px -18px rgba(0,0,0,.85);
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -56,7 +58,7 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 /* width:100% n'est pas décoratif : sans lui, ce conteneur flex est
    dimensionné par le min-content de son contenu (une bulle de discussion
    en nowrap, par exemple) et déborde l'écran du téléphone. */
-.wrap{max-width:62rem;width:100%;min-width:0;margin:0 auto;display:flex;flex-direction:column;gap:1.1rem}
+.wrap{max-width:84rem;width:100%;min-width:0;margin:0 auto;display:flex;flex-direction:column;gap:1.1rem}
 .card,.rows,.row,.teaser,.pad,.volet,.grp{min-width:0}
 .grow{flex:1 1 auto}
 .dim{color:var(--dim)}
@@ -120,8 +122,17 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 
 /* ── Tuiles (classes, matières) ── */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:.85rem}
-.tile{display:flex;flex-direction:column;gap:.35rem;padding:1.15rem 1.3rem 1.2rem;text-decoration:none;transition:transform .15s}
-.tile:hover{transform:translateY(-2px)}
+.tile{position:relative;display:flex;flex-direction:column;gap:.35rem;padding:1.2rem 1.3rem 1.25rem;text-decoration:none;transition:transform .18s,box-shadow .18s}
+.tile:hover{transform:translateY(-3px);box-shadow:var(--shadow-hi)}
+/* Le monogramme donne une couleur stable à chaque classe ; la flèche ne se
+   montre qu'au survol — la tuile promet d'ouvrir sans le crier. */
+.tmono{width:2.7rem;height:2.7rem;border-radius:13px;display:grid;place-items:center;margin-bottom:.45rem;
+  font-size:1.05rem;font-weight:650;
+  background:hsl(var(--h,222) 62% 55% / var(--evt-bg));color:hsl(var(--h,222) 62% var(--evt-tx))}
+.tile .go{position:absolute;top:1.1rem;right:1.1rem;width:2.1rem;height:2.1rem;border-radius:50%;display:grid;place-items:center;
+  background:var(--surface-2);color:var(--dim);opacity:0;transform:translateX(-6px);transition:opacity .18s,transform .18s}
+.tile:hover .go{opacity:1;transform:translateX(0)}
+.tile .go .i{width:16px;height:16px}
 .tile b{font-size:1rem;font-weight:600;letter-spacing:-.015em}
 .tile .meta{font-size:.8rem;color:var(--dim)}
 .pipline{display:flex;align-items:center;gap:.55rem}
@@ -201,7 +212,8 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 .pill{font-size:.7rem;font-weight:650;background:var(--live);color:#fff;border-radius:999px;padding:.06rem .45rem;flex:0 0 auto}
 .row .field{padding:.4rem .7rem;min-height:2.4rem;font-size:.85rem;max-width:13rem}
 .row .meta{font-size:.78rem;color:var(--dim)}
-.teaser{display:flex;flex-direction:column;gap:.5rem;padding:1.1rem 1.3rem 1.2rem;text-decoration:none}
+.teaser{display:flex;flex-direction:column;gap:.5rem;padding:1.1rem 1.3rem 1.2rem;text-decoration:none;transition:transform .18s,box-shadow .18s}
+.teaser:hover{transform:translateY(-2px);box-shadow:var(--shadow-hi)}
 .teaser .ex{font-size:.85rem;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Un aperçu de message se coupe ; une invitation à écrire, non. */
 .teaser .ex.libre{white-space:normal;line-height:1.5}
@@ -315,6 +327,21 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
   min-height:5.2rem;border-radius:26px;transition:color .15s,border-color .15s,background .15s}
 .tile.add:hover{color:var(--ink);border-color:var(--ink);background:var(--surface-2);transform:none}
 
+/* ── Accueil : mes classes à gauche, la porte toujours ouverte à droite —
+   l'écran sert en entier, rien ne se cache derrière un clic. ── */
+.accueil{display:grid;grid-template-columns:minmax(0,1fr) clamp(21rem,31vw,26rem);gap:1.1rem;align-items:start}
+.accueil>div{display:flex;flex-direction:column;gap:1.1rem;min-width:0}
+.accueil .segs{align-self:stretch}
+.accueil .seg{flex:1 1 0}
+.accueil .btn.grand,.accueil .cases{max-width:none}
+.accueil .volet .field{max-width:none !important}
+@media (max-width:900px){.accueil{grid-template-columns:minmax(0,1fr)}}
+
+/* Une salle de classe au trait — elle meuble le vide sans le crier. */
+.illu{display:flex;flex-direction:column;gap:.85rem;padding:1.35rem 1.45rem 1.25rem}
+.illu svg{width:100%;height:auto;display:block}
+.illu p{font-size:.82rem;line-height:1.55;color:var(--dim)}
+
 @media (max-width:760px){
   .split{grid-template-columns:minmax(0,1fr)}
   .row .stamp{width:4.6rem}
@@ -343,7 +370,8 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 }
 @media (prefers-reduced-motion:reduce){
   .cases.secoue,.case.on::after,.spin,.entre{animation:none}
-  .case.on,.tile:hover,.btn:active{transform:none}
+  .case.on,.tile:hover,.teaser:hover,.btn:active{transform:none}
+  .tile .go{transition:none;transform:none}
   .tick path{animation:none;stroke-dashoffset:0}
 }
 </style>
@@ -521,6 +549,7 @@ body{padding-bottom:4.5rem !important}
   const I_PARTAGE = ["M12 15.5V4M8.5 7.5 12 4l3.5 3.5", "M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"];
   const I_COCHE = ["M5 12.5l4.5 4.5L19 7.5"];
   const I_PLUS = ["M12 5.5v13M5.5 12h13"];
+  const I_FLECHE = ["M4.5 12h14", "M13 6.5 18.5 12 13 17.5"];
 
   /* Le code d'invitation. L'alphabet écarte les caractères qu'on confond en
      les lisant à voix haute (O/0, I/L/1) : on peut donc filtrer la frappe
@@ -765,14 +794,14 @@ body{padding-bottom:4.5rem !important}
      Deux volets sous un même toit. « J'ai un code » passe devant : c'est
      le geste de presque tout le monde. Créer une classe, une personne le
      fait une fois pour trente. */
-  function carteEntree({ focal = false, code = "", auto = false } = {}) {
+  function carteEntree({ focal = false, code = "", auto = false, sansTitre = false } = {}) {
     const carte = mk("div", "card entre" + (focal ? " dark solo" : ""));
     const p = mk("div", "pad entree");
 
     if (focal) {
       p.append(mk("h2", null, "Rejoins ta classe"));
       p.append(mk("p", "dim sous", "Entre le code qu'on t'a passé : vous partagerez les cours, les notes de session et le fil de la classe."));
-    } else {
+    } else if (!sansTitre) {
       p.append(mk("h3", null, "Rejoindre ou créer une classe"));
     }
 
@@ -866,6 +895,44 @@ body{padding-bottom:4.5rem !important}
     return carte;
   }
 
+  /* ── L'image de la classe ───────────────────────────────────────────
+     Un tableau, une pile de livres, une plante, un avion en papier : le
+     trait des icônes, en grand. Elle habite l'écran d'accueil et dit,
+     sans un mot de plus, où on vient d'arriver. */
+  const SVG_CLASSE = `
+<svg viewBox="0 0 520 300" role="img" aria-label="Une salle de classe dessinée au trait">
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="60" y="26" width="270" height="150" rx="12" fill="var(--invert)"/>
+    <text x="84" y="74" font-family="ui-monospace,Menlo,monospace" font-size="21" fill="var(--on-invert)" opacity=".92">a² + b² = c²</text>
+    <path d="M85 88q11 6 22 0t22 0t22 0t22 0" stroke="var(--on-invert)" stroke-width="1.75" opacity=".4"/>
+    <path d="M106 118v36h46z" stroke="var(--on-invert)" stroke-width="1.75" opacity=".85"/>
+    <path d="M106 147h7v7" stroke="var(--on-invert)" stroke-width="1.5" opacity=".55"/>
+    <path d="M205 152h76M214 150q29-60 58 0" stroke="var(--on-invert)" stroke-width="1.75" opacity=".85"/>
+    <path d="M92 184h206" stroke="var(--line-hi)" stroke-width="3.5"/>
+    <rect x="152" y="178" width="17" height="5" rx="2.5" fill="var(--faint)" opacity=".8"/>
+    <rect x="46" y="268" width="86" height="16" rx="5" fill="hsl(222 62% 55% / .22)" stroke="hsl(222 55% 48%)" stroke-width="1.75"/>
+    <rect x="54" y="252" width="74" height="16" rx="5" fill="hsl(344 62% 55% / .22)" stroke="hsl(344 55% 48%)" stroke-width="1.75"/>
+    <rect x="50" y="236" width="66" height="16" rx="5" fill="hsl(48 72% 52% / .26)" stroke="hsl(48 55% 42%)" stroke-width="1.75"/>
+    <path d="M420 258h46l-7 26h-32z" fill="var(--surface-2)" stroke="var(--line-hi)" stroke-width="1.75"/>
+    <path d="M443 256v-32M443 236q-17-7-21-28M443 242q15-9 18-30" stroke="hsl(150 35% 40%)" stroke-width="1.75"/>
+    <ellipse cx="419" cy="200" rx="9" ry="14" transform="rotate(-26 419 200)" fill="hsl(150 45% 45% / .22)" stroke="hsl(150 35% 40%)" stroke-width="1.75"/>
+    <ellipse cx="464" cy="204" rx="8" ry="13" transform="rotate(22 464 204)" fill="hsl(150 45% 45% / .22)" stroke="hsl(150 35% 40%)" stroke-width="1.75"/>
+    <ellipse cx="443" cy="215" rx="8" ry="12" fill="hsl(150 45% 45% / .22)" stroke="hsl(150 35% 40%)" stroke-width="1.75"/>
+    <path d="M340 82q58-34 116-12" stroke="var(--faint)" stroke-width="1.75" stroke-dasharray="1 7"/>
+    <path d="M478 58 440 74l16 5z" fill="var(--surface-2)" stroke="var(--ink)" stroke-width="1.5"/>
+    <path d="M478 58 456 79l-2 12 8-10z" fill="var(--surface-2)" stroke="var(--ink)" stroke-width="1.5"/>
+    <path d="M36 284h448" stroke="var(--line-hi)" stroke-width="1.75"/>
+  </g>
+</svg>`;
+  function carteIllu(solo = false) {
+    const c = mk("div", "card" + (solo ? " entre solo" : ""));
+    const w = mk("div", "illu");
+    w.innerHTML = SVG_CLASSE;
+    w.append(mk("p", null, "Une classe met en commun les cours, les notes de séance, les pages de révision et un fil de discussion — tout le monde y écrit, tout le monde y voit."));
+    c.append(w);
+    return c;
+  }
+
   /* Un accusé de réception. On vient d'entrer quelque part : autant dire
      où, avec qui, et régler tout de suite la seule chose que la classe
      verra de toi — ton nom. Sans ça, tout le monde s'appelle « Quelqu'un ». */
@@ -945,30 +1012,34 @@ body{padding-bottom:4.5rem !important}
 
     /* Premier jour : la porte est la page. Pas de carte vide à côté d'un
        formulaire — il n'y a qu'une chose à faire, elle prend l'écran. */
-    if (!rows.length) { v.append(carteEntree({ focal: true })); return; }
+    if (!rows.length) { v.append(carteEntree({ focal: true }), carteIllu(true)); return; }
 
+    /* Deux colonnes : mes classes à gauche, la porte toujours ouverte à
+       droite — l'écran entier sert, rien ne se cache derrière un clic. */
+    const duo = mk("div", "accueil");
+    const gauche = mk("div"), droite = mk("div");
+
+    gauche.append(sect("Mes classes"));
     const grid = mk("div", "grid");
     for (const c of rows) {
       const t = mk("a", "card tile"); t.href = `#c/${c.id}`;
-      t.append(mk("b", null, c.nom));
+      const ini = mk("span", "tmono", initiale(c.nom));
+      ini.style.setProperty("--h", hueDe(c.nom));
+      ini.setAttribute("aria-hidden", "true");
+      t.append(ini, mk("b", null, c.nom));
       const n = c.agenda_class_members?.[0]?.count ?? 0;
       t.append(mk("span", "meta", `${n} élève${n > 1 ? "s" : ""}`));
       t.append(mk("span", "chipcode mono", c.code));
+      const go = mk("span", "go"); go.setAttribute("aria-hidden", "true");
+      go.append(icone(...I_FLECHE));
+      t.append(go);
       grid.append(t);
     }
-    const add = mk("button", "card tile add");
-    add.append(icone(...I_PLUS), document.createTextNode("Rejoindre ou créer"));
-    grid.append(add);
-    v.append(sect("Mes classes"), grid);
+    gauche.append(grid);
 
-    const entree = carteEntree();
-    entree.hidden = true;
-    v.append(entree);
-    add.addEventListener("click", () => {
-      entree.hidden = false; add.hidden = true;
-      entree.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      entree.querySelector(".raw")?.focus();
-    });
+    droite.append(sect("Créer ou rejoindre"), carteEntree({ sansTitre: true }), carteIllu());
+    duo.append(gauche, droite);
+    v.append(duo);
   }
 
   async function vueClasse(id) {
