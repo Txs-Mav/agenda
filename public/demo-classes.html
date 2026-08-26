@@ -2,10 +2,9 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<title>Classes — Agenda Cégep</title>
+<title>Démo — page Classes</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1f2123">
-<link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
 <link rel="apple-touch-icon" href="/icon-180.png">
 <style>
@@ -21,7 +20,6 @@
   --invert-soft:rgba(255,255,255,.10); --invert-soft-2:rgba(255,255,255,.19);
   --evt-bg:.20; --evt-bd:.42; --evt-tx:32%;
   --shadow:0 1px 2px rgba(16,18,20,.05), 0 14px 34px -22px rgba(16,18,20,.45);
-  --shadow-hi:0 2px 4px rgba(16,18,20,.08), 0 26px 48px -20px rgba(16,18,20,.5);
   --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
   color-scheme:light;
@@ -36,7 +34,6 @@
   --invert-soft:rgba(0,0,0,.06); --invert-soft-2:rgba(0,0,0,.12);
   --evt-bg:.26; --evt-bd:.40; --evt-tx:78%;
   --shadow:0 1px 2px rgba(0,0,0,.35), 0 14px 34px -22px rgba(0,0,0,.8);
-  --shadow-hi:0 2px 4px rgba(0,0,0,.45), 0 26px 48px -18px rgba(0,0,0,.85);
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -59,7 +56,7 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 /* width:100% n'est pas décoratif : sans lui, ce conteneur flex est
    dimensionné par le min-content de son contenu (une bulle de discussion
    en nowrap, par exemple) et déborde l'écran du téléphone. */
-.wrap{max-width:84rem;width:100%;min-width:0;margin:0 auto;display:flex;flex-direction:column;gap:1.1rem}
+.wrap{max-width:62rem;width:100%;min-width:0;margin:0 auto;display:flex;flex-direction:column;gap:1.1rem}
 .card,.rows,.row,.teaser,.pad,.volet,.grp{min-width:0}
 .grow{flex:1 1 auto}
 .dim{color:var(--dim)}
@@ -123,17 +120,8 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 
 /* ── Tuiles (classes, matières) ── */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:.85rem}
-.tile{position:relative;display:flex;flex-direction:column;gap:.35rem;padding:1.2rem 1.3rem 1.25rem;text-decoration:none;transition:transform .18s,box-shadow .18s}
-.tile:hover{transform:translateY(-3px);box-shadow:var(--shadow-hi)}
-/* Le monogramme donne une couleur stable à chaque classe ; la flèche ne se
-   montre qu'au survol — la tuile promet d'ouvrir sans le crier. */
-.tmono{width:2.7rem;height:2.7rem;border-radius:13px;display:grid;place-items:center;margin-bottom:.45rem;
-  font-size:1.05rem;font-weight:650;
-  background:hsl(var(--h,222) 62% 55% / var(--evt-bg));color:hsl(var(--h,222) 62% var(--evt-tx))}
-.tile .go{position:absolute;top:1.1rem;right:1.1rem;width:2.1rem;height:2.1rem;border-radius:50%;display:grid;place-items:center;
-  background:var(--surface-2);color:var(--dim);opacity:0;transform:translateX(-6px);transition:opacity .18s,transform .18s}
-.tile:hover .go{opacity:1;transform:translateX(0)}
-.tile .go .i{width:16px;height:16px}
+.tile{display:flex;flex-direction:column;gap:.35rem;padding:1.15rem 1.3rem 1.2rem;text-decoration:none;transition:transform .15s}
+.tile:hover{transform:translateY(-2px)}
 .tile b{font-size:1rem;font-weight:600;letter-spacing:-.015em}
 .tile .meta{font-size:.8rem;color:var(--dim)}
 .pipline{display:flex;align-items:center;gap:.55rem}
@@ -213,8 +201,7 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 .pill{font-size:.7rem;font-weight:650;background:var(--live);color:#fff;border-radius:999px;padding:.06rem .45rem;flex:0 0 auto}
 .row .field{padding:.4rem .7rem;min-height:2.4rem;font-size:.85rem;max-width:13rem}
 .row .meta{font-size:.78rem;color:var(--dim)}
-.teaser{display:flex;flex-direction:column;gap:.5rem;padding:1.1rem 1.3rem 1.2rem;text-decoration:none;transition:transform .18s,box-shadow .18s}
-.teaser:hover{transform:translateY(-2px);box-shadow:var(--shadow-hi)}
+.teaser{display:flex;flex-direction:column;gap:.5rem;padding:1.1rem 1.3rem 1.2rem;text-decoration:none}
 .teaser .ex{font-size:.85rem;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Un aperçu de message se coupe ; une invitation à écrire, non. */
 .teaser .ex.libre{white-space:normal;line-height:1.5}
@@ -328,21 +315,6 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
   min-height:5.2rem;border-radius:26px;transition:color .15s,border-color .15s,background .15s}
 .tile.add:hover{color:var(--ink);border-color:var(--ink);background:var(--surface-2);transform:none}
 
-/* ── Accueil : mes classes à gauche, la porte toujours ouverte à droite —
-   l'écran sert en entier, rien ne se cache derrière un clic. ── */
-.accueil{display:grid;grid-template-columns:minmax(0,1fr) clamp(21rem,31vw,26rem);gap:1.1rem;align-items:start}
-.accueil>div{display:flex;flex-direction:column;gap:1.1rem;min-width:0}
-.accueil .segs{align-self:stretch}
-.accueil .seg{flex:1 1 0}
-.accueil .btn.grand,.accueil .cases{max-width:none}
-.accueil .volet .field{max-width:none !important}
-@media (max-width:900px){.accueil{grid-template-columns:minmax(0,1fr)}}
-
-/* Une salle de classe au trait — elle meuble le vide sans le crier. */
-.illu{display:flex;flex-direction:column;gap:.85rem;padding:1.35rem 1.45rem 1.25rem}
-.illu svg{width:100%;height:auto;display:block}
-.illu p{font-size:.82rem;line-height:1.55;color:var(--dim)}
-
 @media (max-width:760px){
   .split{grid-template-columns:minmax(0,1fr)}
   .row .stamp{width:4.6rem}
@@ -371,8 +343,7 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 }
 @media (prefers-reduced-motion:reduce){
   .cases.secoue,.case.on::after,.spin,.entre{animation:none}
-  .case.on,.tile:hover,.teaser:hover,.btn:active{transform:none}
-  .tile .go{transition:none;transform:none}
+  .case.on,.tile:hover,.btn:active{transform:none}
   .tick path{animation:none;stroke-dashoffset:0}
 }
 </style>
@@ -392,6 +363,126 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
   <main class="wrap" id="vue" style="padding:0"></main>
 </div>
 
+<style>
+/* ── Barre de démo : elle ne fait pas partie de la page, elle la pilote. ── */
+#demobar{
+  position:fixed;left:50%;bottom:.7rem;transform:translateX(-50%);z-index:99;
+  display:flex;align-items:center;gap:.3rem;flex-wrap:wrap;justify-content:center;
+  max-width:calc(100vw - 1.2rem);padding:.35rem;border-radius:16px;
+  background:rgba(20,22,24,.92);backdrop-filter:blur(12px);
+  box-shadow:0 8px 30px -8px rgba(0,0,0,.5);
+  font:500 .76rem/1 system-ui,-apple-system,sans-serif;color:#fff;
+}
+#demobar .lab{padding:0 .5rem;opacity:.45;letter-spacing:.12em;text-transform:uppercase;font-size:.62rem}
+#demobar button{
+  border:0;font:inherit;color:#fff;background:rgba(255,255,255,.1);
+  padding:.5rem .7rem;border-radius:11px;cursor:pointer;transition:background .15s;
+}
+#demobar button:hover{background:rgba(255,255,255,.22)}
+#demobar button[aria-pressed="true"]{background:#fff;color:#16171A}
+body{padding-bottom:4.5rem !important}
+</style>
+<script>
+/* ── DÉMO — ce fichier n'est pas l'application. C'est public/classes.html
+   rejoué contre un faux serveur, pour parcourir tous les états de la
+   refonte sans compte ni base. Supprimable sans conséquence. ── */
+(() => {
+  "use strict";
+  const UID = "u-1";
+  localStorage.setItem("agenda.sb", JSON.stringify({ at: "demo", rt: "demo", uid: UID, email: "mavmenard@gmail.com" }));
+  localStorage.removeItem("classes.invite");
+  const maintenant = () => new Date().toISOString();
+
+  const MEMBRES = () => [
+    { user_id: "u-1", pseudo: "mavmenard", role: S.role, joined_at: S.entreQuand },
+    { user_id: "u-2", pseudo: "Léa Tremblay", role: S.role === "proprio" ? "membre" : "proprio", joined_at: "2026-08-14T10:00:00Z" },
+    { user_id: "u-3", pseudo: "Sam Ouellet", role: "membre", joined_at: "2026-08-16T10:00:00Z" },
+    { user_id: "u-4", pseudo: null, role: "membre", joined_at: "2026-08-18T10:00:00Z" },
+  ];
+  const MATS = [
+    { id: "m1", nom: "Calcul différentiel", hue: 222, ordre: 0, agenda_cours: [{ count: 12 }],
+      agenda_revisions: [{ id: "r1", titre: "Intra sur les dérivées", date_examen: "2026-09-15" }] },
+    { id: "m2", nom: "Chimie générale", hue: 150, ordre: 1, agenda_cours: [{ count: 9 }], agenda_revisions: [] },
+    { id: "m3", nom: "Philosophie et rationalité", hue: 312, ordre: 2, agenda_cours: [{ count: 7 }],
+      agenda_revisions: [{ id: "r2", titre: "Dissertation finale", date_examen: "2026-09-02" }] },
+  ];
+  const PAGES = [{ id: "p1", titre: "Plan de session", updated_at: "2026-08-20T14:00:00Z", ordre: 0 }];
+  const MSGS = [
+    { id: "g2", texte: "Je les mets dans la page du cours ce soir", created_at: "2026-08-23T18:24:00Z", user_id: "u-3" },
+    { id: "g1", texte: "Quelqu'un a les notes du cours de mardi ?", created_at: "2026-08-23T18:20:00Z", user_id: "u-2" },
+  ];
+  const S = { liste: [], vide: false, role: "proprio", entreQuand: "2026-08-14T10:00:00Z" };
+
+  const CLASSE = { id: "cl-1", nom: "Sciences nature gr. 1234", code: "VK27BR" };
+  const J = o => new Response(JSON.stringify(o), { status: 200, headers: { "content-type": "application/json" } });
+  const E = m => new Response(JSON.stringify({ message: m }), { status: 400, headers: { "content-type": "application/json" } });
+  const vrai = window.fetch.bind(window);
+
+  window.fetch = async (url, init = {}) => {
+    const u = String(url);
+    if (!u.includes("supabase.co")) return vrai(url, init);
+    const b = init.body ? JSON.parse(init.body) : null;
+    await new Promise(r => setTimeout(r, 140));               // un aller-retour se sent
+    if (u.includes("/rpc/agenda_join_class")) {
+      await new Promise(r => setTimeout(r, 500));             // le frein anti-énumération
+      if (b.p_code !== "VK27BR") return E("code introuvable");
+      S.role = "membre"; S.entreQuand = maintenant();
+      S.liste = [{ ...CLASSE, agenda_class_members: [{ count: 4 }] }];
+      return J({ id: CLASSE.id, nom: CLASSE.nom });
+    }
+    if (u.includes("/rpc/agenda_create_class")) {
+      S.role = "proprio"; S.entreQuand = maintenant(); S.vide = true;
+      S.liste = [{ id: "cl-1", nom: b.p_nom, code: "VK27BR", agenda_class_members: [{ count: 1 }] }];
+      return J({ id: "cl-1", nom: b.p_nom, code: "VK27BR" });
+    }
+    if (u.includes("/rpc/agenda_regen_code")) { CLASSE.code = "QW48MT"; return J("QW48MT"); }
+    if (u.includes("agenda_classes?select=id,nom,code")) return J(S.liste);
+    if (u.includes("agenda_classes?id=eq.") && u.includes("select=nom,"))
+      return J([{ nom: CLASSE.nom, agenda_class_members: MEMBRES() }]);
+    if (u.includes("agenda_classes?id=eq."))
+      return J([{ ...CLASSE, agenda_class_members: S.vide ? [MEMBRES()[0]] : MEMBRES(),
+                  agenda_matieres: S.vide ? [] : MATS, agenda_pages: S.vide ? [] : PAGES }]);
+    if (u.includes("agenda_messages")) return J(S.vide ? [] : MSGS);
+    if (u.includes("agenda_snapshots")) return J([{ payload: { tt: [
+      { code: "201-NYA-05", t: "Chimie générale" }, { code: "201-NYB-05", t: "Chimie des solutions" },
+      { code: "340-101-MQ", t: "Philosophie et rationalité" }] } }]);
+    return J([]);
+  };
+
+  /* La barre : chaque scénario remet l'état à zéro puis va à son ancre. */
+  const SCENES = [
+    ["Premier jour", () => { S.liste = []; S.vide = false; return ""; }],
+    ["Lien d'invitation", () => { S.liste = []; S.vide = false; return "j/vk27br"; }],
+    ["Classe garnie", () => { S.liste = [{ ...CLASSE, agenda_class_members: [{ count: 4 }] }]; S.vide = false; S.role = "proprio"; return "c/cl-1"; }],
+    ["Classe neuve", () => { S.liste = [{ ...CLASSE, agenda_class_members: [{ count: 1 }] }]; S.vide = true; S.role = "proprio"; return "c/cl-1"; }],
+    ["Mes classes", () => { S.vide = false; S.liste = [
+      { ...CLASSE, agenda_class_members: [{ count: 12 }] },
+      { id: "cl-2", nom: "Techniques policières 210", code: "HQ83MZ", agenda_class_members: [{ count: 7 }] }]; return ""; }],
+  ];
+
+  addEventListener("DOMContentLoaded", () => {
+    const bar = document.createElement("div");
+    bar.id = "demobar";
+    const lab = document.createElement("span"); lab.className = "lab"; lab.textContent = "démo";
+    bar.append(lab);
+    const boutons = SCENES.map(([nom, mise]) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.textContent = nom;
+      b.addEventListener("click", () => {
+        localStorage.removeItem("classes.invite");
+        S.role = "proprio"; S.entreQuand = "2026-08-14T10:00:00Z"; CLASSE.code = "VK27BR";
+        const cible = mise();
+        boutons.forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+        if (location.hash.slice(1) === cible) dispatchEvent(new Event("hashchange"));
+        else location.hash = cible;
+      });
+      bar.append(b); return b;
+    });
+    document.body.append(bar);
+    boutons[0].setAttribute("aria-pressed", "true");
+  });
+})();
+</script>
 <script>
 (() => {
   "use strict";
@@ -1556,11 +1647,6 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
   addEventListener("hashchange", route);
   route();
 })();
-</script>
-<script>
-if ("serviceWorker" in navigator) {
-  addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
-}
 </script>
 </body>
 </html>
