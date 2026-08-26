@@ -4194,6 +4194,15 @@ html,body{overflow-x:clip}
     drawAnnos(); mGrow(); mTouched(); histBtns();
   }
 
+  /* L'invite de la page blanche s'efface dès qu'on s'en sert : le champ prend
+     le focus, un outil est choisi, ou la page porte déjà quelque chose. Elle
+     ne revient que devant une page redevenue vraiment intacte. */
+  const M_HINT = el("m-page").placeholder;
+  function mHint() {
+    const ta = el("m-page");
+    const blank = mCur && !mFull(mCur);
+    ta.placeholder = blank && mTool === "write" && document.activeElement !== ta ? M_HINT : "";
+  }
   /* Un geste vient de changer la page : on tamponne l'heure et on programme
      l'écriture sur disque. Un seul endroit, donc jamais de page modifiée
      sans que la date le dise. */
@@ -4202,7 +4211,7 @@ html,body{overflow-x:clip}
     const at = mStamp();
     mWrite(c, { at });
     el("m-pat").textContent = mFull(c) ? `modifiée ${at}` : "";
-    mSoon();
+    mHint(); mSoon();
   }
   function setTool(t, focus) {
     mTool = MTOOLS.includes(t) ? t : "write";
@@ -4210,6 +4219,7 @@ html,body{overflow-x:clip}
       b.classList.toggle("on", b.dataset.tool === mTool);
     el("m-wrap").className = "pagewrap" + (mTool === "write" ? "" : ` drawing t-${mTool}`);
     el("m-swz").hidden = mTool === "write" || mTool === "erase";
+    mHint();
     if (focus && mTool === "write") el("m-page").focus({ preventScroll:true });
   }
   function drawSwatches() {
@@ -4329,7 +4339,8 @@ html,body{overflow-x:clip}
     mWrite(mCur, { page: el("m-page").value });
     mGrow(); mTouched();
   });
-  el("m-page").addEventListener("blur", () => { mFlush(); renderCourses(); });
+  el("m-page").addEventListener("focus", mHint);
+  el("m-page").addEventListener("blur", () => { mFlush(); renderCourses(); mHint(); });
 
   for (const b of el("m-tools").querySelectorAll("[data-tool]"))
     b.addEventListener("click", () => setTool(b.dataset.tool, true));
