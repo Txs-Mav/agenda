@@ -883,9 +883,6 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
      et la carte ne se rétracte jamais sur un texte plus long qu'elle. */
   body.mv .pagewrap{flex:1 1 auto;display:flex;flex-direction:column}
   body.mv .page{flex:1 1 auto}
-  /* Une page-document ne s'étire pas jusqu'au bas de la carte : sa hauteur
-     est celle du papier — l'étirer décollerait l'encre du document. */
-  body.mv .pagewrap.hasdoc{flex:0 0 auto;display:block}
 }
 .mpip{display:inline-block;width:.62rem;height:.62rem;border-radius:50%;margin-right:.5rem;flex:0 0 auto}
 #matiere .sect h2{display:flex;align-items:center;min-width:0}
@@ -956,68 +953,6 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
 .pagewrap.t-pen .cap,.pagewrap.t-hl .cap{cursor:crosshair}
 .pagewrap.t-erase .cap{cursor:cell}
 .pagewrap.t-anno .cap{cursor:copy}
-
-/* Le dossier de la matière, déplié dans l'en-tête de la carte : une page par
-   cours, on passe de l'une à l'autre sans quitter la fiche. */
-.pgsel{flex:0 1 auto;min-width:0;max-width:12rem;background:var(--surface-2);border:none;
-  border-radius:9px;padding:.34rem .5rem;color:var(--dim);font:inherit;font-size:.74rem;cursor:pointer}
-.pgsel:hover{color:var(--ink)}
-
-/* ── Ranger une page ─────────────────────────────────────────────
-   Une page se range sous une catégorie — « Cours 5 », « Préparation
-   examen ». Le bouton de l'en-tête porte la catégorie de la page ouverte ;
-   tant qu'elle n'en a pas, il propose le geste. */
-#m-pgcat span{max-width:9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#m-pgcat.on{color:var(--ink)}
-/* Les catégories déjà employées reviennent en boutons : la même se
-   réutilise d'un clic, sans la retaper. */
-.pop .chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.65rem}
-.pop .chips .chip{border-radius:999px;padding:.34rem .7rem;font-size:.73rem;font-weight:550;
-  background:var(--surface-2);color:var(--dim);transition:background .15s,color .15s}
-.pop .chips .chip:hover{color:var(--ink)}
-.pop .chips .chip.on{background:var(--invert);color:var(--on-invert)}
-/* Le rangement proposé au moment de quitter : la carte se pose au coin de
-   l'écran, elle n'interrompt rien — cliquer ailleurs vaut « plus tard ». */
-.pop.dock{left:auto !important;top:auto !important;right:16px;bottom:16px;max-width:calc(100vw - 2rem)}
-
-/* ── Un document importé ─────────────────────────────────────────
-   PDF ou image, posé dans la page comme du papier : ses feuilles empilées
-   pleine largeur, et les mêmes calques d'encre par-dessus. Le champ de texte
-   se retire — sur un document, écrire passe par Annoter. Fond blanc même en
-   thème sombre : c'est le papier du document, pas une surface de l'app.
-   Aucune bordure ni marge qui prendrait de la hauteur : le bloc doit faire
-   exactement largeur × ratio, c'est ce qui cale l'encre dessus — d'où le
-   filet en outline, qui ne mesure rien. */
-.mdoc{position:relative;z-index:0}
-.mdoc img,.mdoc .miss{display:block;width:100%;height:auto;background:#fff;
-  outline:1px solid var(--line);outline-offset:-1px;user-select:none;-webkit-user-drag:none}
-.mdoc .miss{display:flex;align-items:center;justify-content:center;text-align:center;
-  color:#8a8f98;font-size:.8rem;padding:1rem}
-.pagewrap.hasdoc .page{display:none}
-
-/* ── Toutes les notes ────────────────────────────────────────────
-   Un dossier par matière, ses pages dedans. Chaque rangée dit ce que la page
-   porte déjà — sa première ligne, sa date — et n'offre qu'un geste : l'ouvrir. */
-.ntlead{padding:0 .35rem 1rem;font-size:.82rem;line-height:1.55;color:var(--dim);max-width:44rem}
-.ntgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(19rem,1fr));gap:.85rem;align-items:start}
-.ntfold .ch h3{display:flex;align-items:center;min-width:0}
-.ntpages{list-style:none;padding:0}
-.ntpages li{display:flex;align-items:center;gap:.2rem;border-top:1px solid var(--line);padding-right:.7rem}
-.ntpages li:hover{background:var(--surface-2)}
-/* L'étiquette d'une catégorie dans le dossier : un intertitre, pas une
-   rangée — rien ne s'y clique, rien ne s'y allume. */
-.ntpages li.ntcat{display:flex;align-items:baseline;gap:.45rem;padding:.55rem .7rem .3rem 1.25rem;
-  font-size:.64rem;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);font-weight:600}
-.ntpages li.ntcat:hover{background:transparent}
-.ntpage{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:.14rem;text-align:left;
-  padding:.6rem 0 .6rem 1.25rem}
-.ntpage b{font-size:.84rem;font-weight:600;color:var(--ink)}
-.ntpage span{font-size:.72rem;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-/* Supprimer une page pleine se confirme sur place : le × devient un mot, et
-   l'hésitation retombe seule. */
-.ntpages .kill.arm{opacity:1;color:var(--p3);font-size:.72rem;font-weight:600}
-.ntadd{margin:.35rem 1.25rem 1.1rem;align-self:flex-start}
-.ntfold .empty{border-top:1px solid var(--line);padding-top:.75rem}
 
 /* Encres. Chaque teinte a sa version sombre : un bleu à 48 % de clarté
    disparaît sur une carte noire. */
@@ -1338,45 +1273,6 @@ html,body{overflow-x:clip}
 .lp-row.noimg{grid-template-columns:minmax(0,1fr)}
 .lp-row.noimg .lp-pic{display:none}
 .lp-row.noimg .txt{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:1.8rem 1.9rem}
-.lp-more{display:inline-flex;align-items:center;gap:.4rem;margin-top:1.1rem;font-size:.86rem;font-weight:600;color:var(--ac);text-decoration:none}
-.lp-more .i{width:14px;height:14px;transition:transform .2s}
-.lp-more:hover .i{transform:translateX(3px)}
-
-/* Maquettes dessinées (notes, classe) : pas de capture, du HTML — comme le héro. */
-.lp-nb,.lp-cl{background:var(--surface);padding:1.15rem 1.25rem 1.35rem;display:flex;flex-direction:column;gap:.6rem;text-align:left;position:relative;min-height:16rem}
-.lp-nb .tb{display:flex;align-items:center;gap:.45rem;padding-bottom:.65rem;border-bottom:1px solid var(--line)}
-.lp-nb .tb i{width:1.2rem;height:1.2rem;border-radius:6px;background:var(--surface-3)}
-.lp-nb .tb i.on{background:var(--invert)}
-.lp-nb .tb em{font-style:normal;font-family:var(--mono);font-size:.6rem;color:var(--faint);margin-left:auto}
-.lp-nb>b{font-size:.98rem;font-weight:650;letter-spacing:-.015em;margin-top:.2rem}
-.lp-nb .l{height:.55rem;border-radius:99px;background:var(--surface-3)}
-.lp-nb .w9{width:92%}.lp-nb .w8{width:83%}.lp-nb .w7{width:74%}.lp-nb .w5{width:55%}
-.lp-nb .l.hl{background:linear-gradient(90deg,#EAD06B,#E9C94F);height:.62rem}
-.lp-nb .pen{position:absolute;right:1.2rem;bottom:3.6rem;width:52%;fill:none;stroke:var(--ac);stroke-width:2.5;stroke-linecap:round;opacity:.9}
-.lp-nb .anno{
-  align-self:flex-end;margin-top:auto;font-size:.64rem;font-weight:600;
-  background:var(--invert);color:var(--on-invert);border-radius:9px 9px 2px 9px;
-  padding:.38rem .7rem;transform:rotate(-1.5deg);
-}
-.lp-cl .hd{display:flex;align-items:baseline;gap:.6rem;padding-bottom:.65rem;border-bottom:1px solid var(--line)}
-.lp-cl .hd b{font-size:.95rem;font-weight:650;letter-spacing:-.015em}
-.lp-cl .hd span{font-family:var(--mono);font-size:.6rem;color:var(--faint);margin-left:auto}
-.lp-cl .bub{display:flex;gap:.55rem;align-items:flex-end;max-width:88%}
-.lp-cl .bub i{
-  width:1.7rem;height:1.7rem;border-radius:50%;background:var(--surface-3);flex:0 0 auto;
-  display:grid;place-items:center;font-style:normal;font-size:.58rem;font-weight:700;color:var(--dim);
-}
-.lp-cl .bub>div{background:var(--surface-2);border:1px solid var(--line);border-radius:12px 12px 12px 3px;padding:.5rem .7rem}
-.lp-cl .bub b{display:block;font-size:.6rem;font-weight:650;color:var(--faint);margin-bottom:.15rem}
-.lp-cl .bub span{font-size:.74rem;line-height:1.35}
-.lp-cl .bub.me{align-self:flex-end}
-.lp-cl .bub.me>div{background:var(--invert);color:var(--on-invert);border-color:transparent;border-radius:12px 12px 3px 12px}
-.lp-cl .bub.me b{color:color-mix(in srgb,var(--on-invert) 60%,transparent)}
-.lp-cl .doc{display:flex;align-items:center;gap:.6rem;background:var(--surface-2);border:1px dashed var(--line-hi);border-radius:10px;padding:.55rem .7rem;margin-top:auto}
-.lp-cl .doc .ic{width:1.9rem;height:1.9rem;border-radius:8px;display:grid;place-items:center;color:#fff;background:linear-gradient(120deg,var(--acd),var(--ac2));flex:0 0 auto}
-.lp-cl .doc .ic .i{width:15px;height:15px}
-.lp-cl .doc b{display:block;font-size:.72rem;font-weight:650}
-.lp-cl .doc span{font-size:.6rem;color:var(--faint);font-family:var(--mono)}
 /* Respiration entre groupes */
 .lp-story-gap{height:clamp(1.2rem,3vw,2.6rem)}
 @media (max-width:860px){
@@ -1504,7 +1400,6 @@ html,body{overflow-x:clip}
     <button class="navi" data-go="echeances"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg> Échéances <span class="cnt" id="n-e"></span></button>
     <button class="navi" data-go="mios"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 8.2 6 8.2-6"/></svg> MIO <span class="cnt" id="n-m"></span></button>
     <button class="navi" data-go="cours"><svg class="i" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 18.5V21h16"/></svg> Mes cours <span class="cnt" id="n-c"></span></button>
-    <button class="navi" id="nav-notes"><svg class="i" viewBox="0 0 24 24"><path d="M3.5 7A2.5 2.5 0 0 1 6 4.5h3.6l2 2.5H18a2.5 2.5 0 0 1 2.5 2.5v7.5A2.5 2.5 0 0 1 18 19.5H6A2.5 2.5 0 0 1 3.5 17z"/></svg> Toutes les notes <span class="cnt" id="n-n"></span></button>
     <a class="navi" href="classes.html" style="text-decoration:none"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M15.5 5.8a3 3 0 0 1 0 5.4M17.5 13.6a5.5 5.5 0 0 1 3 4.9"/></svg> Classes</a>
 
     <p class="grp">Matières</p>
@@ -1758,13 +1653,7 @@ html,body{overflow-x:clip}
         </div>
         <div class="mcol">
           <section class="card fx fill">
-            <div class="ch"><h3>Notes</h3>
-              <select class="pgsel" id="m-pgsel" title="Changer de page"></select>
-              <button class="link" id="m-pgadd" title="Ouvrir une page blanche de plus"><svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M12 5v14M5 12h14"/></svg> Page</button>
-              <button class="link" id="m-pgcat"><svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M3.5 7A2.5 2.5 0 0 1 6 4.5h3.6l2 2.5H18a2.5 2.5 0 0 1 2.5 2.5v7.5A2.5 2.5 0 0 1 18 19.5H6A2.5 2.5 0 0 1 3.5 17z"/></svg> <span id="m-pgcat-t">Ranger</span></button>
-              <button class="link" id="m-imp" title="Importer un PDF ou une image — la page le porte, et on écrit dessus"><svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9"/><path d="M4.5 15.5v3A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5v-3"/></svg> Importer</button>
-              <input id="m-file" type="file" accept="application/pdf,image/*" hidden>
-              <span class="grow"></span>
+            <div class="ch"><h3>Notes</h3><span class="grow"></span>
               <span class="dim mono" id="m-pat" style="font-size:.66rem"></span></div>
             <div class="tools" id="m-tools">
               <button class="tl on" data-tool="write" title="Écrire — le texte de la page"><svg class="i" viewBox="0 0 24 24"><path d="M5.5 7V4.5h13V7M12 4.5v15M9 19.5h6"/></svg></button>
@@ -1779,7 +1668,6 @@ html,body{overflow-x:clip}
               <button class="tl" id="m-redo" title="Rétablir"><svg class="i" viewBox="0 0 24 24"><path d="M15.5 7.5l4 4-4 4"/><path d="M19.5 11.5H9.7a4.7 4.7 0 1 0 0 9.4H14"/></svg></button>
             </div>
             <div class="pagewrap" id="m-wrap">
-              <div class="mdoc" id="m-doc"></div>
               <svg class="inklayer hl" id="m-hl" aria-hidden="true"></svg>
               <textarea id="m-page" class="page" spellcheck="true"
                 placeholder="Page blanche. Écris, dessine, surligne, annote — tout reste sur cet appareil."></textarea>
@@ -1798,13 +1686,6 @@ html,body{overflow-x:clip}
       </div>
     </div>
 
-    <div id="notes" hidden>
-      <div class="sect"><h2>Toutes les notes <span class="dim" id="nt-n"></span></h2><span class="grow"></span>
-        <button class="link" id="nt-back"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg> Retour au tableau de bord</button></div>
-      <p class="ntlead">Un dossier par matière, une page blanche par cours — et tes catégories (« Cours 5 », « Préparation examen ») pour t'y retrouver. Ouvre une page pour écrire, dessiner, surligner, annoter — tout reste sur cet appareil.</p>
-      <div class="ntgrid" id="nt-grid"></div>
-    </div>
-
     <div id="landing" hidden>
       <div class="lp-bg" id="lp-bg" aria-hidden="true"><span class="mesh"></span><span class="spot"></span></div>
       <div class="lp-orbs" aria-hidden="true"><i class="o1"></i><i class="o2"></i><i class="o3"></i></div>
@@ -1819,14 +1700,13 @@ html,body{overflow-x:clip}
       </header>
 
       <section class="lp-hero">
-        <a class="lp-badge" href="demo-classes.html" data-rev style="--d:0ms">
-          <b>Nouveau</b> Rejoins ta classe — discussions et notes partagées
+        <a class="lp-badge" href="guide.html" data-rev style="--d:0ms">
+          <b>Nouveau</b> L'horaire entre par une photo
           <svg class="i" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg>
         </a>
-        <h2 data-rev style="--d:60ms">Tout ton cégep,<br><span class="lp-grad">au même endroit.</span></h2>
-        <p class="lp-lead" data-rev style="--d:120ms">Tes notes, tes MIO, tes échéances, ton horaire, tes Moodle —
-          regroupés dans un seul agenda. Et ta classe au complet&nbsp;: discussions, notes partagées,
-          documents annotés.</p>
+        <h2 data-rev style="--d:60ms">Ton cégep,<br><span class="lp-grad">sans surprise.</span></h2>
+        <p class="lp-lead" data-rev style="--d:120ms">Un agent installé sur ta machine lit Léa et MIO à ta place,
+          date chaque échéance et résume chaque message. Toi, tu ouvres un seul écran — déjà trié.</p>
         <div class="ctas lp-ctas" data-rev style="--d:180ms">
           <button class="cta lp-cta" id="cta-open">Créer mon compte
             <svg class="i" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button>
@@ -1886,10 +1766,10 @@ html,body{overflow-x:clip}
       </section>
 
       <div class="lp-marq" data-rev aria-hidden="true"><div class="in">
-        <span>Notes par cours</span><i>✦</i><span>MIO résumés</span><i>✦</i><span>Échéances datées</span><i>✦</i>
-        <span>Horaire par photo</span><i>✦</i><span>Moodle regroupé</span><i>✦</i><span>Classes partagées</span><i>✦</i>
-        <span>Notes par cours</span><i>✦</i><span>MIO résumés</span><i>✦</i><span>Échéances datées</span><i>✦</i>
-        <span>Horaire par photo</span><i>✦</i><span>Moodle regroupé</span><i>✦</i><span>Classes partagées</span><i>✦</i>
+        <span>Échéances datées</span><i>✦</i><span>Évaluations</span><i>✦</i><span>MIO résumés</span><i>✦</i>
+        <span>Horaire par photo</span><i>✦</i><span>Blocs perso</span><i>✦</i><span>Export .ics</span><i>✦</i>
+        <span>Échéances datées</span><i>✦</i><span>Évaluations</span><i>✦</i><span>MIO résumés</span><i>✦</i>
+        <span>Horaire par photo</span><i>✦</i><span>Blocs perso</span><i>✦</i><span>Export .ics</span><i>✦</i>
       </div></div>
 
       <section class="lp-row" data-rev>
@@ -1934,51 +1814,7 @@ html,body{overflow-x:clip}
         </figure>
       </section>
 
-      <!-- Rangée notes : la page blanche par cours, et les documents qu'on annote.
-           Pas de capture — la maquette est dessinée en HTML, comme celle du héro. -->
-      <section class="lp-row" data-rev>
-        <figure class="lp-pic">
-          <div class="lp-nb" aria-hidden="true">
-            <div class="tb"><i class="on"></i><i></i><i></i><i></i><em>PHY-NYB · séance 4</em></div>
-            <b>Chute libre — l'essentiel</b>
-            <span class="l w9"></span>
-            <span class="l hl w7"></span>
-            <span class="l w8"></span>
-            <span class="l w5"></span>
-            <svg class="pen" viewBox="0 0 220 60"><path d="M8 46 C40 12 74 54 108 30 S172 10 212 28"/></svg>
-            <span class="anno">à revoir avant l'examen</span>
-          </div>
-        </figure>
-        <div class="txt">
-          <span class="lp-kick" style="--k:#D9539B">Notes</span>
-          <h3>Une page blanche <em class="lp-grad">par cours</em>.</h3>
-          <p class="dim">Écris, dessine, surligne, annote — tes notes vivent juste à côté de l'horaire
-            et des échéances. Importe tes documents — plan de cours, PDF, diapos — et prends
-            tes notes directement dessus.</p>
-        </div>
-      </section>
-
-      <!-- Rangée classes : le code d'invitation ouvre la discussion et les notes partagées. -->
-      <section class="lp-row flip" data-rev>
-        <figure class="lp-pic">
-          <div class="lp-cl" aria-hidden="true">
-            <div class="hd"><b>Physique NYB</b><span>code R4KMT7 · 23 élèves</span></div>
-            <div class="bub"><i>LB</i><div><b>Laurie</b><span>Quelqu'un a les notes de la séance 4&nbsp;?</span></div></div>
-            <div class="bub me"><div><b>Toi</b><span>Je viens de les partager — schéma annoté inclus.</span></div></div>
-            <div class="doc"><span class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M3.5 7A2.5 2.5 0 0 1 6 4.5h3.6l2 2.5H18a2.5 2.5 0 0 1 2.5 2.5v7.5A2.5 2.5 0 0 1 18 19.5H6A2.5 2.5 0 0 1 3.5 17z"/></svg></span><div><b>Chute libre — l'essentiel</b><span>note partagée · séance 4</span></div></div>
-          </div>
-        </figure>
-        <div class="txt">
-          <span class="lp-kick" style="--k:#2E7CD6">Classes</span>
-          <h3>Un code, et ta classe <em class="lp-grad">met tout en commun</em>.</h3>
-          <p class="dim">Rejoins ta classe par un code d'invitation&nbsp;: fil de discussion, notes de séance
-            partagées, pages de révision par examen — tout le monde y écrit, tout le monde y voit.</p>
-          <a class="lp-more" href="demo-classes.html">Explorer une classe de démo
-            <svg class="i" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></a>
-        </div>
-      </section>
-
-      <!-- Bande sombre : rupture franche après les sections claires. -->
+      <!-- Bande sombre : rupture franche après trois sections claires. -->
       <section class="lp-dark" data-rev>
         <div class="lp-dark-head">
           <span class="lp-kick" style="--k:var(--ac2)">Avant, après</span>
@@ -1990,7 +1826,7 @@ html,body{overflow-x:clip}
             <img loading="lazy" src="img/omnivox-login.png" width="896" height="1280"
                  onerror="this.closest('.lp-vs').classList.add('noimg')"
                  alt="Le formulaire de connexion d'Omnivox">
-            <figcaption>Connexion, code, Léa, un cours, l'onglet des travaux&#8230; puis pareil pour les MIO, puis pour Moodle.</figcaption>
+            <figcaption>Connexion, code, Léa, un cours, l'onglet des travaux&#8230; puis pareil pour les MIO.</figcaption>
           </figure>
           <span class="lp-arrow" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
@@ -3834,7 +3670,6 @@ html,body{overflow-x:clip}
   function renderCourses() {
     const box = el("courses"); box.textContent = "";
     const max = Math.max(...COURSES.map(c => courseInfo(c).hours));
-    let np = 0;        // pages écrites, toutes matières : le compteur de « Toutes les notes »
     for (const c of COURSES) {
       const info = courseInfo(c), h = hueOf(c);
       const card = mk("div","course fx"); card.style.setProperty("--h", h);
@@ -3854,17 +3689,14 @@ html,body{overflow-x:clip}
       card.append(top, st, mk("p","dsc", sh.prof || info.prof || "Aucun professeur inscrit"));
       /* Ce que la fiche contient déjà, dit sur la carte : sans ça, rien
          n'indique qu'il y a quelque chose à aller voir. */
-      const bits = [n.pages && `${n.pages} page${n.pages > 1 ? "s" : ""} de notes`,
+      const bits = [n.page && "Page de notes",
                     n.dates && `${n.dates} date${n.dates > 1 ? "s" : ""}`].filter(Boolean);
       if (bits.length) card.append(mk("p","dsc", bits.join(" · ")));
       card.style.cursor = "pointer";
       card.title = `Ouvrir la fiche de ${c}`;
       card.addEventListener("click", () => openMatiere(c));
       box.append(card);
-      np += n.pages;
     }
-    el("n-n").textContent = np || "";
-    if (!el("notes").hidden) renderNotes();
   }
 
   /* ── Ce qui s'en vient ────────────────────────────────────────────
@@ -4205,17 +4037,11 @@ html,body{overflow-x:clip}
      Ses pages de notes, une par cours ; `pg` retient laquelle est ouverte.
      La page blanche d'avant vit toujours — il y en a simplement plusieurs,
      et « Toutes les notes » les montre toutes, rangées par matière. */
-  const PAGE0 = { t:"", at:"", page:"", ink:[], annos:[], cat:"" };
+  const PAGE0 = { t:"", at:"", page:"", ink:[], annos:[] };
   const normPage = p => ({ ...PAGE0, ...p,
     ink: Array.isArray(p.ink) ? p.ink : [], annos: Array.isArray(p.annos) ? p.annos : [] });
   const mPages = c => (Array.isArray(mRaw(c).pages) ? mRaw(c).pages : []).map(normPage);
-  /* Le document qu'une page porte, s'il y en a un : { name, k, n, r } — le
-     nom du fichier, la clé de ses images dans IndexedDB, le nombre de
-     feuilles, et le ratio hauteur/largeur de chacune. Les images elles-mêmes
-     ne passent JAMAIS par l'état : un seul PDF en base64 déborderait le
-     localStorage et emporterait tout le reste avec lui. */
-  const pgDoc = p => (p && p.doc && p.doc.n && Array.isArray(p.doc.r)) ? p.doc : null;
-  const pgFull = p => !!(p.page.trim() || p.ink.length || p.annos.length || pgDoc(p));
+  const pgFull = p => !!(p.page.trim() || p.ink.length || p.annos.length);
   const mPage = c => { const ps = mPages(c);
     return ps.find(p => p.id === mRaw(c).pg) || ps[0] || normPage({}); };
   /* Titre d'une page neuve : le cours du jour. Deux pages le même jour se
@@ -4235,30 +4061,6 @@ html,body{overflow-x:clip}
   };
   const addPage = c => { const p = { ...PAGE0, id: uid(), t: pgTitle(c) };
     mWrite(c, { pages: [...mPages(c), p], pg: p.id }); save(); return p; };
-  /* ── Ranger les pages ────────────────────────────────────────────
-     Une page se range sous une catégorie qu'on nomme soi-même — « Cours 5 »,
-     « Préparation minitest », « Préparation examen ». C'est du texte libre :
-     l'app n'invente pas de classement, elle retient le tien et te le
-     repropose. Rangée, la page se regroupe avec ses pareilles dans le
-     dossier et dans « Toutes les notes ». */
-  const pgCat = p => String(p.cat || "").trim();
-  const setPageCat = (c, id, cat) => {
-    mWrite(c, { pages: mPages(c).map(p => p.id === id ? { ...p, cat: String(cat || "").trim() } : p) });
-    save();
-  };
-  /* Deux suggestions toutes faites pour la première fois ; ensuite, tes
-     propres catégories passent devant — celles de la matière d'abord,
-     celles des autres ensuite, chacune une seule fois. */
-  const CAT_IDEES = ["Préparation minitest", "Préparation examen"];
-  const catList = c => {
-    const out = [];
-    const take = cs => { for (const t of cs)
-      if (t && !out.some(o => o.toLowerCase() === t.toLowerCase())) out.push(t); };
-    take(mPages(c).map(pgCat));
-    for (const o of COURSES) if (o !== c) take(mPages(o).map(pgCat));
-    take(CAT_IDEES);
-    return out;
-  };
   /* Une page se tape en continu : réécrire tout l'état à chaque touche ferait
      saccader les longues pages. Le texte entre en mémoire tout de suite, il
      descend sur le disque un instant plus tard — et sans faute dès qu'on
@@ -4275,9 +4077,6 @@ html,body{overflow-x:clip}
      l'intérieur, rien de coupé. À recalculer dès que la largeur change. */
   function mGrow() {
     const ta = el("m-page"); if (!ta) return;
-    /* Une page-document tient sa hauteur de son papier : les feuilles en flux
-       la donnent d'elles-mêmes, il n'y a rien à mesurer ni à étirer. */
-    if (mCur && pgDoc(mPage(mCur))) { drawInk(); layoutAnnos(); return; }
     /* Quand la fiche remplit l'écran, le flex étire la page jusqu'au bas de sa
        carte. Mesurer dans cet état reviendrait à relire la hauteur qu'on vient
        de lui donner : la page grandirait d'un cran à chaque frappe. On coupe
@@ -4417,13 +4216,7 @@ html,body{overflow-x:clip}
      surlignage qui ne surligne plus rien.
 
      L'épaisseur ne suit aucune échelle non plus (vector-effect) : le
-     marqueur doit couvrir une ligne de texte, dont la taille ne bouge pas.
-
-     Exception, et elle inverse tout : la page qui porte un document. Un
-     document, lui, S'ÉTIRE avec la fenêtre — sa hauteur suit sa largeur au
-     ratio près. Un y en pixels y ferait glisser l'encre hors du papier au
-     premier redimensionnement ; y passe donc en millièmes de largeur, comme
-     x. Le repère devient uniforme, et le cercle dessiné reste un cercle. */
+     marqueur doit couvrir une ligne de texte, dont la taille ne bouge pas. */
   const MTOOLS = ["write","pen","hl","anno","erase"];
   const MCOL = { ink:"Encre", rouge:"Rouge", ambre:"Ambre", vert:"Vert", bleu:"Bleu", violet:"Violet" };
   const colOf = id => `var(--ic-${id in MCOL ? id : "ink"})`;
@@ -4454,27 +4247,15 @@ html,body{overflow-x:clip}
     return n;
   }
   const mBoxW = () => el("m-wrap").clientWidth || 1;
-  /* Le document de la page ouverte, s'il y en a un — c'est lui qui décide du
-     repère de y. Sa hauteur totale, en millièmes de largeur : la somme des
-     ratios de ses feuilles, empilées sans le moindre interstice. */
-  const mDocOpen = () => mCur ? pgDoc(mPage(mCur)) : null;
-  const docH1000 = d => Math.round(d.r.reduce((a, b) => a + (+b || 0), 0) * 1000);
-  /* Le facteur qui ramène un y stocké en pixels d'écran : 1 sur une page
-     blanche (y est déjà en pixels), largeur/1000 sur un document. */
-  const mYK = () => mDocOpen() ? mBoxW() / 1000 : 1;
   const toLog = ev => { const r = el("m-wrap").getBoundingClientRect();
-    const ky = mDocOpen() ? 1000 / (r.width || 1) : 1;
     return [ +((ev.clientX - r.left) * 1000 / (r.width || 1)).toFixed(1),
-             +((ev.clientY - r.top) * ky).toFixed(1) ]; };
+             +(ev.clientY - r.top).toFixed(1) ]; };
 
   function drawInk() {
     const wrap = el("m-wrap");
     /* Mille unités en largeur, des pixels en hauteur : le repère du stockage
-       tel quel. D'où « none » — l'aspect ne doit surtout PAS être préservé.
-       Sur un document, la hauteur vient des ratios et non de clientHeight :
-       le calque doit épouser le papier au millième, pas l'arrondi du DOM. */
-    const doc = mDocOpen();
-    const vb = `0 0 1000 ${doc ? docH1000(doc) : (wrap.clientHeight || 1)}`;
+       tel quel. D'où « none » — l'aspect ne doit surtout PAS être préservé. */
+    const vb = `0 0 1000 ${wrap.clientHeight || 1}`;
     const ink = mCur ? mPage(mCur).ink : [];
     for (const [id, kind] of [["m-hl","hl"], ["m-pen","pen"]]) {
       const svg = el(id);
@@ -4485,10 +4266,10 @@ html,body{overflow-x:clip}
     }
   }
   function layoutAnnos() {
-    const k = mBoxW() / 1000, ky = mYK();
+    const k = mBoxW() / 1000;
     for (const n of el("m-annos").children) {
       n.style.left = `${(+n.dataset.x) * k}px`;
-      n.style.top  = `${(+n.dataset.y) * ky}px`;
+      n.style.top  = `${+n.dataset.y}px`;
     }
   }
   function drawAnnos() {
@@ -4532,16 +4313,14 @@ html,body{overflow-x:clip}
       ev.preventDefault();
       try { handle.setPointerCapture(ev.pointerId); } catch {}
       node.classList.add("drag");
-      /* Sur un document, y vit en millièmes comme x : le déplacement vertical
-         se convertit donc au même taux que l'horizontal. */
-      const k = 1000 / mBoxW(), ky = mDocOpen() ? k : 1, sx = ev.clientX, sy = ev.clientY;
+      const k = 1000 / mBoxW(), sx = ev.clientX, sy = ev.clientY;
       const o = mPage(c).annos.find(x => x.id === id) || { x:0, y:0 };
       let moved = false;
       const mv = e2 => {
         if (Math.abs(e2.clientX - sx) + Math.abs(e2.clientY - sy) < 3) return;
         moved = true;
         node.dataset.x = Math.max(0, Math.min(880, o.x + (e2.clientX - sx) * k)).toFixed(1);
-        node.dataset.y = Math.max(0, o.y + (e2.clientY - sy) * ky).toFixed(1);
+        node.dataset.y = Math.max(0, o.y + (e2.clientY - sy)).toFixed(1);
         layoutAnnos();
       };
       const up = () => {
@@ -4575,16 +4354,16 @@ html,body{overflow-x:clip}
      toujours, et ça reste prévisible — on efface ce qu'on a tracé. */
   /* Le test se fait en pixels d'écran : x est rangé sur mille, y en pixels —
      les comparer tels quels donnerait une gomme ovale. */
-  const strokeHit = (st, x, y, k, ky) => {
-    const px = x * k, py = y * ky, r = ERASE_R + (st.w || PEN_W) / 2;
+  const strokeHit = (st, x, y, k) => {
+    const px = x * k, r = ERASE_R + (st.w || PEN_W) / 2;
     for (let i = 0; i < st.p.length; i += 2)
-      if (Math.hypot(st.p[i] * k - px, st.p[i+1] * ky - py) <= r) return true;
+      if (Math.hypot(st.p[i] * k - px, st.p[i+1] - y) <= r) return true;
     return false;
   };
   function eraseAt(x, y) {
     const c = mCur; if (!c) return;
-    const k = mBoxW() / 1000, ky = mYK();
-    const ink = mPage(c).ink, keep = ink.filter(st => !strokeHit(st, x, y, k, ky));
+    const k = mBoxW() / 1000;
+    const ink = mPage(c).ink, keep = ink.filter(st => !strokeHit(st, x, y, k));
     if (keep.length === ink.length) return;
     mPWrite(c, { ink: keep });
     drawInk();
@@ -4609,8 +4388,8 @@ html,body{overflow-x:clip}
     if (!mStroke) return;
     /* On ne garde pas chaque échantillon : deux points collés n'ajoutent
        rien au trait et alourdissent la page pour rien. */
-    const p = mStroke.p, n = p.length, k = mBoxW() / 1000, ky = mYK();
-    if (Math.hypot((x - p[n-2]) * k, (y - p[n-1]) * ky) < 2) return;
+    const p = mStroke.p, n = p.length, k = mBoxW() / 1000;
+    if (Math.hypot((x - p[n-2]) * k, y - p[n-1]) < 2) return;
     p.push(x, y);
     mLive.setAttribute("d", pathD(p));
   }
@@ -4628,7 +4407,7 @@ html,body{overflow-x:clip}
      texte son propre défaire tant qu'on écrit, et pilote l'encre dès qu'un
      outil de dessin est choisi. */
   let mHist = [], mHPos = -1;
-  const mSnap = () => { const s = mPage(mCur); return JSON.stringify({ ink:s.ink, annos:s.annos }); };
+  const mSnap = () => { const s = mSheet(mCur); return JSON.stringify({ ink:s.ink, annos:s.annos }); };
   const histBtns = () => { el("m-undo").disabled = mHPos <= 0;
     el("m-redo").disabled = mHPos >= mHist.length - 1; };
   function histInit() { mHist = mCur ? [mSnap()] : []; mHPos = mHist.length - 1; histBtns(); }
@@ -4650,7 +4429,7 @@ html,body{overflow-x:clip}
     if (!mCur || i < 0 || i >= mHist.length) return;
     mHPos = i;
     const s = JSON.parse(mHist[i]);
-    mPWrite(mCur, { ink: s.ink, annos: s.annos });
+    mWrite(mCur, { ink: s.ink, annos: s.annos });
     drawAnnos(); mGrow(); mTouched(); histBtns();
   }
 
@@ -4660,7 +4439,7 @@ html,body{overflow-x:clip}
   const M_HINT = el("m-page").placeholder;
   function mHint() {
     const ta = el("m-page");
-    const blank = mCur && !pgFull(mPage(mCur));
+    const blank = mCur && !mFull(mCur);
     ta.placeholder = blank && mTool === "write" && document.activeElement !== ta ? M_HINT : "";
   }
   /* Un geste vient de changer la page : on tamponne l'heure et on programme
@@ -4669,24 +4448,15 @@ html,body{overflow-x:clip}
   function mTouched() {
     const c = mCur; if (!c) return;
     const at = mStamp();
-    mPWrite(c, { at });
-    el("m-pat").textContent = pgFull(mPage(c)) ? `modifiée ${at}` : "";
+    mWrite(c, { at });
+    el("m-pat").textContent = mFull(c) ? `modifiée ${at}` : "";
     mHint(); mSoon();
   }
   function setTool(t, focus) {
     mTool = MTOOLS.includes(t) ? t : "write";
-    /* Une page-document n'a pas de champ de texte : « écrire » y devient le
-       stylo — et pour poser des mots sur le papier, il y a Annoter. */
-    const doc = mDocOpen();
-    if (doc && mTool === "write") mTool = "pen";
-    const w = el("m-tools").querySelector('[data-tool="write"]');
-    w.disabled = !!doc;
-    w.title = doc ? "Cette page porte un document — pose tes mots avec Annoter"
-                  : "Écrire — le texte de la page";
     for (const b of el("m-tools").querySelectorAll("[data-tool]"))
       b.classList.toggle("on", b.dataset.tool === mTool);
-    el("m-wrap").className = "pagewrap" + (doc ? " hasdoc" : "")
-      + (mTool === "write" ? "" : ` drawing t-${mTool}`);
+    el("m-wrap").className = "pagewrap" + (mTool === "write" ? "" : ` drawing t-${mTool}`);
     el("m-swz").hidden = mTool === "write" || mTool === "erase";
     mHint();
     if (focus && mTool === "write") el("m-page").focus({ preventScroll:true });
@@ -4707,43 +4477,14 @@ html,body{overflow-x:clip}
      modification, en petit dans l'en-tête. */
   function renderMPage() {
     const c = mCur; if (!c) return;
-    const p = mPage(c);
-    renderPgSel(); renderPgCat();
-    el("m-page").value = p.page || "";
-    el("m-pat").textContent = pgFull(p) && p.at ? `modifiée ${p.at}` : "";
-    drawDoc(); setTool("write"); drawSwatches(); drawAnnos(); histInit();
+    const sh = mSheet(c);
+    el("m-page").value = sh.page || "";
+    el("m-pat").textContent = mFull(c) && sh.at ? `modifiée ${sh.at}` : "";
+    setTool("write"); drawSwatches(); drawAnnos(); histInit();
     /* Tout de suite, pour que la page soit à sa taille dès le premier
        affichage ; puis au cadre suivant, une fois la police posée. Un onglet
        en arrière-plan ne rend jamais ce cadre — d'où les deux. */
     mGrow(); requestAnimationFrame(mGrow);
-  }
-  /* Le dossier, déplié dans l'en-tête de la carte : une option par page. Un
-     dossier encore vide montre le titre que prendra la page au premier trait. */
-  function renderPgSel() {
-    const c = mCur, sel = el("m-pgsel"); if (!c) return;
-    sel.textContent = "";
-    const ps = mPages(c), cur = mPage(c);
-    if (!ps.length) sel.append(mk("option", null, pgTitle(c)));
-    /* Les pages rangées se regroupent sous leur catégorie, dans l'ordre où
-       les catégories sont apparues ; les pages libres gardent la tête. */
-    const grps = new Map();
-    const under = cat => { if (!cat) return sel;
-      const k = cat.toLowerCase();
-      if (!grps.has(k)) { const g = mk("optgroup"); g.label = cat; grps.set(k, g); }
-      return grps.get(k); };
-    for (const p of ps) { const o = mk("option", null, p.t || "Page");
-      o.value = p.id; o.selected = p.id === cur.id; under(pgCat(p)).append(o); }
-    for (const g of grps.values()) sel.append(g);
-  }
-  /* Le bouton « Ranger » de l'en-tête porte la catégorie de la page ouverte ;
-     tant qu'elle n'en a pas, il propose le geste. */
-  function renderPgCat() {
-    const c = mCur; if (!c) return;
-    const cat = pgCat(mPage(c));
-    el("m-pgcat").classList.toggle("on", !!cat);
-    el("m-pgcat-t").textContent = cat || "Ranger";
-    el("m-pgcat").title = cat ? `Rangée sous « ${cat} » — cliquer pour changer`
-      : "Ranger cette page sous une catégorie — ex. Cours 5, Préparation examen";
   }
   /* La semaine type du cours : les mêmes blocs que dans l'horaire, à l'échelle
      d'une carte. Seul le cours ouvert garde sa couleur ; les autres restent en
@@ -4834,97 +4575,11 @@ html,body{overflow-x:clip}
   el("m-dt").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addMDate(); } });
   el("m-page").addEventListener("input", () => {
     if (!mCur) return;
-    mPWrite(mCur, { page: el("m-page").value });
+    mWrite(mCur, { page: el("m-page").value });
     mGrow(); mTouched();
   });
   el("m-page").addEventListener("focus", mHint);
   el("m-page").addEventListener("blur", () => { mFlush(); renderCourses(); mHint(); });
-  /* Changer de page écrit d'abord ce qui est en attente : le texte tapé sur
-     l'une ne doit jamais atterrir sur l'autre. */
-  el("m-pgsel").addEventListener("change", () => {
-    const c = mCur; if (!c) return;
-    mFlush();
-    const prev = mPage(c);   // la page qu'on quitte, relue après l'écriture
-    if (el("m-pgsel").value) { mWrite(c, { pg: el("m-pgsel").value }); save(); }
-    renderMPage();
-    if (prev.id && prev.id !== mRaw(c).pg) catNudge(c, prev, el("m-pgsel"));
-  });
-  el("m-pgadd").addEventListener("click", () => {
-    const c = mCur; if (!c) return;
-    mFlush();
-    const prev = mPage(c);
-    addPage(c); renderMPage();
-    el("m-page").focus({ preventScroll:true });
-    catNudge(c, prev, el("m-pgsel"));
-  });
-
-  /* ── Le panneau de rangement ─────────────────────────────────────
-     Les catégories déjà employées en boutons, un champ pour en nommer une
-     neuve. Ancré au bouton qui l'appelle ; sans ancre, il se pose au coin
-     de l'écran — c'est la proposition du départ. */
-  function catPop(c, pid, anchor) {
-    pop?.remove(); pop = null; popAnchor = null;
-    const p = mPages(c).find(x => x.id === pid); if (!p) return;
-    const box = mk("div","pop fx" + (anchor ? "" : " dock"));
-    box.append(mk("h4", null, "Ranger cette page"));
-    box.append(mk("p","when", [p.t || "Page", c].join(" · ")));
-    const done = cat => {
-      setPageCat(c, pid, cat); closePop();
-      if (mCur === c && !el("matiere").hidden) { renderPgSel(); renderPgCat(); }
-      if (!el("notes").hidden) renderNotes();
-    };
-    const chips = mk("div","chips");
-    for (const cat of catList(c)) {
-      const b = mk("button","chip" + (cat.toLowerCase() === pgCat(p).toLowerCase() ? " on" : ""), cat);
-      b.title = `Ranger sous « ${cat} »`;
-      b.addEventListener("click", () => done(cat));
-      chips.append(b);
-    }
-    box.append(chips);
-    const input = mk("input"); input.type = "text"; input.maxLength = 40;
-    input.placeholder = "Nouvelle catégorie — ex. Cours 5";
-    box.append(input);
-    const acts = mk("div","acts");
-    if (pgCat(p)) {
-      const rm = mk("button","btn quiet","Retirer");
-      rm.title = "La page reste, sans catégorie";
-      rm.addEventListener("click", () => done(""));
-      acts.append(rm);
-    }
-    acts.append(mk("span","grow"));
-    const later = mk("button","btn quiet", anchor ? "Annuler" : "Plus tard");
-    later.addEventListener("click", closePop);
-    const ok = mk("button","btn solid","Ranger");
-    const commit = () => { const t = input.value.trim(); if (t) done(t); };
-    ok.addEventListener("click", commit);
-    const syncOk = () => { ok.disabled = !input.value.trim(); };
-    input.addEventListener("input", syncOk); syncOk();
-    input.addEventListener("keydown", ev => {
-      if (ev.key === "Enter") { ev.preventDefault(); commit(); }
-      if (ev.key === "Escape") { ev.preventDefault(); closePop(); }
-    });
-    acts.append(later, ok); box.append(acts);
-    pop = box;
-    if (anchor) place(box, anchor, false);
-    else document.body.append(box);
-  }
-  /* Quitter une page pleine et pas encore rangée le propose — une seule
-     fois par page et par visite : « Plus tard » vaut réponse, et une page
-     déjà rangée ne redemande rien. */
-  const catAsked = new Set();
-  function catNudge(c, p, anchor) {
-    if (!p || !p.id || !pgFull(p) || pgCat(p) || catAsked.has(p.id)) return;
-    catAsked.add(p.id);
-    catPop(c, p.id, anchor || null);
-  }
-  el("m-pgcat").addEventListener("click", () => {
-    const c = mCur; if (!c) return;
-    mFlush();
-    const p = mPage(c);
-    /* Un dossier encore vide n'a rien à ranger : la page naît au premier
-       trait, sa catégorie viendra après elle. */
-    if (p.id) catPop(c, p.id, el("m-pgcat"));
-  });
 
   for (const b of el("m-tools").querySelectorAll("[data-tool]"))
     b.addEventListener("click", () => setTool(b.dataset.tool, true));
@@ -4946,93 +4601,6 @@ html,body{overflow-x:clip}
     ev.preventDefault();
     histGo(ev.shiftKey ? 1 : -1);
   });
-
-  /* ── Toutes les notes ────────────────────────────────────────────
-     La même page blanche, vue d'en haut : un dossier par matière, ses pages
-     dedans, dans l'ordre où on les a ouvertes. Cliquer une page l'ouvre dans
-     la fiche de sa matière — c'est le même papier, pas une copie. */
-  function openNotes() {
-    showView("notes");
-    renderNotes();
-  }
-  function openNotePage(c, id) {
-    mWrite(c, { pg: id }); save();
-    openMatiere(c);
-  }
-  function renderNotes() {
-    const box = el("nt-grid"); box.textContent = "";
-    let total = 0;
-    for (const c of COURSES) {
-      const ps = mPages(c); total += ps.length;
-      const card = mk("section","card fx ntfold");
-      const ch = mk("div","ch");
-      const h = mk("h3");
-      const pip = mk("i","mpip"); pip.style.background = `hsl(${hueOf(c)} 62% 52%)`;
-      h.append(pip, document.createTextNode(c));
-      ch.append(h, mk("span","grow"),
-        mk("span","dim mono", ps.length ? `${ps.length} page${ps.length > 1 ? "s" : ""}` : ""));
-      card.append(ch);
-      if (ps.length) {
-        /* Les pages rangées se regroupent sous leur catégorie — « Cours 5 »,
-           « Préparation examen » — dans l'ordre où les catégories sont
-           apparues ; les pages libres gardent la tête du dossier, sans
-           étiquette inventée. */
-        const grps = new Map();
-        for (const p of ps) { const k = pgCat(p).toLowerCase();
-          if (!grps.has(k)) grps.set(k, { cat: pgCat(p), pages: [] });
-          grps.get(k).pages.push(p); }
-        const order = [...grps.values()];
-        const free = grps.get("");
-        if (free) { order.splice(order.indexOf(free), 1); order.unshift(free); }
-        const ul = mk("ul","ntpages");
-        for (const g of order) {
-          if (g.cat) { const hd = mk("li","ntcat");
-            hd.append(mk("span", null, g.cat), mk("span","dim mono", `${g.pages.length}`));
-            ul.append(hd); }
-          for (const p of g.pages) ul.append(ntRow(c, p));
-        }
-        card.append(ul);
-      } else {
-        card.append(mk("p","empty","Aucune page encore. La première s'ouvre ici — ou au premier trait posé dans la fiche."));
-      }
-      const add = mk("button","btn quiet ntadd","Nouvelle page");
-      add.title = `Ouvrir une page blanche sous ${c}`;
-      add.addEventListener("click", () => { addPage(c); openMatiere(c);
-        el("m-page").focus({ preventScroll:true }); });
-      card.append(add);
-      box.append(card);
-    }
-    el("nt-n").textContent = total ? `(${total})` : "";
-  }
-  function ntRow(c, p) {
-    const li = mk("li");
-    const btn = mk("button","ntpage");
-    /* Ce que la page porte, dit en une ligne : sa première phrase s'il y a du
-       texte, sinon la nature de ce qui s'y trouve. */
-    const line = (p.page.split("\n").find(l => l.trim()) || "").trim();
-    const what = line || (p.ink.length ? "Page dessinée" : p.annos.length ? "Annotations posées" : "Page vide");
-    btn.append(mk("b", null, p.t || "Page"),
-      mk("span", null, [p.at && `modifiée ${p.at}`, what].filter(Boolean).join(" · ")));
-    btn.title = `Ouvrir cette page — ${c}`;
-    btn.addEventListener("click", () => openNotePage(c, p.id));
-    /* Une page pleine ne part pas d'un seul clic : le premier arme le bouton,
-       le second seulement supprime — et l'hésitation désarme toute seule. */
-    const kill = mk("button","kill","×"); kill.title = "Supprimer la page";
-    kill.addEventListener("click", () => {
-      if (pgFull(p) && !kill.classList.contains("arm")) {
-        kill.classList.add("arm"); kill.textContent = "sûr ?";
-        setTimeout(() => { kill.classList.remove("arm"); kill.textContent = "×"; }, 2600);
-        return;
-      }
-      const ps = mPages(c).filter(x => x.id !== p.id);
-      mWrite(c, { pages: ps, pg: ps[0]?.id || "" }); save();
-      renderCourses();   // remet les compteurs à jour, et la vue avec eux
-    });
-    li.append(btn, kill);
-    return li;
-  }
-  el("nav-notes").addEventListener("click", openNotes);
-  el("nt-back").addEventListener("click", () => enterBoard());
 
   /* ── Thème + commandes ────────────────────────────────────────── */
   function applyTheme() {
@@ -5383,20 +4951,9 @@ html,body{overflow-x:clip}
      vaut que dans l'app : la landing se présente seule. */
   function showView(name) {
     /* Quitter la fiche d'une matière la referme : les cartes de « Mes cours »
-       reprennent alors les notes et les dates qu'on vient d'y écrire. Et la
-       page qu'on laisse pleine sans catégorie propose de se ranger — après
-       l'enregistrement, jamais à sa place. */
-    if (name !== "matiere" && mCur) {
-      mFlush();
-      const c = mCur, p = mPage(c);
-      mCur = null; renderSubjects(); renderCourses();
-      if (name === "board" || name === "notes") catNudge(c, p);
-    }
-    for (const v of ["board","profil","matiere","landing","onboard","notes"]) el(v).hidden = v !== name;
-    /* L'entrée « Toutes les notes » n'est pas une ancre du tableau : elle
-       s'allume avec sa vue, et éteint les ancres qui croiraient l'être encore. */
-    el("nav-notes").classList.toggle("on", name === "notes");
-    if (name === "notes") document.querySelectorAll(".navi[data-go]").forEach(x => x.classList.remove("on"));
+       reprennent alors les notes et les dates qu'on vient d'y écrire. */
+    if (name !== "matiere" && mCur) { mFlush(); mCur = null; renderSubjects(); renderCourses(); }
+    for (const v of ["board","profil","matiere","landing","onboard"]) el(v).hidden = v !== name;
     const hors = name === "landing" || name === "onboard";
     el("apphead").hidden = hors;
     /* La salutation et la date n'appartiennent qu'au tableau de bord. Ailleurs,
