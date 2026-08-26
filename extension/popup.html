@@ -1,0 +1,39 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Agenda Cégep</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0; padding: 14px 16px; width: 280px;
+    font: 13px/1.45 -apple-system, "Segoe UI", system-ui, sans-serif;
+    background: #f6f7f9; color: #1d2733;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { background: #1f2123; color: #e8eaed; }
+    .carte { background: #2a2d30 !important; }
+  }
+  h1 { font-size: 14px; margin: 0 0 10px; }
+  .carte { background: #fff; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+  .ligne { display: flex; justify-content: space-between; gap: 8px; margin: 3px 0; }
+  .cle { opacity: .62; }
+  .etat-ok { color: #2c7a4b; font-weight: 600; }
+  .etat-ko { color: #b3402a; font-weight: 600; }
+  .raison { margin: 8px 0 0; font-size: 12px; opacity: .8; }
+  button {
+    width: 100%; padding: 8px 0; margin-top: 2px; border: 0; border-radius: 8px;
+    background: #23456e; color: #fff; font: 600 13px/1 inherit; cursor: pointer;
+  }
+  button.quiet { background: transparent; color: inherit; opacity: .7; margin-top: 6px; }
+  button:disabled { opacity: .5; cursor: default; }
+</style>
+<h1>Agenda Cégep — collecteur</h1>
+<div class="carte">
+  <div class="ligne"><span class="cle">Session Omnivox</span><span id="session">…</span></div>
+  <div class="ligne"><span class="cle">Dernière collecte</span><span id="quand">…</span></div>
+  <div class="ligne"><span class="cle">Échéances</span><span id="n-ech">…</span></div>
+  <div class="ligne"><span class="cle">MIO</span><span id="n-mio">…</span></div>
+  <p class="raison" id="raison" hidden></p>
+</div>
+<button id="collecter">Collecter maintenant</button>
+<button id="omnivox" class="quiet">Ouvrir Omnivox</button>
+<script src="popup.js"></script>

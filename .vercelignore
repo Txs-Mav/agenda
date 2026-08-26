@@ -20,6 +20,7 @@ public/horaire.json
 # Inutile au build (build.mjs ne lit que agenda.html)
 node_modules/
 src/
+extension/
 tests/
 capture.ts
 horaire.scrape.plist

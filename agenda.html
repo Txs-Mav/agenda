@@ -21,9 +21,9 @@
   color-scheme:light;
 }
 :root[data-theme="dark"]{
-  --bg:#12161C; --bg-2:#1B2129; --bg-3:#0D1117;
-  --surface:#1A2028; --surface-2:#212831; --surface-3:#283039;
-  --invert:#D8E6F3; --invert-2:#C6DAEC; --on-invert:#14243A; --ac:#7FA8CF;
+  --bg:#0C0D10; --bg-2:#101216; --bg-3:#090A0C;
+  --surface:#141619; --surface-2:#1B1D21; --surface-3:#222429;
+  --invert:#E8EDF3; --invert-2:#DDE3EA; --on-invert:#14243A; --ac:#7FA8CF;
   --ink:#F1F3F5; --dim:#A2A8AF; --faint:#6E757C;
   --line:rgba(255,255,255,.09); --line-hi:rgba(255,255,255,.19);
   --live:#FF6B58;
@@ -614,7 +614,7 @@ label.ghost{cursor:pointer}
 
 /* ── Polish : dégradés subtils + effets sur les KPI ─────────────── */
 :root{ --sheen:rgba(255,255,255,.55); --tint:rgba(22,23,26,.03); --glow-a:.05 }
-:root[data-theme="dark"]{ --sheen:rgba(255,255,255,.05); --tint:rgba(0,0,0,.2); --glow-a:.09 }
+:root[data-theme="dark"]{ --sheen:rgba(255,255,255,.03); --tint:rgba(0,0,0,.2); --glow-a:.03 }
 
 /* Fond : une lueur froide très discrète en haut, par-dessus les halos gris. */
 body{
@@ -650,6 +650,15 @@ button.me,.mk{background-image:linear-gradient(160deg,var(--invert-2),var(--inve
   -webkit-background-clip:text;background-clip:text;color:transparent;
 }
 .meter i{background:linear-gradient(90deg,color-mix(in srgb,var(--on-invert) 45%,transparent),var(--on-invert))}
+/* En sombre, les dégradés bavent sur les surfaces : tout redevient mat et
+   franc — seul le voile des cartes claires (sheen) survit, quasi invisible. */
+:root[data-theme="dark"] .card.dark,:root[data-theme="dark"] .course,
+:root[data-theme="dark"] .pill,:root[data-theme="dark"] .btn.solid,
+:root[data-theme="dark"] .navi.on,:root[data-theme="dark"] button.me,
+:root[data-theme="dark"] .mk{background-image:none;box-shadow:none}
+:root[data-theme="dark"] button.me{box-shadow:var(--shadow)}
+:root[data-theme="dark"] .fig b{background-image:none;color:var(--on-invert)}
+:root[data-theme="dark"] .meter i{background:var(--on-invert)}
 .tile{
   position:relative;overflow:hidden;
   background-image:linear-gradient(180deg,color-mix(in srgb,var(--on-invert) 4%,transparent),transparent 60%);
