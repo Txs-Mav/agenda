@@ -12,9 +12,9 @@
 /* Page sœur de l'agenda : mêmes jetons, même langage — cartes blanches à
    grand rayon, une carte inversée comme point focal, étiquettes mono. */
 :root{
-  --bg:#E7E8EB; --bg-2:#F2F3F5; --bg-3:#DEDFE3;
-  --surface:#FFFFFF; --surface-2:#F3F4F6; --surface-3:#EAEBEE;
-  --invert:#1B1C1E; --invert-2:#2A2C2F; --on-invert:#FFFFFF;
+  --bg:#E6E9EE; --bg-2:#F1F4F8; --bg-3:#DBE1E9;
+  --surface:#FFFFFF; --surface-2:#F2F5F8; --surface-3:#E9EDF2;
+  --invert:#1C3D5D; --invert-2:#28527A; --on-invert:#FFFFFF; --ac:#3A6EA5;
   --ink:#16171A; --dim:#5F646A; --faint:#6E737A;
   --line:rgba(0,0,0,.075); --line-hi:rgba(0,0,0,.14);
   --live:#D0402F; --live-hi:#FF8B7C;
@@ -27,9 +27,9 @@
   color-scheme:light;
 }
 :root[data-theme="dark"]{
-  --bg:#141618; --bg-2:#1E2124; --bg-3:#0F1113;
-  --surface:#1D2023; --surface-2:#24282B; --surface-3:#2B2F33;
-  --invert:#F2F3F5; --invert-2:#E4E6E9; --on-invert:#16171A;
+  --bg:#12161C; --bg-2:#1B2129; --bg-3:#0D1117;
+  --surface:#1A2028; --surface-2:#212831; --surface-3:#283039;
+  --invert:#D8E6F3; --invert-2:#C6DAEC; --on-invert:#14243A; --ac:#7FA8CF;
   --ink:#F1F3F5; --dim:#A8AEB5; --faint:#8A9199;
   --line:rgba(255,255,255,.09); --line-hi:rgba(255,255,255,.19);
   --live:#FF6B58; --live-hi:#C2372A;
@@ -53,7 +53,7 @@ body{
 }
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
 a{color:inherit}
-:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
 
 /* width:100% n'est pas décoratif : sans lui, ce conteneur flex est
@@ -117,7 +117,7 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 .card.dark .field:focus{outline-color:var(--on-invert)}
 .field{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:.58rem .85rem;font:inherit;color:var(--ink);min-width:0}
 .field::placeholder{color:var(--faint)}
-.field:focus{outline:2px solid var(--ink);outline-offset:1px}
+.field:focus{outline:2px solid var(--ac);outline-offset:1px}
 .frow{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
 .frow .field{flex:1 1 10rem}
 
@@ -234,7 +234,7 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 .msgx:hover{opacity:1}
 .compo{display:flex;gap:.5rem;align-items:flex-end;padding:.7rem .9rem 1rem;border-top:1px solid var(--line)}
 .compo textarea{flex:1 1 auto;background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:.55rem .85rem;font:inherit;font-size:.9rem;color:var(--ink);resize:none;max-height:9rem;overflow:auto}
-.compo textarea:focus{outline:2px solid var(--ink);outline-offset:1px}
+.compo textarea:focus{outline:2px solid var(--ac);outline-offset:1px}
 
 
 /* ── Entrer dans une classe ────────────────────────────────────────

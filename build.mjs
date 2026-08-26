@@ -20,7 +20,7 @@ const page = `<!doctype html>
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="theme-color" content="#1f2123">
+<meta name="theme-color" content="#12161C">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Agenda">

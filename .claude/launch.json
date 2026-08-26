@@ -2,6 +2,17 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "agenda-4173",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "4173",
+        "public"
+      ],
+      "port": 4173
+    },
+    {
       "name": "agenda-src",
       "runtimeExecutable": "npx",
       "runtimeArgs": [
