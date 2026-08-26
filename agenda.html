@@ -1548,7 +1548,7 @@ html,body{overflow-x:clip}
             <div class="emptybox" id="mk-exam-empty">
               <svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><path d="M6 3.5h12v17H6z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
               <b>Aucun examen marqué</b>
-              <span>Dans l'horaire, choisis une case libre, nomme le bloc, puis clique « Examen » : il se range ici, avec son compte à rebours.</span>
+              <span>Dans l'horaire, choisis une case libre, nomme le bloc, puis clique « Examen » : il se range ici, avec son compte à rebours. Une séance de cours se marque de la même façon — clique-la, « Modifier », « Examen ».</span>
             </div>
           </section>
           <section class="card fx" id="w-biz">
@@ -1988,6 +1988,68 @@ html,body{overflow-x:clip}
     if (next.del || TT_FIELDS.some(f => f in next)) state.ttEdits[key] = next;
     else delete state.ttEdits[key];
   }
+
+  /* ── L'exception d'une semaine ────────────────────────────────── */
+  /* Un cours revient chaque semaine, mais une semaine n'est pas l'autre : le
+     labo du 3 se donne ailleurs, celui du 17 devient l'examen, celui du 24
+     n'a pas lieu. Une seconde couche se pose donc par-dessus la première,
+     datée celle-là — la retouche de bloc reste la règle, la retouche du jour
+     l'exception. Sans elle, corriger le local d'un mardi repeignait tous les
+     mardis de la session.
+     `kind` n'existe qu'ici : un examen tombe une fois, il n'a pas de sens
+     dans une couche qui vaut pour toutes les semaines. */
+  const DAY_FIELDS = [...TT_FIELDS, "kind"];
+  const dayEdit = (dISO, key) => state.ttDays[dISO]?.[key];
+  const withDay = (e, ed) => {
+    if (!ed) return e;
+    const row = { ...e };
+    for (const f of DAY_FIELDS) if (f in ed) row[f] = ed[f];
+    return row;
+  };
+  /* Le bloc tel qu'il se donne réellement à cette date — null s'il est annulé
+     ce jour-là. C'est par ici que passe tout ce qui lit l'horaire sur une
+     date : la grille, « ça s'en vient », les rappels, l'export. */
+  const ttOn = (dISO, e) => {
+    const ed = dayEdit(dISO, ttKey(e));
+    return ed?.del ? null : withDay(e, ed);
+  };
+  function setDayEdit(dISO, key, patch) {
+    const base = TT.find(r => ttKey(r) === key) || {};
+    const next = { ...(state.ttDays[dISO]?.[key] || {}), ...patch };
+    if (!next.del) {
+      delete next.del;
+      for (const f of DAY_FIELDS) if (f in next && (next[f] || "") === (base[f] || "")) delete next[f];
+    }
+    const map = state.ttDays[dISO] || (state.ttDays[dISO] = {});
+    if (next.del || DAY_FIELDS.some(f => f in next)) map[key] = next;
+    else delete map[key];
+    if (!Object.keys(map).length) delete state.ttDays[dISO];
+  }
+  function clearDay(dISO, key) {
+    const map = state.ttDays[dISO];
+    if (!map) return;
+    delete map[key];
+    if (!Object.keys(map).length) delete state.ttDays[dISO];
+  }
+  /* Les cours marqués examen ou business, avec leur date : une marque posée
+     sur un cours est une marque comme une autre, elle doit se retrouver dans
+     la même liste que celles des blocs perso. */
+  function ttMarques() {
+    const out = [];
+    for (const [dISO, map] of Object.entries(state.ttDays)) {
+      const dt = new Date(dISO + "T00:00:00");
+      if (!inSem(dt)) continue;
+      const wd = (dt.getDay()+6)%7;
+      for (const [key, ed] of Object.entries(map)) {
+        if (!ed.kind || ed.del) continue;
+        const base = TT.find(r => r.d === wd && ttKey(r) === key);
+        if (base) out.push({ dISO, e: withDay(base, ed) });
+      }
+    }
+    return out;
+  }
+  const ttCount = () => Object.keys(state.ttEdits).length
+    + Object.values(state.ttDays).reduce((s, m) => s + Object.keys(m).length, 0);
   /* Toucher à l'horaire, c'est toucher à la grille, aux matières, aux
      compteurs et aux cartes de cours : tout ce qui compte des heures repasse
      par ici, d'un seul appel. */
@@ -1996,11 +2058,15 @@ html,body{overflow-x:clip}
     if (state.filter && !COURSES.includes(state.filter)) state.filter = null;
     if (mCur && !COURSES.includes(mCur)) closeMatiere();
     renderWeeks(); renderSubjects(); renderOverview(); renderChart(); renderRings(); renderCourses();
+    /* La carte du haut et les dates importantes lisent l'horaire elles aussi :
+       un cours annulé pour un jour doit en sortir sur-le-champ, un cours
+       marqué examen doit y entrer — pas trente secondes plus tard. */
+    renderWidget();
     if (mCur) renderMatiere();
     syncTTReset(); save();
   }
   function syncTTReset() {
-    const n = Object.keys(state.ttEdits).length, b = el("h-reset");
+    const n = ttCount(), b = el("h-reset");
     if (!b) return;
     b.hidden = !n;
     b.textContent = `${n} retouche${n > 1 ? "s" : ""} · rétablir`;
@@ -2033,7 +2099,10 @@ html,body{overflow-x:clip}
       const day = addDays(base, i);
       if (!inSem(day)) continue;
       const wd = (day.getDay()+6)%7;
-      for (const e of rows.filter(x => x.d === wd).sort((a,b) => a.h[0] - b.h[0])) {
+      for (const src of rows.filter(x => x.d === wd).sort((a,b) => a.h[0] - b.h[0])) {
+        /* Une séance annulée pour ce jour-là n'est pas la prochaine séance. */
+        const e = ttOn(iso(day), src);
+        if (!e) continue;
         const [h1,m1] = hm(e.time.split(" – ")[0]);
         const [h2,m2] = hm(e.time.split(" – ")[1]);
         const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h1, m1);
@@ -2100,8 +2169,12 @@ html,body{overflow-x:clip}
     name:"Maverick Menard",
     blocks: {},
     /* Retouches de l'horaire, par bloc (« jour-heure ») : ce que tu corriges
-       d'un cours mal lu sur la photo. Voir setTTEdit. */
+       d'un cours mal lu sur la photo, pour toutes les semaines. Voir setTTEdit. */
     ttEdits: {},
+    /* Retouches datées, par date puis par bloc : l'exception d'une seule
+       semaine — local changé une fois, cours annulé, séance devenue examen.
+       Elles se posent par-dessus les précédentes. Voir setDayEdit. */
+    ttDays: {},
     todos: [
       { id:"g1", t:"Réviser le labo de Calcul différentiel", done:false, lvl:0 },
       { id:"g2", t:"Relire les chapitres 1 à 4 de philo", done:false, lvl:1 },
@@ -2145,6 +2218,9 @@ html,body{overflow-x:clip}
   if (!state.rappels || typeof state.rappels !== "object") state.rappels = { on:false, vus:{} };
   if (!state.rappels.vus || typeof state.rappels.vus !== "object") state.rappels.vus = {};
   if (!state.ttEdits || typeof state.ttEdits !== "object") state.ttEdits = {};
+  if (!state.ttDays || typeof state.ttDays !== "object") state.ttDays = {};
+  for (const [d, m] of Object.entries(state.ttDays))
+    if (!m || typeof m !== "object") delete state.ttDays[d];
   if (!state.sheets || typeof state.sheets !== "object") state.sheets = {};
   /* Première forme des fiches : une pile de notes datées. La page blanche les
      remplace — on recolle ce qui était écrit, dans l'ordre où c'était empilé,
@@ -2154,6 +2230,18 @@ html,body{overflow-x:clip}
     const txt = sh.notes.map(n => (n.t || "").trim()).filter(Boolean).join("\n\n");
     if (txt && !sh.page) { sh.page = txt; sh.at = sh.notes[0]?.at || ""; }
     delete sh.notes;
+  }
+  /* Deuxième forme : UNE page par matière. Chaque matière est devenue un
+     dossier — une pile de pages, une par cours — et l'ancienne page unique
+     en devient la première, sans rien perdre de ce qui y était. */
+  for (const sh of Object.values(state.sheets)) {
+    if (!Array.isArray(sh.pages)) sh.pages = [];
+    if ((sh.page || "").trim() || (Array.isArray(sh.ink) && sh.ink.length)
+        || (Array.isArray(sh.annos) && sh.annos.length))
+      sh.pages.unshift({ id: "p" + Math.random().toString(36).slice(2,9), t: "Première page",
+        at: sh.at || "", page: sh.page || "", ink: sh.ink || [], annos: sh.annos || [] });
+    delete sh.page; delete sh.at; delete sh.ink; delete sh.annos;
+    if (!sh.pg || !sh.pages.some(p => p.id === sh.pg)) sh.pg = sh.pages[0]?.id || "";
   }
   if (state.wview !== "pile") state.wview = "une";
   if (!Number.isInteger(state.wcur)) state.wcur = 0;
@@ -2201,7 +2289,13 @@ html,body{overflow-x:clip}
      traversés, ce qui permet d'en joindre plusieurs en une seule activité. */
   const courseAt = (d,h) => {
     const dt = new Date(d + "T00:00:00");
-    return inSem(dt) ? byDay.get((dt.getDay()+6)%7)?.get(h) : undefined;
+    if (!inSem(dt)) return undefined;
+    const hit = byDay.get((dt.getDay()+6)%7)?.get(h);
+    if (!hit) return undefined;
+    /* Une case n'affiche pas le bloc de la semaine type mais celui de CE
+       jour : renommé, déplacé de local, marqué, ou pas donné du tout. */
+    const e = ttOn(d, hit.e);
+    return e ? { e, head: hit.head } : undefined;
   };
 
   function buildWeek(off) {
@@ -2215,10 +2309,12 @@ html,body{overflow-x:clip}
     const head = mk("div","ch");
     head.append(mk("h3", null, range(days[0], addDays(start,6))), mk("span","grow"));
     let hrs = 0;
+    /* On recompte case par case plutôt que de lire la semaine type : une
+       séance annulée pour ce jour-là ne doit plus être facturée à la semaine. */
     for (const d of days) {
-      const wd = (d.getDay()+6)%7;
-      if (inSem(d)) hrs += byDay.get(wd)?.size ?? 0;
-      hrs += dayBlocks(iso(d)).reduce((s,b) => s + (b.to-b.from), 0);
+      const dI = iso(d);
+      for (let h = START_HOUR; h <= END_HOUR; h++) if (courseAt(dI, h)) hrs++;
+      hrs += dayBlocks(dI).reduce((s,b) => s + (b.to-b.from), 0);
     }
     const meta = mk("span","mono dim", `S${weekNo(start)} · ${hrs} h`);
     meta.style.fontSize = ".72rem";
@@ -2278,6 +2374,27 @@ html,body{overflow-x:clip}
     cell.append(box);
   }
 
+  /* Marquer une case : anneau teinté, étiquette, respiration quand l'échéance
+     se rapproche. Une seule mécanique pour les blocs perso et les cours, sinon
+     un examen posé sur un cours n'aurait pas l'air d'un examen. L'imminence se
+     calcule, elle ne se choisit pas — et le business garde son neutre quoi
+     qu'il arrive. */
+  function markEv(cell, kind, dISO, hhmm) {
+    const cd = countdown(dISO, hhmm);
+    const ev = cell.querySelector(".ev");
+    if (!ev) return cd;
+    ev.classList.add("mark", kind === "examen" ? "exam" : "biz");
+    /* Rien de passé ne respire : une case révolue n'a plus rien à signaler,
+       seul ce qui arrive mérite qu'on la regarde bouger. */
+    if (cd.lvl >= 2 && cd.days >= 0) ev.classList.add("soon");
+    const [mkc, mkt] = kind === "examen"
+      ? [`var(--p${cd.lvl})`, `var(--p${cd.lvl}t)`]
+      : ["var(--biz)", "var(--bizt)"];
+    ev.style.setProperty("--mk", mkc);
+    ev.style.setProperty("--mkt", mkt);
+    return cd;
+  }
+
   function buildCell(date, hr) {
     const dISO = iso(date), wd = (date.getDay()+6)%7;
     const cell = mk("div","cell");
@@ -2293,11 +2410,20 @@ html,body{overflow-x:clip}
 
     if (slot) {
       const { e } = slot;
-      if (slot.head) paint(cell, { hue:hueOf(e.t), span:e.h[1]-e.h[0], title:e.t,
-        meta:[e.k, e.room].filter(Boolean).join(" · "), time:e.time,
-        prof:(e.h[1]-e.h[0]) >= 2 ? e.prof : "" });
+      /* Un cours marqué dit d'abord ce qu'il est devenu : « EXAMEN · SA3075 »
+         plutôt que « TH · SA3075 ». Le type de séance ne compte plus le jour
+         où la séance est l'examen. */
+      const lab = MARKS[e.kind] || "";
+      let cd = null;
+      if (slot.head) {
+        paint(cell, { hue:hueOf(e.t), span:e.h[1]-e.h[0], title:e.t,
+          meta:[lab || e.k, e.room].filter(Boolean).join(" · "), time:e.time,
+          prof:(e.h[1]-e.h[0]) >= 2 ? e.prof : "" });
+        if (lab) cd = markEv(cell, e.kind, dISO, e.time?.split(" – ")[0] || `${pad(e.h[0])}:00`);
+      }
       else cell.classList.add("under");
-      cell.title = [e.t, e.code && `${e.code} (${e.k})`, e.room, e.prof, e.time].filter(Boolean).join("\n");
+      cell.title = [e.t, cd && `${lab} · ${cd.txt}`, e.code && `${e.code} (${e.k})`,
+        e.room, e.prof, e.time].filter(Boolean).join("\n");
       if (state.filter && state.filter !== e.t) cell.querySelector(".ev")?.style.setProperty("opacity",".26");
       cell.style.cursor = "pointer";
       cell.tabIndex = 0;
@@ -2314,21 +2440,7 @@ html,body{overflow-x:clip}
         paint(cell, { hue:blk.h, span:blk.to-blk.from, title:blk.t,
           meta: label, time:`${pad(blk.from)}:00 – ${pad(blk.to)}:00`, mine:true });
         if (label) {
-          /* L'imminence se calcule, elle ne se choisit pas : même règle que
-             pour une remise, ce qui tombe demain crie, ce qui tombe en octobre
-             non. C'est elle qui décide de la respiration, et de la teinte d'un
-             examen ; le business, lui, garde son neutre quoi qu'il arrive. */
-          const cd = countdown(dISO, `${pad(blk.from)}:00`);
-          const ev = cell.querySelector(".ev");
-          ev.classList.add("mark", blk.kind === "examen" ? "exam" : "biz");
-          /* Rien de passé ne respire : une case révolue n'a plus rien à
-             signaler, seul ce qui arrive mérite qu'on la regarde bouger. */
-          if (cd.lvl >= 2 && cd.days >= 0) ev.classList.add("soon");
-          const [mkc, mkt] = blk.kind === "examen"
-            ? [`var(--p${cd.lvl})`, `var(--p${cd.lvl}t)`]
-            : ["var(--biz)", "var(--bizt)"];
-          ev.style.setProperty("--mk", mkc);
-          ev.style.setProperty("--mkt", mkt);
+          const cd = markEv(cell, blk.kind, dISO, `${pad(blk.from)}:00`);
           cell.title = `${blk.t}\n${label} · ${cd.txt}`;
         }
       }
@@ -2556,6 +2668,9 @@ html,body{overflow-x:clip}
     box.append(mk("h4", null, e.t));
     box.append(mk("p","when", [e.code && `${e.code} (${e.k})`, e.time].filter(Boolean).join(" · ")));
     const lines = [
+      /* Un bloc marqué le dit ici aussi : la fiche est ce qu'on lit avant de
+         cliquer « Modifier », elle ne peut pas taire ce que la case annonce. */
+      ["Marquage", MARKS[e.kind] || ""],
       ["Local", e.room], ["Professeur", e.prof],
       ["Durée", `${e.h[1] - e.h[0]} h`],
     ].filter(([, v]) => v);
@@ -2599,36 +2714,47 @@ html,body{overflow-x:clip}
     return { w, i };
   }
 
-  /* Retoucher un bloc de cours. Le nom appartient au cours — il porte la
-     couleur, le filtre, la carte de matière — alors que le type, le local et
-     le professeur appartiennent au bloc : le labo n'est pas dans le local du
-     cours magistral. D'où deux portées, et une seule question posée. */
+  /* Retoucher un bloc de cours. Trois portées, de la plus étroite à la plus
+     large — et c'est la plus étroite qui est offerte d'abord : corriger le
+     local d'un mardi ne devait jamais repeindre tous les mardis de la session.
+     Au-delà de la portée, deux appartenances : le nom appartient au cours (il
+     porte la couleur, le filtre, la carte de matière) tandis que le type, le
+     local et le professeur appartiennent au bloc — le labo n'est pas dans le
+     local du cours magistral. */
   function editCourse(cell, e) {
     pop?.remove();
-    const key = ttKey(e), touched = !!state.ttEdits[key];
-    const sib = TT.filter(x => x.t === e.t);
+    const dISO = cell.dataset.d, dt = new Date(dISO + "T00:00:00");
+    const key = ttKey(e);
+    /* Les blocs frères se comptent sur la semaine type, pas sur ce que ce
+       jour-là affiche : un bloc renommé pour une seule date reste, le reste
+       du temps, une séance du même cours. */
+    const wk = TT.find(r => ttKey(r) === key) || e;
+    const sib = TT.filter(x => x.t === wk.t);
+    const jour = `${DOW[(dt.getDay()+6)%7]}. ${dt.getDate()} ${MONTH[dt.getMonth()]}`;
     const box = mk("div","pop wide fx");
     box.append(mk("h4", null, "Modifier le bloc"));
-    box.append(mk("p","when", `${DOW_FULL[e.d]} · ${e.time} · ${e.h[1]-e.h[0]} h`));
+    box.append(mk("p","when", `${DOW_FULL[e.d]} ${dt.getDate()} ${MONTH[dt.getMonth()]} · ${e.time} · ${e.h[1]-e.h[0]} h`));
+
+    /* La question se pose toujours, même pour un cours d'un seul bloc : « ce
+       jour-là » et « chaque semaine » ne se confondent jamais. « Tout le
+       cours » n'apparaît que s'il y a vraiment plusieurs blocs à changer. */
+    const SCOPES = [
+      ["jour",  "Ce jour-là",      `Ne touche que le ${jour}`],
+      ["bloc",  "Chaque semaine",  "Change ce bloc dans toutes les semaines de la session"],
+      ["cours", `Tout le cours (${sib.length})`, `Change le nom et le sigle des ${sib.length} blocs du cours`],
+    ].filter(sc => sc[0] !== "cours" || sib.length > 1);
+    let scope = "jour";
+    const seg = mk("div","seg");
+    const segBtns = SCOPES.map(([v, label, tip]) => {
+      const b = mk("button", v === scope ? "on" : null, label);
+      b.dataset.s = v; b.title = tip;
+      b.addEventListener("click", () => setScope(v));
+      seg.append(b); return b;
+    });
+    box.append(seg);
 
     const nom = field("Nom", e.t, { ph:"Nom du cours ou de l'activité" });
     box.append(nom.w);
-
-    /* Un cours occupe plusieurs cases : renommer la seule qu'on a sous les
-       yeux le couperait en deux matières de deux couleurs. On ne demande la
-       portée que lorsqu'elle se pose vraiment. */
-    let scope = sib.length > 1 ? "cours" : "bloc";
-    if (sib.length > 1) {
-      const seg = mk("div","seg");
-      const all = mk("button","on", `Tout le cours (${sib.length} blocs)`);
-      const one = mk("button", null, "Ce bloc seulement");
-      const pick = v => { scope = v;
-        all.classList.toggle("on", v === "cours"); one.classList.toggle("on", v === "bloc"); };
-      all.addEventListener("click", () => pick("cours"));
-      one.addEventListener("click", () => pick("bloc"));
-      seg.append(all, one); box.append(seg);
-    }
-
     const duo = mk("div","duo");
     const code = field("Sigle", e.code, { ph:"101-115-RI", max:20 });
     const kinds = [["","—"],["TH","Théorie"],["LA","Laboratoire"],["AP","Activité pratique"]];
@@ -2638,25 +2764,55 @@ html,body{overflow-x:clip}
     const room = field("Local", e.room, { ph:"HA3325", max:40 });
     const prof = field("Professeur", e.prof, { ph:"Nom du professeur", max:60 });
     box.append(duo, room.w, prof.w);
-    box.append(mk("p","hint", sib.length > 1
-      ? "Une retouche vaut pour toutes les semaines. Le type, le local et le professeur ne changent que pour ce bloc."
-      : "Une retouche vaut pour toutes les semaines."));
+
+    /* Une séance devient parfois autre chose qu'une séance : l'examen de
+       mi-session se donne à l'heure du cours, le rendez-vous d'affaires prend
+       la place du labo. Les mêmes bascules que pour un bloc perso, et le même
+       classement dans « Examens et business ». */
+    let mark = e.kind || null;
+    const kindRow = mk("div","kind");
+    const chip = (val, label, icon) => {
+      const b = mk("button","kd" + (mark === val ? " on" : ""));
+      b.dataset.k = val;
+      b.innerHTML = icon;
+      b.append(document.createTextNode(label));
+      b.addEventListener("click", () => {
+        mark = mark === val ? null : val;
+        kindRow.querySelectorAll(".kd").forEach(x => x.classList.toggle("on", x.dataset.k === mark));
+        syncScope();
+      });
+      return b;
+    };
+    kindRow.append(chip("examen","Examen",ICON.examen), chip("business","Business",ICON.business));
+    box.append(kindRow);
+
+    const hint = mk("p","hint");
+    box.append(hint);
 
     const acts = mk("div","acts");
-    /* Supprimer libère les heures : la case redevient sélectionnable et
-       accepte un bloc à toi — c'est le chemin pour remplacer un cours par
-       autre chose sur toute la session. */
+    /* Supprimer libère les heures : la case redevient sélectionnable et accepte
+       un bloc à toi. Sa portée est celle du reste — un cours annulé cette
+       semaine-là n'annule pas les suivantes. */
     const del = mk("button","btn danger","Supprimer");
-    del.title = "Libère ces heures dans toutes les semaines";
     del.addEventListener("click", () => {
-      setTTEdit(key, { del:true }); closePop(); ttChanged();
+      if (scope === "jour") setDayEdit(dISO, key, { del:true });
+      else { clearDay(dISO, key); setTTEdit(key, { del:true }); }
+      closePop(); ttChanged();
     });
     acts.append(del);
-    if (touched) {
+
+    const dayEd = dayEdit(dISO, key), weekEd = state.ttEdits[key];
+    if (dayEd || weekEd) {
       const undo = mk("button","btn quiet","Rétablir");
-      undo.title = "Remettre ce bloc tel qu'il a été importé";
+      undo.title = dayEd
+        ? `Annuler la retouche du ${jour} et revenir au bloc des autres semaines`
+        : "Remettre ce bloc tel qu'il a été importé";
       undo.addEventListener("click", () => {
-        delete state.ttEdits[key]; closePop(); ttChanged();
+        /* La plus récente d'abord : l'exception du jour se retire seule, un
+           second passage remet la semaine. Un seul clic n'efface jamais deux
+           corrections dont une qu'on n'a pas regardée. */
+        if (dayEd) clearDay(dISO, key); else delete state.ttEdits[key];
+        closePop(); ttChanged();
       });
       acts.append(undo);
     }
@@ -2667,15 +2823,59 @@ html,body{overflow-x:clip}
     const commit = () => {
       const t = nom.i.value.trim();
       if (!t) return;
-      const c = code.i.value.trim();
-      for (const row of (scope === "cours" ? sib : [e])) {
-        setTTEdit(ttKey(row), row === e
-          ? { t, code:c, k:kind.i.value, room:room.i.value.trim(), prof:prof.i.value.trim() }
-          : { t, code:c });
+      const full = { t, code:code.i.value.trim(), k:kind.i.value,
+                     room:room.i.value.trim(), prof:prof.i.value.trim() };
+      if (scope === "jour") setDayEdit(dISO, key, { ...full, kind: mark });
+      else {
+        /* Une retouche de semaine reprend la main sur la date qu'on regarde :
+           sans ça, on corrigerait le bloc sous ses propres yeux sans rien voir
+           changer, l'exception du jour continuant de le recouvrir. Les autres
+           dates gardent la leur. */
+        clearDay(dISO, key);
+        for (const row of (scope === "cours" ? sib : [wk]))
+          setTTEdit(ttKey(row), ttKey(row) === key ? full : { t, code:full.code });
       }
       closePop(); ttChanged();
     };
     ok.addEventListener("click", commit);
+    acts.append(cancel, ok); box.append(acts);
+
+    /* Ce que la retouche va toucher, dit en toutes lettres et remis à jour à
+       chaque changement de portée : c'est la seule façon de savoir, avant de
+       cliquer, si on corrige une semaine ou toute la session. */
+    function syncHint() {
+      del.title = scope === "jour"
+        ? `Libère ces heures le ${jour} seulement`
+        : "Libère ces heures dans toutes les semaines";
+      hint.textContent = mark
+        ? `${MARKS[mark]} du ${jour} : le marquage se range dans « Examens et business » avec son compte à rebours, et ne touche aucune autre semaine.`
+        : scope === "jour"
+          ? `Cette retouche ne vaut que pour le ${jour}. Les autres semaines gardent le bloc tel qu'il est.`
+          : scope === "bloc"
+            ? "Cette retouche vaut pour ce bloc dans toutes les semaines de la session."
+            : `Le nom et le sigle changent pour les ${sib.length} blocs du cours ; le type, le local et le professeur ne changent que pour celui-ci — dans toutes les semaines.`;
+    }
+    function setScope(v) {
+      scope = v;
+      segBtns.forEach(b => b.classList.toggle("on", b.dataset.s === v));
+      syncHint();
+    }
+    /* Un examen tombe une fois. Le marquer verrouille donc la portée sur la
+       date : proposer « chaque semaine » pour un examen serait proposer une
+       chose qui n'existe pas. Retirer le marquage rend le choix. */
+    function syncScope() {
+      if (mark) setScope("jour"); else syncHint();
+      for (const b of segBtns) {
+        const off = !!mark && b.dataset.s !== "jour";
+        b.disabled = off;
+        b.style.opacity = off ? ".4" : "";
+        b.title = off
+          ? "Un examen ou un rendez-vous ne se répète pas : il se pose sur une date."
+          : SCOPES.find(sc => sc[0] === b.dataset.s)[2];
+      }
+    }
+    syncScope();
+
     /* Un nom vide n'enregistre rien : on le dit avec le bouton plutôt que de
        fermer le composeur sans explication. */
     const syncOk = () => { ok.disabled = !nom.i.value.trim(); };
@@ -2685,7 +2885,6 @@ html,body{overflow-x:clip}
       if (ev.key === "Enter") { ev.preventDefault(); commit(); }
       if (ev.key === "Escape") { ev.preventDefault(); closePop(); }
     });
-    acts.append(cancel, ok); box.append(acts);
     pop = box; place(box, cell, true); nom.i.focus(); nom.i.select();
   }
 
@@ -2694,16 +2893,16 @@ html,body{overflow-x:clip}
      pas sur un clic distrait. */
   function openTTReset(anchorEl) {
     pop?.remove();
-    const n = Object.keys(state.ttEdits).length;
+    const n = ttCount();
     const box = mk("div","pop fx");
     box.append(mk("h4", null, "Rétablir l'horaire"));
     box.append(mk("p","when", `${n} retouche${n > 1 ? "s" : ""}`));
-    box.append(mk("p","hint", "Les noms, sigles, types, locaux et professeurs que tu as corrigés reviennent à l'horaire importé, et les blocs de cours supprimés reparaissent. Les blocs que tu as ajoutés toi-même ne bougent pas."));
+    box.append(mk("p","hint", "Les noms, sigles, types, locaux et professeurs que tu as corrigés reviennent à l'horaire importé, les blocs de cours supprimés reparaissent, et les exceptions posées sur une semaine précise — examens, rendez-vous, séances annulées — s'effacent avec elles. Les blocs que tu as ajoutés toi-même ne bougent pas."));
     const acts = mk("div","acts"); acts.append(mk("span","grow"));
     const cancel = mk("button","btn quiet","Annuler");
     cancel.addEventListener("click", closePop);
     const ok = mk("button","btn danger","Rétablir");
-    ok.addEventListener("click", () => { state.ttEdits = {}; closePop(); ttChanged(); });
+    ok.addEventListener("click", () => { state.ttEdits = {}; state.ttDays = {}; closePop(); ttChanged(); });
     acts.append(cancel, ok); box.append(acts);
     pop = box; place(box, anchorEl);
   }
@@ -3323,6 +3522,16 @@ html,body{overflow-x:clip}
      entière dès minuit. */
   function marques(k, now = new Date()) {
     const out = [];
+    /* Un examen posé sur le cours de mardi n'existerait que dans la grille si
+       la liste ne lisait que les blocs perso : les deux sources se versent
+       donc dans le même panier, avec les mêmes règles de tri et de péremption. */
+    for (const { dISO, e } of ttMarques()) {
+      if (e.kind !== k) continue;
+      const [y, m, d] = dISO.split("-").map(Number);
+      const [start, end] = ttSpan(e, new Date(y, m - 1, d));
+      if (end <= now) continue;
+      out.push({ dISO, b: { t:e.t, h:hueOf(e.t), kind:e.kind }, start, end });
+    }
     for (const [dISO, list] of Object.entries(state.blocks || {})) {
       const [y, m, d] = dISO.split("-").map(Number);
       for (const b of list) {
@@ -3517,12 +3726,18 @@ html,body{overflow-x:clip}
       const day = addDays(d0, i);
       if (!inSem(day)) continue;
       const wd = (day.getDay() + 6) % 7;
-      for (const e of TT) {
-        if (e.d !== wd) continue;
+      const dI = iso(day);
+      for (const src of TT) {
+        if (src.d !== wd) continue;
+        /* Ce jour-là, pas la semaine type : un cours annulé pour cette date ne
+           s'annonce pas, et celui qu'on a marqué examen s'annonce comme tel. */
+        const e = ttOn(dI, src);
+        if (!e) continue;
         const [start, end] = ttSpan(e, day);
         if (end <= now) continue;   // un cours commencé n'est pas passé
-        out.push({ key:`c:${iso(day)}:${e.h[0]}`, kind:"cours", t:e.t, hue:hueOf(e.t),
-          sub:[kindLabel(e.k), e.room].filter(Boolean).join(" · "),
+        out.push({ key:`c:${dI}:${e.h[0]}`, kind:e.kind === "examen" ? "examen" : "cours",
+          t:e.t, hue:hueOf(e.t),
+          sub:[MARKS[e.kind] || kindLabel(e.k), e.room].filter(Boolean).join(" · "),
           start, end, at:new Date(+start - LEAD_MIN * 6e4) });
       }
     }
@@ -3646,7 +3861,7 @@ html,body{overflow-x:clip}
     el("kd-n").textContent = tout.length ? `(${tout.length})` : "";
     el("kd-empty").hidden = pick.length > 0;
   }
-  const renderWidget = () => { renderNext(); renderKeyDates(); };
+  function renderWidget() { renderNext(); renderKeyDates(); }
 
   /* ── Rappels : une heure avant ─────────────────────────────────────
      Aucun serveur de push ici — le navigateur ne réveille pas une page
@@ -3803,24 +4018,49 @@ html,body{overflow-x:clip}
      ouvre sa fiche. Les dates qu'on y ajoute ne sont pas un carnet à part :
      ce sont les mêmes échéances que partout ailleurs, d'où le rappel qui
      s'allume et la case qui se pose dans l'horaire. */
-  const MSHEET = { prof:"", mail:"", room:"", link:"", memo:"", page:"", at:"", ink:[], annos:[] };
+  const MSHEET = { prof:"", mail:"", room:"", link:"", memo:"", pages:[], pg:"" };
   /* Clés possibles d'une fiche, la meilleure en tête. Un horaire lu sur photo
      laisse souvent le sigle vide : la fiche s'ouvre alors sous le nom du
      cours, puis déménage sous le sigle dès qu'une collecte le fait
      apparaître — sans que les notes déjà prises restent en arrière. */
   const mKeys = c => { const code = courseInfo(c).code; return code ? [code, c] : [c]; };
   const mRaw = c => { const ks = mKeys(c); return state.sheets[ks.find(k => state.sheets[k])] || {}; };
-  /* Les deux listes sont recopiées à la lecture : le gabarit MSHEET partage
-     ses tableaux vides entre toutes les fiches, les muter en place les
-     mélangerait toutes. Toute écriture passe donc par un tableau NEUF. */
-  const mSheet = c => { const r = mRaw(c);
-    return { ...MSHEET, ...r,
-      ink:   Array.isArray(r.ink)   ? r.ink   : [],
-      annos: Array.isArray(r.annos) ? r.annos : [] }; };
+  /* Le gabarit MSHEET partage son tableau `pages` vide entre toutes les
+     fiches : le muter en place les mélangerait toutes. Toute écriture passe
+     donc par un tableau NEUF. */
+  const mSheet = c => ({ ...MSHEET, ...mRaw(c) });
   const mWrite = (c, patch) => { const ks = mKeys(c);
     state.sheets[ks[0]] = { ...MSHEET, ...mRaw(c), ...patch };
     for (const old of ks.slice(1)) delete state.sheets[old]; };
   const mPatch = (c, patch) => { mWrite(c, patch); save(); };
+  /* ── Le dossier de la matière ────────────────────────────────────
+     Ses pages de notes, une par cours ; `pg` retient laquelle est ouverte.
+     La page blanche d'avant vit toujours — il y en a simplement plusieurs,
+     et « Toutes les notes » les montre toutes, rangées par matière. */
+  const PAGE0 = { t:"", at:"", page:"", ink:[], annos:[] };
+  const normPage = p => ({ ...PAGE0, ...p,
+    ink: Array.isArray(p.ink) ? p.ink : [], annos: Array.isArray(p.annos) ? p.annos : [] });
+  const mPages = c => (Array.isArray(mRaw(c).pages) ? mRaw(c).pages : []).map(normPage);
+  const pgFull = p => !!(p.page.trim() || p.ink.length || p.annos.length);
+  const mPage = c => { const ps = mPages(c);
+    return ps.find(p => p.id === mRaw(c).pg) || ps[0] || normPage({}); };
+  /* Titre d'une page neuve : le cours du jour. Deux pages le même jour se
+     numérotent — deux « Cours du 26 août » seraient indiscernables. */
+  const pgTitle = c => { const d = new Date();
+    const base = `Cours du ${d.getDate()} ${MONTH[d.getMonth()]}`;
+    const n = mPages(c).filter(p => (p.t || "").startsWith(base)).length;
+    return n ? `${base} · ${n + 1}` : base; };
+  /* Écrire dans la page ouverte. Un dossier encore vide n'a pas de page :
+     c'est le premier geste qui la crée — ouvrir une fiche pour la regarder
+     n'en sème pas. */
+  const mPWrite = (c, patch) => {
+    let ps = mPages(c), cur = mRaw(c).pg;
+    if (!ps.length) { const p = { ...PAGE0, id: uid(), t: pgTitle(c) }; ps = [p]; cur = p.id; }
+    else if (!ps.some(p => p.id === cur)) cur = ps[0].id;
+    mWrite(c, { pages: ps.map(p => p.id === cur ? { ...p, ...patch } : p), pg: cur });
+  };
+  const addPage = c => { const p = { ...PAGE0, id: uid(), t: pgTitle(c) };
+    mWrite(c, { pages: [...mPages(c), p], pg: p.id }); save(); return p; };
   /* Une page se tape en continu : réécrire tout l'état à chaque touche ferait
      saccader les longues pages. Le texte entre en mémoire tout de suite, il
      descend sur le disque un instant plus tard — et sans faute dès qu'on
@@ -3845,7 +4085,7 @@ html,body{overflow-x:clip}
     ta.style.height = "auto";
     let need = ta.scrollHeight;
     if (mCur) {
-      const sh = mSheet(mCur);
+      const sh = mPage(mCur);
       let deep = 0;   // y est déjà en pixels : rien à convertir
       for (const st of sh.ink) for (let i = 1; i < st.p.length; i += 2) if (st.p[i] > deep) deep = st.p[i];
       for (const a of sh.annos) if (a.y > deep) deep = a.y;
@@ -3858,9 +4098,8 @@ html,body{overflow-x:clip}
   const mStamp = () => { const t = new Date();
     return `${t.getDate()} ${MONTH[t.getMonth()].slice(0,4)} · ${pad(t.getHours())}:${pad(t.getMinutes())}`; };
   /* Ce qu'une fiche contient déjà : sert aux compteurs des cartes « Mes cours ». */
-  const mFull = c => { const sh = mSheet(c);
-    return !!(sh.page.trim() || sh.ink.length || sh.annos.length); };
-  const mCount = c => ({ page: mFull(c), dates: mDates(c).length });
+  const mFull = c => mPages(c).some(pgFull);
+  const mCount = c => ({ pages: mPages(c).filter(pgFull).length, dates: mDates(c).length });
   let mCur = null;                     // matière dont la fiche est ouverte
 
   function openMatiere(c) {
@@ -4017,7 +4256,7 @@ html,body{overflow-x:clip}
     /* Mille unités en largeur, des pixels en hauteur : le repère du stockage
        tel quel. D'où « none » — l'aspect ne doit surtout PAS être préservé. */
     const vb = `0 0 1000 ${wrap.clientHeight || 1}`;
-    const ink = mCur ? mSheet(mCur).ink : [];
+    const ink = mCur ? mPage(mCur).ink : [];
     for (const [id, kind] of [["m-hl","hl"], ["m-pen","pen"]]) {
       const svg = el(id);
       svg.setAttribute("viewBox", vb);
@@ -4036,7 +4275,7 @@ html,body{overflow-x:clip}
   function drawAnnos() {
     const c = mCur, box = el("m-annos"); box.textContent = "";
     if (!c) return;
-    for (const a of mSheet(c).annos) {
+    for (const a of mPage(c).annos) {
       const n = mk("div","anno");
       n.dataset.x = a.x; n.dataset.y = a.y; n.dataset.id = a.id;
       n.style.setProperty("--c", colOf(a.c));
@@ -4044,7 +4283,7 @@ html,body{overflow-x:clip}
       const grab = mk("span","grab"); grab.title = "Déplacer l'annotation";
       const kill = mk("button","kill","×"); kill.title = "Retirer l'annotation";
       kill.addEventListener("click", () => {
-        mWrite(c, { annos: mSheet(c).annos.filter(x => x.id !== a.id) });
+        mPWrite(c, { annos: mPage(c).annos.filter(x => x.id !== a.id) });
         drawAnnos(); mGrow(); histSave(); mTouched();
       });
       hd.append(grab, kill);
@@ -4052,7 +4291,7 @@ html,body{overflow-x:clip}
       ta.placeholder = "Annotation…";
       const g = () => { ta.style.height = "auto"; ta.style.height = `${ta.scrollHeight}px`; };
       ta.addEventListener("input", () => { g();
-        mWrite(c, { annos: mSheet(c).annos.map(x => x.id === a.id ? { ...x, t: ta.value } : x) });
+        mPWrite(c, { annos: mPage(c).annos.map(x => x.id === a.id ? { ...x, t: ta.value } : x) });
         mTouched();
         /* Le texte d'une annotation doit entrer dans l'historique lui aussi :
            sans ça, annuler un trait ramènerait un état antérieur à ce qu'on
@@ -4075,7 +4314,7 @@ html,body{overflow-x:clip}
       try { handle.setPointerCapture(ev.pointerId); } catch {}
       node.classList.add("drag");
       const k = 1000 / mBoxW(), sx = ev.clientX, sy = ev.clientY;
-      const o = mSheet(c).annos.find(x => x.id === id) || { x:0, y:0 };
+      const o = mPage(c).annos.find(x => x.id === id) || { x:0, y:0 };
       let moved = false;
       const mv = e2 => {
         if (Math.abs(e2.clientX - sx) + Math.abs(e2.clientY - sy) < 3) return;
@@ -4090,7 +4329,7 @@ html,body{overflow-x:clip}
         handle.removeEventListener("pointercancel", up);
         node.classList.remove("drag");
         if (!moved) return;
-        mWrite(c, { annos: mSheet(c).annos.map(x => x.id === id
+        mPWrite(c, { annos: mPage(c).annos.map(x => x.id === id
           ? { ...x, x:+node.dataset.x, y:+node.dataset.y } : x) });
         mGrow(); histSave(); mTouched();
       };
@@ -4103,7 +4342,7 @@ html,body{overflow-x:clip}
     const c = mCur; if (!c) return;
     const a = { id: uid(), x: +Math.max(0, Math.min(880, x)).toFixed(1),
                 y: +Math.max(0, y).toFixed(1), t:"", c: mCol };
-    mWrite(c, { annos: [...mSheet(c).annos, a] });
+    mPWrite(c, { annos: [...mPage(c).annos, a] });
     drawAnnos(); mGrow(); histSave(); mTouched();
     /* Poser une annotation, c'est vouloir écrire dedans : on repasse à
        l'écriture, sinon le clic suivant en sème une deuxième. */
@@ -4124,9 +4363,9 @@ html,body{overflow-x:clip}
   function eraseAt(x, y) {
     const c = mCur; if (!c) return;
     const k = mBoxW() / 1000;
-    const ink = mSheet(c).ink, keep = ink.filter(st => !strokeHit(st, x, y, k));
+    const ink = mPage(c).ink, keep = ink.filter(st => !strokeHit(st, x, y, k));
     if (keep.length === ink.length) return;
-    mWrite(c, { ink: keep });
+    mPWrite(c, { ink: keep });
     drawInk();
   }
 
@@ -4160,7 +4399,7 @@ html,body{overflow-x:clip}
     if (!mStroke) return;
     const st = mStroke; mStroke = null; mLive = null;
     if (!c) { drawInk(); return; }
-    mWrite(c, { ink: [...mSheet(c).ink, st] });
+    mPWrite(c, { ink: [...mPage(c).ink, st] });
     mGrow(); histSave(); mTouched();
   }
 
@@ -4450,13 +4689,18 @@ html,body{overflow-x:clip}
       const start = addDays(anchor, off*7);
       for (let i = 0; i < 7; i++) {
         const day = addDays(start, i), dI = iso(day);
-        for (const e of (inSem(day) ? TT.filter(x => x.d === i) : [])) {
+        for (const src of (inSem(day) ? TT.filter(x => x.d === i) : [])) {
+          /* Le calendrier reçoit la session telle qu'elle se donne : sans les
+             séances annulées, et avec les examens sous leur vrai nom. */
+          const e = ttOn(dI, src);
+          if (!e) continue;
           const [h1,m1] = e.time.split(" – ")[0].split(":").map(Number);
           const [h2,m2] = e.time.split(" – ")[1].split(":").map(Number);
           lines.push("BEGIN:VEVENT",
             `DTSTART:${st(new Date(day.getFullYear(),day.getMonth(),day.getDate(),h1,m1))}`,
             `DTEND:${st(new Date(day.getFullYear(),day.getMonth(),day.getDate(),h2,m2))}`,
-            `SUMMARY:${e.t} (${e.k})`, `LOCATION:${e.room}`, "END:VEVENT");
+            `SUMMARY:${e.kind ? `${MARKS[e.kind]} — ${e.t}` : `${e.t} (${e.k})`}`,
+            `LOCATION:${e.room}`, "END:VEVENT");
         }
         for (const b of dayBlocks(dI)) lines.push("BEGIN:VEVENT",
           `DTSTART:${st(new Date(day.getFullYear(),day.getMonth(),day.getDate(),b.from))}`,
