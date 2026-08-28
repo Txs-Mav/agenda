@@ -18,6 +18,8 @@ import { analyzeNew } from "./scrape/agent.js";
 import { pushSnapshot, fetchSuppressions } from "./sync/supabase.js";
 import { extractHoraire } from "./scrape/horaire.js";
 import { collectEvenements } from "./scrape/evenements.js";
+import { lireJeton } from "./moodle/api.js";
+import { collecteMoodle } from "./moodle/collect.js";
 import { reportFailure, reportSuccess } from "./notify.js";
 import { log } from "./log.js";
 
@@ -157,6 +159,13 @@ async function cmdScrape(): Promise<void> {
     await pushSnapshot(JSON.parse(rf(join(config.dataDir, "export.json"), "utf8")));
     await s.saveState();
     await reportSuccess();
+    // Moodle embarque dans le même passage dès qu'un jeton existe (l'unique
+    // `npm run moodle-login`) : zéro entretien ensuite. Et un pépin Moodle ne
+    // coûte jamais la collecte Omnivox — il est déjà consigné, on continue.
+    if (lireJeton()) {
+      try { await collecteMoodle(); }
+      catch (err) { log.warn(`Moodle : ${err instanceof Error ? err.message : err}`); }
+    }
   } finally { await s.close(); }
 }
 

@@ -38,9 +38,24 @@ Guide illustré et détaillé : https://agenda-five-sigma.vercel.app/guide.html
 | `npm run horaire <image>` | Lit une capture/photo de ton horaire (heures visibles) et remplit la grille |
 | `npm run check` | La session tient-elle encore, et depuis quand |
 | `npm run discover` | Relève la navigation réelle du portail (débogage) |
+| `npm run moodle-login` | Branche Moodle — une fois ; connexion M365 dans une fenêtre, jeton durable |
+| `npm run moodle` | Un passage Moodle immédiat (sinon il embarque dans la collecte horaire) |
 
 La collecte automatique passe toutes les heures via `launchd`
 (`horaire.scrape.plist`). Journal : `data/scrape.log`.
+
+## Moodle, en deux minutes
+
+Guide illustré : https://agenda-five-sigma.vercel.app/moodle.html
+
+`npm run moodle-login`, tu te connectes **comme d'habitude** (M365) dans la
+fenêtre qui s'ouvre, et c'est terminé : le jeton — durable, lecture seule,
+rangé dans `data/` — permet à la collecte horaire d'embarquer Moodle
+automatiquement. Remises et tests arrivent dans l'agenda (une date déplacée
+par le prof **suit**, sans doublon) ; chaque nouveau document déclenche une
+notification, et sa liste avec **l'URL exacte** vit dans
+`data/moodle-nouveautes.json`. Ton mot de passe n'est ni lu ni stocké — le
+flux est celui, officiel, de l'app mobile Moodle, jamais rejoué en ton nom.
 
 ## Quand la session Omnivox expire
 

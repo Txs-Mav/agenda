@@ -22,7 +22,7 @@ import { log } from "../log.js";
 import { pushSnapshot, fetchSuppressions } from "../sync/supabase.js";
 import { reportNouveautes } from "../notify.js";
 import {
-  lireJeton, ws, sigleDe, MOODLE_BASE,
+  lireJeton, ws, sigleDe, MOODLE_BASE, MoodleError,
   type SiteInfo, type Cours, type SectionCours, type Devoirs, type EvenementsCal,
 } from "./api.js";
 
@@ -148,12 +148,14 @@ function fusionne(prev: Deadline[], fresh: Deadline[], supprimees: Set<string>):
 
 /* ---- Le passage ----------------------------------------------------------- */
 
-try {
+/**
+ * Un passage complet. Appelé par `npm run moodle` (src/moodle/run.ts) et
+ * embarqué dans la collecte horaire Omnivox (cli.ts) dès qu'un jeton existe :
+ * après l'unique `npm run moodle-login`, plus aucun entretien.
+ */
+export async function collecteMoodle(): Promise<{ nouveautes: number; echeances: number }> {
   const jeton = lireJeton();
-  if (!jeton) {
-    log.error("Aucun jeton Moodle. Lance d'abord : npm run moodle-login");
-    process.exit(2);
-  }
+  if (!jeton) throw new MoodleError("aucunjeton", "Aucun jeton Moodle. Lance d'abord : npm run moodle-login");
 
   log.step(`Collecte Moodle (${jeton.host})`);
   const info = await ws<SiteInfo>(jeton.token, "core_webservice_get_site_info");
@@ -197,7 +199,5 @@ try {
   log.info(`${nextD.length} échéances au total dans l'agenda`);
 
   await pushSnapshot(payload);
-} catch (err) {
-  log.error(err instanceof Error ? err.message : err);
-  process.exit(1);
+  return { nouveautes: fraiches.length, echeances: fresh.length };
 }

@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moodle en deux minutes — Agenda CTR</title>
+<meta name="description" content="Une commande, une connexion comme d'habitude, puis plus rien : remises, tests et nouveaux documents Moodle arrivent dans ton agenda, avec le lien exact.">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,380;0,9..144,500;0,9..144,600;1,9..144,380;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --nuit:#131417; --nuit-2:#1B1D21;
+  --papier:#F2EFE8; --papier-2:#E9E5DB;
+  --encre:#191A1D; --encre-2:#54565C; --encre-3:#8B8D93;
+  --creme:#F5F2EB; --creme-2:rgba(245,242,235,.62); --creme-3:rgba(245,242,235,.34);
+  --filet:rgba(25,26,29,.16); --filet-nuit:rgba(245,242,235,.14);
+  --accent:#C6472B; --accent-nuit:#E86A4A;
+  --serif:"Fraunces",Georgia,serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--papier);color:var(--encre);
+  font-family:var(--sans);font-size:16.5px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+h1,h2,h3,p,ul,ol,figure{margin:0}
+a{color:inherit}
+::selection{background:var(--accent);color:var(--creme)}
+.grain{position:relative;isolation:isolate}
+.grain::after{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='2'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+  opacity:.05;mix-blend-mode:overlay;
+}
+.wrap{max-width:76rem;margin:0 auto;padding:0 clamp(1.2rem,4vw,3rem)}
+.ov{font-family:var(--mono);font-size:.68rem;letter-spacing:.24em;text-transform:uppercase}
+.num{font-family:var(--serif);font-style:italic;font-weight:380;color:var(--accent)}
+
+.hero{
+  background:radial-gradient(120% 90% at 78% -10%, var(--nuit-2) 0%, var(--nuit) 55%);
+  color:var(--creme);overflow:hidden;
+}
+nav{display:flex;align-items:center;gap:2rem;padding:1.6rem 0}
+.marque{font-family:var(--serif);font-weight:600;font-size:1.22rem;letter-spacing:-.01em;text-decoration:none}
+.marque i{font-weight:380;color:var(--accent-nuit)}
+nav .liens{margin-left:auto;display:flex;gap:1.8rem;align-items:center}
+nav .liens a{font-size:.85rem;color:var(--creme-2);text-decoration:none;transition:color .15s}
+nav .liens a:hover{color:var(--creme)}
+.cta{
+  background:var(--creme);color:var(--nuit)!important;text-decoration:none;
+  font-size:.85rem;font-weight:600;padding:.6rem 1.15rem;border-radius:999px;
+  transition:transform .15s;
+}
+.cta:hover{transform:translateY(-1px)}
+
+.hero-solo{padding:3.4rem 0 4.6rem;max-width:44rem}
+.hero .ov{color:var(--accent-nuit)}
+.hero h1{
+  font-family:var(--serif);font-weight:500;font-size:clamp(2.4rem,5vw,3.9rem);
+  line-height:1.05;letter-spacing:-.022em;margin:1.1rem 0 1.3rem;
+}
+.hero h1 em{font-style:italic;font-weight:380}
+.hero .pitch{color:var(--creme-2);font-size:1.02rem;max-width:31rem}
+.hero .pitch b{color:var(--creme);font-weight:600}
+
+.cmd{
+  margin-top:1.9rem;max-width:33rem;
+  border:1px solid var(--filet-nuit);border-radius:12px;overflow:hidden;
+  background:rgba(0,0,0,.28);
+}
+.cmd .t{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:.5rem .9rem;border-bottom:1px solid var(--filet-nuit);
+  font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;color:var(--creme-3);
+}
+.cmd button{
+  font-family:var(--mono);font-size:.64rem;letter-spacing:.1em;color:var(--creme-2);
+  background:none;border:0;cursor:pointer;padding:.2rem 0;
+}
+.cmd button:hover{color:var(--creme)}
+.cmd pre{
+  margin:0;padding:.95rem .95rem 1.05rem;overflow-x:auto;
+  font-family:var(--mono);font-size:.74rem;line-height:1.5;color:var(--creme);
+}
+.cmd pre b{color:var(--accent-nuit);font-weight:500}
+.hero .apres{margin-top:1rem;font-size:.83rem;color:var(--creme-3)}
+.hero .apres a{color:var(--creme-2)}
+
+/* Les trois gestes, sur papier cette fois */
+.gestes-sec{padding:4.4rem 0 4.6rem}
+.gestes-sec>.wrap>.ov{color:var(--encre-3)}
+.gestes{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:2.4rem;
+  margin-top:2.2rem;
+}
+.geste .num{font-size:1.6rem}
+.geste h3{font-family:var(--serif);font-weight:500;font-size:1.25rem;margin:.55rem 0 .5rem}
+.geste p{font-size:.92rem;color:var(--encre-2)}
+.geste p+p{margin-top:.6rem}
+.geste p b{color:var(--encre);font-weight:600}
+.geste p code{font-family:var(--mono);font-size:.8rem;color:var(--encre)}
+
+/* Ce que ça change, en une bande */
+.apport{border-top:1px solid var(--filet);border-bottom:1px solid var(--filet)}
+.apport .wrap{display:grid;grid-template-columns:repeat(3,1fr)}
+.item{padding:1.5rem 1.4rem 1.6rem;border-left:1px solid var(--filet)}
+.item:first-child{border-left:0;padding-left:0}
+.item .ov{color:var(--encre-3)}
+.item p{font-family:var(--serif);font-size:1.06rem;font-weight:500;line-height:1.3;margin-top:.45rem}
+
+/* Variantes & dépannage */
+.variantes{padding:4.2rem 0 1.4rem}
+.variantes .ov{color:var(--encre-3)}
+.variantes h2{
+  font-family:var(--serif);font-weight:500;font-size:clamp(1.7rem,3vw,2.4rem);
+  letter-spacing:-.018em;line-height:1.1;margin:.8rem 0 1.6rem;
+}
+.variantes ul{list-style:none;padding:0;max-width:44rem}
+.variantes li{padding:1rem 0;border-top:1px solid var(--filet);font-size:.95rem;color:var(--encre-2)}
+.variantes li b{color:var(--encre);font-weight:600}
+.variantes li code{font-family:var(--mono);font-size:.82rem;color:var(--encre);background:var(--papier-2);padding:.12rem .4rem;border-radius:6px;white-space:nowrap}
+
+.charte{padding:4.2rem 0 5rem}
+.charte .cadre-double{
+  border:1px solid var(--encre);outline:1px solid var(--encre);outline-offset:4px;
+  padding:clamp(1.8rem,4.5vw,3.4rem);
+}
+.charte .ov{color:var(--accent)}
+.charte h2{
+  font-family:var(--serif);font-weight:500;font-size:clamp(1.8rem,3.2vw,2.6rem);
+  letter-spacing:-.018em;line-height:1.1;margin:.8rem 0 2rem;max-width:30rem;
+}
+.charte ul{list-style:none;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:1.6rem 3rem}
+.charte li{padding-top:1rem;border-top:1px solid var(--filet)}
+.charte li b{font-family:var(--serif);font-weight:600;font-size:1.04rem;display:block;margin-bottom:.3rem}
+.charte li{font-size:.93rem;color:var(--encre-2)}
+
+footer{border-top:1px solid var(--filet);padding:2.2rem 0 3rem}
+footer .wrap{display:flex;gap:2rem;align-items:baseline;flex-wrap:wrap}
+footer p{font-size:.83rem;color:var(--encre-3)}
+footer a{color:var(--encre-2)}
+footer .marque{color:var(--encre);font-size:1.05rem}
+footer .marque i{color:var(--accent)}
+footer .droite{margin-left:auto}
+
+@media (max-width:960px){
+  .gestes{grid-template-columns:1fr}
+  .apport .wrap{grid-template-columns:1fr}
+  .item{padding-left:0;border-left:0;border-top:1px solid var(--filet)}
+  .item:first-child{border-top:0}
+  .charte ul{grid-template-columns:1fr}
+  nav .liens a:not(.cta){display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="hero grain">
+  <div class="wrap">
+    <nav>
+      <a class="marque" href="/guide.html">Agenda <i>·</i> CTR</a>
+      <div class="liens">
+        <a href="#gestes">Les deux gestes</a>
+        <a href="#charte">Sécurité</a>
+        <a href="https://github.com/Txs-Mav/agenda">Code source</a>
+        <a class="cta" href="/">Ouvrir l’app</a>
+      </div>
+    </nav>
+
+    <div class="hero-solo">
+      <p class="ov">Moodle · Cégep de Trois-Rivières</p>
+      <h1>Moodle, branché<br><em>en deux minutes.</em></h1>
+      <p class="pitch">Remises, tests et documents de cours rejoignent ton agenda —
+      <b>avec le lien exact vers chaque contenu</b>. Une commande, une connexion
+      comme d’habitude, puis plus rien : la collecte de chaque heure s’en occupe.
+      <b>Ton mot de passe n’est ni lu, ni stocké.</b></p>
+
+      <div class="cmd">
+        <div class="t"><span>TERMINAL — UNE SEULE FOIS</span>
+          <button id="copier" type="button">COPIER</button></div>
+        <pre><b>cd</b> ~/AgendaCegep &amp;&amp; <b>npm</b> run moodle-login</pre>
+      </div>
+      <p class="apres">Cmd + Espace, tape « Terminal », colle, Entrée.
+      Pas encore l’app ? <a href="/guide.html#installer">Commence par l’installation</a>.</p>
+    </div>
+  </div>
+</header>
+
+<section class="gestes-sec" id="gestes">
+  <div class="wrap">
+    <p class="ov">Deux gestes, et le deuxième est déjà une habitude</p>
+    <div class="gestes">
+      <div class="geste">
+        <span class="num">1</span>
+        <h3>La commande</h3>
+        <p>Une fenêtre s’ouvre sur la vraie page Moodle du cégep — celle que tu
+        connais, à l’adresse habituelle. Le script n’y touche pas : il attend.</p>
+      </div>
+      <div class="geste">
+        <span class="num">2</span>
+        <h3>Connecte-toi comme d’habitude</h3>
+        <p>Bouton <b>« Connexion M365 »</b>, ton compte du cégep, comme pour tes
+        courriels. C’est tout : le jeton d’accès revient tout seul, la fenêtre
+        se ferme, et il est rangé sur <b>ton</b> disque.</p>
+      </div>
+      <div class="geste">
+        <span class="num">∅</span>
+        <h3>Il n’y a pas de geste trois</h3>
+        <p>La collecte qui passait déjà toutes les heures pour Omnivox embarque
+        Moodle automatiquement. Rien à reprogrammer, rien à entretenir — et le
+        jeton dure des mois.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="apport">
+  <div class="wrap">
+    <div class="item"><p class="ov">Remises &amp; tests</p><p>Chaque devoir daté arrive dans l’agenda, à l’heure près</p></div>
+    <div class="item"><p class="ov">Dates déplacées</p><p>Un prof repousse ? L’échéance suit — jamais dupliquée</p></div>
+    <div class="item"><p class="ov">Nouveaux documents</p><p>Notification à la publication, avec le lien exact du contenu</p></div>
+  </div>
+</section>
+
+<section class="variantes">
+  <div class="wrap">
+    <p class="ov">Variantes</p>
+    <h2>Si ton cas est différent.</h2>
+    <ul>
+      <li><b>Pas envie d’attendre l’heure ?</b> <code>npm run moodle</code> lance un
+      passage immédiat, n’importe quand.</li>
+      <li><b>Tu as un compte local Moodle</b> (nom d’utilisateur + mot de passe, sans
+      M365) ? Écris-le dans <code>.env</code> (<code>MOODLE_USER</code> et
+      <code>MOODLE_PASS</code>) : le jeton s’obtient sans fenêtre, sans navigateur,
+      sans geste du tout.</li>
+      <li><b>Le jeton finit par mourir</b> (rare — il vit des mois) ?
+      <code>npm run moodle-login -- --force</code>, même connexion d’habitude,
+      reparti.</li>
+      <li><b>Autre cégep sur la plateforme DECclic ?</b> Change
+      <code>MOODLE_HOST</code> dans <code>.env</code> — tout le reste est identique.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="charte" id="charte">
+  <div class="wrap">
+    <div class="cadre-double">
+      <p class="ov">Charte</p>
+      <h2>Le même contrat que pour Omnivox.</h2>
+      <ul>
+        <li><b>Ton mot de passe M365 n’existe pas ici.</b> Tu le tapes sur la page de
+        Microsoft, dans une fenêtre que le script regarde sans toucher. Ce qui
+        revient, c’est un jeton de lecture — pas tes identifiants.</li>
+        <li><b>Le jeton vit chez toi.</b> Dans <code>data/</code>, exclu du dépôt,
+        jamais commité, jamais envoyé à un serveur tiers. Le supprimer =
+        débrancher Moodle, immédiatement.</li>
+        <li><b>Jamais de connexion automatisée.</b> Le flux utilisé est celui,
+        officiel, de l’app mobile Moodle. Pas de formulaire rejoué, pas de
+        réessai, pas de contournement.</li>
+        <li><b>Lecture seule, dérivé seul.</b> La collecte lit tes cours ; elle
+        n’écrit rien sur Moodle. Et comme pour Léa, seul le dérivé — échéances,
+        titres, liens — rejoint le compte nuagique facultatif.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <a class="marque" href="/guide.html">Agenda <i>·</i> CTR</a>
+    <p><a href="https://github.com/Txs-Mav/agenda">Code source sur GitHub</a> — fais-le tourner chez toi, c’est le principe.</p>
+    <p class="droite">Fait à Trois-Rivières. Aucune affiliation avec Moodle ni DECclic.</p>
+  </div>
+</footer>
+
+<script>
+const b = document.getElementById("copier");
+b.addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText("cd ~/AgendaCegep && npm run moodle-login");
+    b.textContent = "COPIÉ ✓";
+  } catch { b.textContent = "CMD+C CI-DESSOUS"; }
+  setTimeout(() => { b.textContent = "COPIER"; }, 1800);
+});
+</script>
+</body>
+</html>
