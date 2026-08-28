@@ -1,0 +1,9 @@
+# Le projet Supabase « shift » est partagé avec une autre application : tout ce
+# qui appartient à l'agenda porte le préfixe `agenda_`. Ce fichier ne décrit que
+# nos fonctions — la base, elle, se gère par migrations.
+project_id = "olkbhrbyubejetqygdcy"
+
+[functions.agenda-resume]
+# La passerelle exige un vrai jeton de session avant même d'entrer dans le code.
+# La clé publique de l'app n'en est pas un : seul un compte connecté passe.
+verify_jwt = true

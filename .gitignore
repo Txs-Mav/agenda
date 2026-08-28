@@ -40,3 +40,6 @@ npm-debug.log*
 .vercel/
 .vercel
 apercu-agenda.png
+
+# Scratch de la CLI Supabase
+supabase/.temp/

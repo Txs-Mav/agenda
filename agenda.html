@@ -1153,6 +1153,28 @@ html,body{overflow-x:clip}
 .lp-orbs .o2{width:22rem;height:22rem;top:22rem;left:-10rem;background:radial-gradient(circle,#FFE2BC,transparent 65%);animation:lp-drift 20s ease-in-out infinite alternate-reverse}
 .lp-orbs .o3{width:18rem;height:18rem;top:60rem;right:-4rem;background:radial-gradient(circle,#C9E4FF,transparent 65%);animation:lp-drift 24s ease-in-out infinite alternate}
 @keyframes lp-drift{from{transform:translate(0,0)}to{transform:translate(2.4rem,1.6rem)}}
+/* ── Transcrire le cours ─────────────────────────────────────────
+   L'encart vit sous la page : muet tant qu'il n'y a rien à montrer, et le
+   point rouge ne bat que pendant l'écoute. */
+.scribe{border-top:1px solid var(--line);margin:.3rem 1.2rem 0;padding:.7rem 0 .9rem}
+.scribe[hidden]{display:none}
+.scb{display:flex;align-items:center;gap:.45rem;font-size:.7rem;color:var(--dim)}
+.scdot{width:.42rem;height:.42rem;border-radius:50%;background:var(--line-hi);flex:0 0 auto}
+.scribe.live .scdot{background:#E5484D;animation:scpulse 1.7s ease-in-out infinite}
+@keyframes scpulse{0%,100%{opacity:1}50%{opacity:.2}}
+@media (prefers-reduced-motion:reduce){.scribe.live .scdot{animation:none}}
+.scavis{margin:.5rem 0 0;font-size:.72rem;line-height:1.5;color:var(--faint)}
+.scavis[hidden]{display:none}
+.scavis .btn{display:block;margin-top:.6rem}
+.scia{margin-top:.55rem;font-size:.8rem;line-height:1.6;white-space:pre-wrap;
+  max-height:16rem;overflow:auto}
+.scia[hidden],.scprov[hidden],.sctr[hidden]{display:none}
+.scprov{margin-top:.35rem;font-size:.75rem;line-height:1.5;color:var(--faint);
+  font-style:italic;white-space:pre-wrap}
+.scact{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.5rem}
+.scact .link[hidden]{display:none}
+.sctr{margin-top:.5rem;font-size:.7rem;line-height:1.5;color:var(--faint);
+  white-space:pre-wrap;max-height:9rem;overflow:auto}
 :root[data-theme="dark"] .lp-orbs i{opacity:.16}
 
 [data-rev]{opacity:0;transform:translateY(20px);transition:opacity .6s cubic-bezier(.2,.7,.3,1) var(--d,0ms),transform .6s cubic-bezier(.2,.7,.3,1) var(--d,0ms)}
@@ -1917,6 +1939,8 @@ a,button{touch-action:manipulation}
                     <span class="t">Aperçu de la session</span>
                     <div class="figs"><b>31<i>h</i></b><b>8<i>cours</i></b></div>
                     <span class="meter"><i></i></span>
+              <button class="tl" id="m-mic" title="Transcrire le cours"><svg class="i" viewBox="0 0 24 24"><path d="M12 3.5a2.5 2.5 0 0 1 2.5 2.5v5a2.5 2.5 0 0 1-5 0V6A2.5 2.5 0 0 1 12 3.5z"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5v3"/></svg></button>
+              <span class="sep"></span>
                     <div class="tiles"><span class="on">18<i>Blocs</i></span><span>12<i>Échéances</i></span><span>13<i>MIO</i></span></div>
                   </div>
                   <div class="c">
@@ -1933,6 +1957,23 @@ a,button{touch-action:manipulation}
                     <div class="row"><i style="background:#E8912B"></i><div><b>Actualité géographique 1</b><span class="cd" style="color:#A2620F">Dans 8 jours</span></div></div>
                     <div class="row"><i style="background:#3FA457"></i><div><b>Examen 1 — Philo</b><span class="cd" style="color:#2E7D45">Dans 25 jours</span></div></div>
                     <div class="row"><i style="background:#3A6EA5"></i><div><b>Rapport de laboratoire</b><span class="cd" style="color:#1C3D5D">Dans 32 jours</span></div></div>
+            <div class="scribe" id="m-scribe" hidden>
+              <div class="scb"><span class="scdot"></span><span id="m-scb"></span></div>
+              <p class="scavis" id="m-scavis" hidden>
+                Avant d'enregistrer, demande l'accord de ton enseignant. Le son ne quitte
+                jamais cet appareil&nbsp;: seul le texte transcrit part se faire rédiger,
+                et rien n'en est conservé sur le serveur.
+                <button class="btn solid" id="m-scok">J'ai l'accord — commencer</button>
+              </p>
+              <div class="scia" id="m-scia" hidden></div>
+              <div class="scprov" id="m-scprov" hidden></div>
+              <div class="scact">
+                <button class="link" id="m-scverse" hidden>Verser dans la page</button>
+                <button class="link" id="m-scpropre" hidden>Mettre au propre</button>
+                <button class="link" id="m-sctrv" hidden>Voir la transcription</button>
+              </div>
+              <div class="sctr" id="m-sctr" hidden></div>
+            </div>
                   </div>
                 </div>
               </div>
@@ -4270,7 +4311,7 @@ a,button{touch-action:manipulation}
      Ses pages de notes, une par cours ; `pg` retient laquelle est ouverte.
      La page blanche d'avant vit toujours — il y en a simplement plusieurs,
      et « Toutes les notes » les montre toutes, rangées par matière. */
-  const PAGE0 = { t:"", at:"", page:"", ink:[], annos:[], cat:"" };
+  const PAGE0 = { t:"", at:"", page:"", ink:[], annos:[], cat:"", ia:"", tr:0 };
   const normPage = p => ({ ...PAGE0, ...p,
     ink: Array.isArray(p.ink) ? p.ink : [], annos: Array.isArray(p.annos) ? p.annos : [] });
   const mPages = c => (Array.isArray(mRaw(c).pages) ? mRaw(c).pages : []).map(normPage);
@@ -4864,6 +4905,7 @@ a,button{touch-action:manipulation}
       }
       b.tabIndex = 0;
       const open = () => on ? seeAtSchedule(c) : openMatiere(e.t);
+    scPeindre();
       if (!on) b.title = `Ouvrir la fiche de ${e.t}\n` + b.title;
       b.addEventListener("click", open);
       b.addEventListener("keydown", ev => {
@@ -5078,6 +5120,306 @@ a,button{touch-action:manipulation}
     const hint = mk("p","hint dim", "Le texte de la page part dans la page de séance — toute la classe le voit. Ce qui y est déjà écrit reste au-dessus.");
     box.append(hint);
     const err = mk("p","hint"); err.style.color = "var(--live)"; err.hidden = true; box.append(err);
+
+  /* ── Transcrire le cours ─────────────────────────────────────────
+     L'enseignant parle, l'appareil écoute, et toutes les quelques minutes ce
+     qui vient d'être dit part se faire rédiger. Les notes reviennent écrites
+     et s'empilent sous les précédentes, pendant que le cours continue.
+
+     Deux textes, deux destins. Le transcript brut est encombrant — trois
+     heures de parole pèsent deux cents kilo-octets — et ne sert qu'une fois :
+     il vit dans IndexedDB, comme les feuilles des documents, et ne touche
+     jamais l'état. Les notes rédigées, elles, sont le produit : quelques
+     kilo-octets qui voyagent avec le reste.
+
+     La reconnaissance du navigateur ne coûte rien et ne demande aucun
+     serveur, mais elle s'interrompt d'elle-même toutes les quelques minutes
+     et n'existe pas partout. On la relance sans bruit ; là où elle manque, le
+     bouton le dit au lieu d'échouer en silence.
+
+     Ce que la machine écrit ne remplace jamais ce que l'étudiant a écrit :
+     les notes rédigées vivent dans leur propre encart, et c'est un geste
+     explicite qui les verse dans la page. */
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const SC_VU = "agenda.scribe.vu";     // l'avertissement a déjà été lu une fois
+  /* Assez de matière pour qu'un résumé ait du sens, assez souvent pour que
+     les notes s'écrivent PENDANT le cours et non après. */
+  const SC_MIN = 700, SC_MAX = 2600, SC_DELAI = 150000;
+  const IDB_TR = "agenda-tr";
+
+  let scOn = false, scRec = null, scArret = false, scForce = false;
+  let scCours = "", scPage = "";
+  let scBrut = "", scAttente = "", scProv = "";
+  let scT0 = 0, scVol = false, scTic = 0, scDernier = 0, scWake = null;
+  let scNote = "", scQuota = "";
+
+  /* Le brut a son propre dépôt : toucher à la version de celui des documents
+     obligerait à migrer un magasin qu'une autre page peut avoir ouvert. */
+  const trOpen = () => new Promise((res, rej) => {
+    const q = indexedDB.open(IDB_TR, 1);
+    q.onupgradeneeded = () => q.result.createObjectStore("tr");
+    q.onsuccess = () => res(q.result);
+    q.onerror = () => rej(q.error || new Error("IndexedDB refusé"));
+  });
+  const trPut = (k, v) => trOpen().then(db => new Promise(res => {
+    const t = db.transaction("tr", "readwrite");
+    t.objectStore("tr").put(v, k);
+    t.oncomplete = () => { db.close(); res(); };
+    t.onerror = () => { db.close(); res(); };
+  })).catch(() => {});
+  const trGet = k => trOpen().then(db => new Promise(res => {
+    const q = db.transaction("tr").objectStore("tr").get(k);
+    q.onsuccess = () => { db.close(); res(q.result || ""); };
+    q.onerror = () => { db.close(); res(""); };
+  })).catch(() => "");
+  /* Le transcript d'une page supprimée part avec elle, comme ses feuilles. */
+  const trDel = k => trOpen().then(db => new Promise(res => {
+    const t = db.transaction("tr", "readwrite");
+    t.objectStore("tr").delete(k);
+    t.oncomplete = () => { db.close(); res(); };
+    t.onerror = () => { db.close(); res(); };
+  })).catch(() => {});
+
+  /* Écrire sur la page qu'on TRANSCRIT, pas sur celle qui est ouverte :
+     changer d'onglet ou de cours pendant l'écoute ne doit pas détourner les
+     notes vers une autre page. */
+  const scEcrire = (patch) => {
+    if (!scCours || !scPage) return;
+    const ps = mPages(scCours);
+    if (!ps.some(p => p.id === scPage)) return;   // la page a été supprimée entre-temps
+    mWrite(scCours, { pages: ps.map(p => p.id === scPage ? { ...p, ...patch } : p) });
+    save();
+  };
+
+  const scMinSec = ms => { const s = Math.max(0, Math.floor(ms / 1000));
+    return `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, "0")}`; };
+
+  /* L'encart sous la page. Il ne s'ouvre que s'il a quelque chose à dire :
+     une écoute en cours, des notes déjà rédigées, ou un message. */
+  function scPeindre() {
+    const box = el("m-scribe"); if (!box) return;
+    const c = mCur, p = c ? mPage(c) : null;
+    const ici = !!p && p.id === scPage && scCours === c;   // c'est CETTE page qu'on écoute
+    const ia = p ? (p.ia || "") : "";
+    box.hidden = !ia && !ici && !scForce;
+    if (box.hidden) return;
+    box.classList.toggle("live", scOn && ici);
+
+    const bits = [];
+    if (scOn && ici) {
+      bits.push(`écoute · ${scMinSec(Date.now() - scT0)}`);
+      if (scVol) bits.push("rédaction…");
+      else if (scAttente.trim().length >= SC_MIN) bits.push("segment prêt");
+    }
+    if (scNote) bits.push(scNote);
+    if (scQuota) bits.push(scQuota);
+    el("m-scb").textContent = bits.join(" · ") || "Notes rédigées";
+
+    el("m-scia").textContent = ia;
+    el("m-scia").hidden = !ia;
+    el("m-scprov").textContent = (scOn && ici) ? scProv : "";
+    el("m-scprov").hidden = !(scOn && ici && scProv);
+    el("m-scverse").hidden = !ia;
+    el("m-scpropre").hidden = !ia || scVol || (scOn && !ici);
+    el("m-sctrv").hidden = !(p && p.tr);
+  }
+  /* Ouvrir l'encart pour y poser un message, même sans note à montrer. */
+  const scDire = (m) => { scNote = m; scForce = true; scPeindre(); };
+
+  function scBouton() {
+    const b = el("m-mic"); if (!b) return;
+    b.classList.toggle("on", scOn);
+    b.title = !SR ? "Ce navigateur ne sait pas transcrire — essaie Chrome"
+      : scOn ? "Arrêter la transcription"
+      : "Transcrire le cours — l'enseignant parle, la page prend des notes";
+  }
+
+  /* L'appel au relais. Même politesse que le reste du nuage : un jeton
+     périmé se renouvelle une fois avant d'abandonner. */
+  async function scAppel(corps, retry = true) {
+    const at = await sbJeton();
+    if (!at) return { erreur: "Connecte-toi pour que tes notes se rédigent." };
+    const r = await fetch(`${SB_URL}/functions/v1/agenda-resume`, {
+      method: "POST",
+      headers: { apikey: SB_KEY, authorization: `Bearer ${at}`,
+                 "content-type": "application/json" },
+      body: JSON.stringify(corps),
+    });
+    if (r.status === 401 && retry && sbSession()?.rt) {
+      try { await sbRenew(); } catch { return { erreur: "Session expirée — reconnecte-toi." }; }
+      return scAppel(corps, false);
+    }
+    return await r.json().catch(() => ({ erreur: "Réponse illisible du serveur." }));
+  }
+
+  /* Envoyer ce qui s'est accumulé. Le segment part vidé de la file : s'il
+     échoue, il y RETOURNE en tête — perdre cinq minutes de cours parce que
+     le réseau a hoqueté serait le pire des ratés. */
+  async function scEnvoyer(mode) {
+    if (scVol || !scCours || !scPage) return;
+    const p = mPages(scCours).find(x => x.id === scPage);
+    if (!p) return;
+    const ia = p.ia || "";
+    const segment = scAttente.trim();
+    if (mode !== "final" && segment.length < 40) return;
+    scVol = true; scNote = ""; scPeindre();
+    try {
+      const corps = mode === "final"
+        ? { mode: "final", matiere: scCours, notes: ia }
+        : { mode: "segment", matiere: scCours, contexte: ia.slice(-1200), segment };
+      if (mode !== "final") scAttente = "";
+      const d = await scAppel(corps);
+      if (d.erreur) {
+        scNote = d.erreur;
+        if (mode !== "final") scAttente = segment + " " + scAttente;
+      } else if (mode === "final") {
+        scEcrire({ ia: d.texte }); scNote = "Mis au propre.";
+      } else if (!d.vide) {
+        scEcrire({ ia: (ia ? ia + "\n\n" : "") + d.texte });
+      }
+      if (d.appels != null) scQuota = `${d.appels}/${d.plafond} aujourd'hui`;
+      scDernier = Date.now();
+    } catch {
+      scNote = "Pas de réseau — la transcription, elle, continue.";
+      if (mode !== "final") scAttente = segment + " " + scAttente;
+    } finally {
+      scVol = false; scPeindre(); renderCourses();
+    }
+  }
+
+  /* Toutes les cinq secondes : le chronomètre avance, le brut se met à
+     l'abri, et le segment part s'il est mûr. */
+  function scHorloge() {
+    if (!scOn) return;
+    scPeindre();
+    trPut(scPage, scBrut);
+    if (scVol) return;
+    const n = scAttente.trim().length;
+    if (n < SC_MIN) return;
+    if (n < SC_MAX && Date.now() - scDernier < SC_DELAI) return;
+    scEnvoyer("segment");
+  }
+
+  async function scDemarrer() {
+    const c = mCur; if (!c || !SR) return;
+    /* Une page doit exister pour porter la transcription : un dossier encore
+       vide n'en a pas, c'est ce geste-ci qui la sème. */
+    mPWrite(c, {}); save();
+    const p = mPage(c);
+    scCours = c; scPage = p.id;
+    scBrut = await trGet(scPage);
+    scAttente = ""; scProv = ""; scNote = ""; scForce = false;
+    scT0 = Date.now(); scDernier = Date.now();
+    scOn = true; scArret = false;
+
+    const r = new SR();
+    r.lang = "fr-CA"; r.continuous = true; r.interimResults = true;
+    r.onresult = ev => {
+      let prov = "";
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const t = (ev.results[i][0]?.transcript || "").trim();
+        if (!t) continue;
+        if (ev.results[i].isFinal) { scBrut += t + " "; scAttente += t + " "; }
+        else prov += t + " ";
+      }
+      scProv = prov.trim();
+      scPeindre();
+    };
+    r.onerror = ev => {
+      /* « no-speech » et « aborted » sont la vie normale d'une salle de
+         classe : un silence, un onglet qui passe derrière. On ne les relève
+         pas. Le micro refusé, lui, arrête tout — sinon l'étudiant croirait
+         que ça enregistre. */
+      if (ev.error === "not-allowed" || ev.error === "service-not-allowed") {
+        scNote = "Micro refusé — autorise-le dans les réglages du navigateur.";
+        scArreter(false);
+      } else if (ev.error === "audio-capture") {
+        scNote = "Aucun micro détecté."; scArreter(false);
+      }
+      scPeindre();
+    };
+    /* Chrome coupe la reconnaissance toutes les quelques minutes, qu'on parle
+       ou non. On la relance tant que l'écoute n'a pas été arrêtée pour de bon. */
+    r.onend = () => { if (scOn && !scArret) { try { r.start(); } catch {} } };
+    scRec = r;
+    try { r.start(); }
+    catch { scOn = false; scDire("La transcription n'a pas pu démarrer."); return; }
+
+    /* Sans ça, l'écran s'endort au bout d'une minute et emporte l'écoute. */
+    try { scWake = await navigator.wakeLock?.request("screen"); } catch {}
+    scTic = setInterval(scHorloge, 5000);
+    scBouton(); scPeindre();
+  }
+
+  async function scArreter(rediger) {
+    if (!scOn && !scRec) return;
+    scArret = true; scOn = false;
+    if (scTic) { clearInterval(scTic); scTic = 0; }
+    try { scRec?.stop(); } catch {}
+    scRec = null;
+    try { await scWake?.release(); } catch {}
+    scWake = null;
+    scProv = "";
+    if (scBrut) { await trPut(scPage, scBrut); scEcrire({ tr: 1 }); }
+    scBouton(); scPeindre();
+    /* Ce qui restait de dit part quand même : la fin d'un cours porte souvent
+       les consignes d'examen. */
+    if (rediger && scAttente.trim().length >= 40) await scEnvoyer("segment");
+  }
+
+  el("m-mic").addEventListener("click", () => {
+    if (scOn) { scArreter(true); return; }
+    if (!SR) { scDire("Ce navigateur ne sait pas transcrire — essaie Chrome."); return; }
+    if (!mCur) return;
+    if (!sbSession()) { scDire("Connecte-toi pour que tes notes se rédigent."); return; }
+    /* L'avertissement une seule fois, puis on fait confiance. */
+    if (localStorage.getItem(SC_VU)) { scDemarrer(); return; }
+    scForce = true; scNote = ""; scPeindre();
+    el("m-scavis").hidden = false;
+  });
+  el("m-scok").addEventListener("click", () => {
+    localStorage.setItem(SC_VU, "1");
+    el("m-scavis").hidden = true;
+    scDemarrer();
+  });
+  /* Verser, c'est un geste de l'étudiant : la machine n'écrit jamais d'elle-même
+     dans la page. Les notes rédigées restent dans l'encart après coup — les
+     verser deux fois est son droit, pas notre problème. */
+  el("m-scverse").addEventListener("click", () => {
+    const c = mCur; if (!c) return;
+    const ia = (mPage(c).ia || ""); if (!ia) return;
+    mFlush();
+    const base = el("m-page").value;
+    el("m-page").value = base.trim() ? base.replace(/\s*$/, "\n\n") + ia : ia;
+    mPWrite(c, { page: el("m-page").value }); save();
+    mGrow(); mTouched();
+    scNote = "Versé dans la page."; scPeindre();
+  });
+  el("m-scpropre").addEventListener("click", async () => {
+    const c = mCur; if (!c) return;
+    const p = mPage(c);
+    if (!(p.ia || "").trim()) return;
+    if (!scOn) { scCours = c; scPage = p.id; }   // hors écoute, on vise la page ouverte
+    await scEnvoyer("final");
+  });
+  el("m-sctrv").addEventListener("click", async () => {
+    const box = el("m-sctr"), b = el("m-sctrv");
+    if (!box.hidden) { box.hidden = true; b.textContent = "Voir la transcription"; return; }
+    const c = mCur; if (!c) return;
+    const p = mPage(c);
+    box.textContent = (scOn && p.id === scPage) ? scBrut : (await trGet(p.id)) || "(rien)";
+    box.hidden = false; b.textContent = "Masquer la transcription";
+  });
+  /* L'onglet revenu au premier plan : le verrou d'écran s'est relâché tout
+     seul pendant l'absence, on le reprend. */
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden || !scOn || scWake) return;
+    navigator.wakeLock?.request("screen").then(w => { scWake = w; }).catch(() => {});
+  });
+  /* Fermer l'onglet en pleine écoute perdrait ce qui n'est pas encore rédigé. */
+  addEventListener("beforeunload", e => { if (scOn) { e.preventDefault(); e.returnValue = ""; } });
+  scBouton();
+
     const ok = mk("button","btn solid","Envoyer");
     acts.append(mk("span","grow"), fin, ok); box.append(acts);
     const opt = (sel, v, t) => { const o = mk("option", null, t); o.value = v; sel.append(o); };
@@ -5560,6 +5902,7 @@ a,button{touch-action:manipulation}
           if (!e) continue;
           const [h1,m1] = e.time.split(" – ")[0].split(":").map(Number);
           const [h2,m2] = e.time.split(" – ")[1].split(":").map(Number);
+      trDel(p.id);       // son transcript brut aussi
           lines.push("BEGIN:VEVENT",
             `DTSTART:${st(new Date(day.getFullYear(),day.getMonth(),day.getDate(),h1,m1))}`,
             `DTEND:${st(new Date(day.getFullYear(),day.getMonth(),day.getDate(),h2,m2))}`,
