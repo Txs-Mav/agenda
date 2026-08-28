@@ -240,6 +240,10 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 .slot .cd.l1{color:var(--ac)}
 .slot .t{display:flex;align-items:center;gap:.5rem;margin-top:.3rem;font-size:.98rem;font-weight:600;letter-spacing:-.015em}
 .slot .t .pip{background:hsl(var(--h,220) 60% 52%)}
+/* Un examen se repère sans lire : un point rouge au bout de la ligne, du
+   même rouge que l'urgence ailleurs dans la maison. */
+.slot .t .expip{margin-left:auto;width:.45rem;height:.45rem;border-radius:50%;
+  background:var(--p3t);flex:0 0 auto}
 .slot .w{font-family:var(--mono);font-size:.66rem;color:var(--faint);margin-top:.18rem;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* Où on en est dans la file, sans un chiffre de plus à lire. */
@@ -4859,6 +4863,11 @@ a,button{touch-action:manipulation}
       const s = mk("div","slot");
       s.dataset.i = i; s.style.setProperty("--i", i); s.style.setProperty("--h", x.hue);
       const t = mk("p","t"); t.append(mk("i","pip"), document.createTextNode(x.t));
+      if (x.kind === "examen") {
+        const ex = mk("i","expip"); ex.title = "Examen";
+        ex.setAttribute("role","img"); ex.setAttribute("aria-label","Examen");
+        t.append(ex);
+      }
       s.append(mk("b", "cdx cd l" + (live ? 3 : lvlOf(ms)), live ? "En cours" : untilTxt(ms)), t,
         mk("p","w", [whenTxt(x, now), x.sub].filter(Boolean).join(" · ")));
       drum.append(s);
