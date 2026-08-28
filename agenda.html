@@ -70,7 +70,7 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
   display:flex;flex-direction:column;gap:.15rem;max-height:calc(100vh - 1.6rem);max-height:calc(100dvh - 1.6rem);
   /* Le débord horizontal est coupé : pendant le pli, les libellés qui rétré-
      cissent ne doivent pas faire naître une barre de défilement. */
-  overflow:hidden auto;
+  overflow:hidden auto;overscroll-behavior:contain;
   width:15.5rem;transition:width var(--fold) var(--fold-e),padding var(--fold) var(--fold-e);
 }
 .brand{display:flex;align-items:center;gap:.6rem;padding:0 .55rem 1.4rem}
@@ -352,7 +352,7 @@ li.done .tx{color:var(--faint);text-decoration:line-through}
 .ring span{position:absolute;font-family:var(--mono);font-size:.6rem}
 
 /* ── Grille horaire ───────────────────────────────────────────── */
-.gwrap{overflow-x:auto}
+.gwrap{overflow-x:auto;overscroll-behavior-x:contain}
 .grid{position:relative;display:grid;grid-template-columns:var(--gutter) repeat(var(--cols,7),minmax(5.2rem,1fr));user-select:none}
 .corner{grid-column:1;position:sticky;left:0;z-index:3;background:var(--surface)}
 .dh{padding:.45rem .2rem .5rem;text-align:center;border-left:1px solid var(--line);border-bottom:1px solid var(--line-hi)}
@@ -464,7 +464,9 @@ li.done .tx{color:var(--faint);text-decoration:line-through}
 @media (max-width:900px){
   .r1{grid-template-columns:1fr} .r1 .third{grid-column:auto}
 }
-/* Téléphone : la barre latérale devient une rangée en tête de page. */
+/* Téléphone : les cinq ancres vivent dans la barre d'onglets du bas — la
+   barre du haut ne garde que les entrées rares (notes, classes, compte,
+   réglages), en une rangée qui défile avec la page. */
 @media (max-width:760px){
   .shell{grid-template-columns:minmax(0,1fr)}
   .side{position:static;flex-direction:row;flex-wrap:wrap;gap:.35rem;max-height:none;border-radius:22px;padding:.8rem;width:auto}
@@ -474,6 +476,7 @@ li.done .tx{color:var(--faint);text-decoration:line-through}
   .grp,.side .grow{display:none}
   .navi{width:auto}
   .subj{width:auto}
+  .side .navi[data-go],#subjects,#t-theme{display:none}
 }
 @media (max-width:760px){
   :root{--gutter:2.6rem;--row-h:3rem}
@@ -484,7 +487,7 @@ li.done .tx{color:var(--faint);text-decoration:line-through}
   .pop,.pop.wide,.pop.fx{left:0;right:0;top:auto;bottom:0;width:auto;max-width:none;
     border-radius:22px 22px 0 0;
     padding:1.05rem 1.15rem calc(.95rem + env(safe-area-inset-bottom, 0px));
-    max-height:calc(100dvh - 2.5rem);overflow:auto;
+    max-height:calc(100dvh - 2.5rem);overflow:auto;overscroll-behavior:contain;
     animation:sheetup .24s cubic-bezier(.2,.8,.25,1)}
 }
 @keyframes sheetup{from{transform:translateY(26px);opacity:0}}
@@ -503,10 +506,33 @@ li.done .tx{color:var(--faint);text-decoration:line-through}
 .dt.on{background:var(--invert);color:var(--on-invert)}
 .dt.td:not(.on){box-shadow:inset 0 0 0 1.5px var(--line-hi);color:var(--ink)}
 .dt .dd{position:absolute;top:.3rem;right:.35rem;width:.32rem;height:.32rem;border-radius:50%}
+
+/* ── Barre d'onglets (téléphone) ─────────────────────────────────────
+   Fixée au bas, givrée, au-dessus du contenu (z 40) mais sous le composeur
+   et son voile (59/60) : une feuille ouverte la couvre. Le corps reprend
+   de la marge en bas pour que rien ne finisse caché derrière. */
+.tabbar{display:none}
+@media (max-width:760px){
+  .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;
+    display:flex;gap:.15rem;
+    padding:.4rem .5rem calc(.4rem + env(safe-area-inset-bottom, 0px));
+    background:color-mix(in srgb,var(--surface) 88%,transparent);
+    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    border-top:1px solid var(--line)}
+  .tabbar .navi{flex:1 1 0;min-width:0;flex-direction:column;align-items:center;gap:.18rem;
+    padding:.32rem 0 .26rem;font-size:.58rem;letter-spacing:.02em;border-radius:12px;text-align:center}
+  .tabbar .navi .i{width:20px;height:20px;flex:0 0 auto}
+  .tabbar .tbl{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  body{padding-bottom:calc(4.4rem + env(safe-area-inset-bottom, 0px))}
+  /* La vitrine et l'inscription n'ont pas de sections : pas de barre. */
+  body.lp .tabbar{display:none}
+  body.lp{padding-bottom:max(var(--pad),env(safe-area-inset-bottom, 0px))}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{
   body{background:#fff;padding:0}
-  .side,.head,.sect .link,.wnav,.fchip,.newrow,.kill,.ghostcard,.pop,.tools{display:none}
+  .side,.head,.sect .link,.wnav,.fchip,.newrow,.kill,.ghostcard,.pop,.tools,
+  .ntadd,.ntseedh,.ntseeds{display:none}
   /* Rien ne tient à une hauteur d'écran sur papier : la fiche d'une matière
      s'imprime en entier, listes déroulées. */
   .shell{display:block;height:auto}
@@ -1127,9 +1153,27 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
 
 /* Le dossier de la matière, déplié dans l'en-tête de la carte : une page par
    cours, on passe de l'une à l'autre sans quitter la fiche. */
-.pgsel{flex:0 1 auto;min-width:0;max-width:12rem;background:var(--surface-2);border:none;
-  border-radius:9px;padding:.34rem .5rem;color:var(--dim);font:inherit;font-size:.74rem;cursor:pointer}
+.pgsel{flex:0 1 auto;min-width:0;max-width:14rem;background:var(--surface-2);border:none;
+  border-radius:9px;padding:.34rem .38rem .34rem .55rem;color:var(--dim);font:inherit;font-size:.74rem;
+  cursor:pointer;display:flex;align-items:center;gap:.1rem}
+.pgsel>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pgsel .i{width:13px;height:13px;flex:0 0 auto;opacity:.65}
 @media (hover:hover){.pgsel:hover{color:var(--ink)}}
+
+/* Le dossier déplié. C'était un menu du système : gris, étranger au reste, et
+   incapable de dire ce qu'une page contient avant qu'on l'ouvre. */
+.pgpop{width:17rem;padding:.85rem .55rem .6rem}
+.pgpop h4{padding:0 .45rem .5rem}
+.pglist{max-height:19rem;overflow:auto;display:flex;flex-direction:column;gap:.05rem}
+.pgcat{font-size:.62rem;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);padding:.6rem .45rem .2rem}
+.pgitem{display:flex;flex-direction:column;align-items:flex-start;gap:.05rem;text-align:left;
+  border-radius:10px;padding:.4rem .45rem;width:100%;transition:background .12s}
+.pgitem .t{font-size:.8rem;color:var(--ink);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pgitem .s{font-size:.66rem;color:var(--faint)}
+@media (hover:hover){.pgitem:hover{background:var(--surface-2)}}
+.pgitem.on{background:var(--surface-2)}
+.pgitem.on .t{font-weight:650}
+.pgpop .vide{padding:.1rem .45rem .35rem;font-size:.73rem;line-height:1.45;color:var(--faint)}
 
 /* ── Ranger une page ─────────────────────────────────────────────
    Une page se range sous une catégorie — « Cours 5 », « Préparation
@@ -1137,6 +1181,8 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
    tant qu'elle n'en a pas, il propose le geste. */
 #m-pgcat span{max-width:9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #m-pgcat.on{color:var(--ink)}
+/* Une page liée à une séance de classe le montre sur son bouton. */
+#m-share.on{color:var(--ac)}
 /* Les catégories déjà employées reviennent en boutons : la même se
    réutilise d'un clic, sans la retaper. */
 .pop .chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.65rem}
@@ -1144,6 +1190,9 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
   background:var(--surface-2);color:var(--dim);transition:background .15s,color .15s}
 @media (hover:hover){.pop .chips .chip:hover{color:var(--ink)}}
 .pop .chips .chip.on{background:var(--invert);color:var(--on-invert)}
+/* La pastille proposée par l'app : un liseré, pas une couleur — elle attend
+   d'être choisie, elle ne prétend pas l'être déjà. */
+.pop .chips .chip.sugg:not(.on){box-shadow:inset 0 0 0 1.5px var(--line-hi);color:var(--ink)}
 /* Ranger prend l'écran entier. Nommer une page et la classer, c'est le geste
    qui décide si on la retrouve dans trois semaines : le reste de l'app passe
    derrière un voile flou le temps qu'elle trouve sa place. */
@@ -1252,30 +1301,91 @@ body.nzen #m-notecard .tools{position:sticky;top:0;z-index:6;background:var(--su
 #m-notecard .ch{flex-wrap:wrap}
 
 /* ── Toutes les notes ────────────────────────────────────────────
-   Un dossier par matière, ses pages dedans. Chaque rangée dit ce que la page
-   porte déjà — sa première ligne, sa date — et n'offre qu'un geste : l'ouvrir. */
-.ntgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(19rem,1fr));gap:.85rem;align-items:start}
-.ntfold .ch h3{display:flex;align-items:center;min-width:0}
-.ntpages{list-style:none;padding:0}
-.ntpages li{display:flex;align-items:center;gap:.2rem;border-top:1px solid var(--line);padding-right:.7rem}
+   Un dossier par matière, ses pages dedans. Trois règles tiennent la page :
+   une matière sans page n'a pas de carte (elle descend en puce, tout en bas),
+   toutes les cartes d'une rangée ont la même hauteur, et chaque carte a la
+   même anatomie — en-tête, liste, un seul geste au pied. */
+.ntgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(21rem,1fr));
+  gap:.85rem;align-items:stretch}
+.ntfold{display:flex;flex-direction:column;min-width:0}
+
+/* En-tête : la pastille, le nom, son compte. Le compte se lisait à l'autre
+   bout de la carte, à douze rem du mot qu'il comptait ; il revient contre
+   lui. Le filet sépare franchement l'identité du contenu. */
+.ntch{display:flex;align-items:center;gap:.5rem;min-width:0;
+  padding:1rem 1.15rem .8rem;border-bottom:1px solid var(--line)}
+.ntch h3{font-size:.95rem;font-weight:600;letter-spacing:-.015em;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ntcount{flex:0 0 auto;margin-left:auto;font-size:.68rem;font-weight:650;
+  color:var(--faint);font-variant-numeric:tabular-nums;
+  background:var(--surface-2);border-radius:999px;padding:.14rem .5rem}
+
+.ntpages{list-style:none;padding:0;margin:0}
+.ntpages li{display:flex;align-items:center;gap:.2rem;padding-right:.6rem}
+.ntpages li+li{border-top:1px solid var(--line)}
 @media (hover:hover){.ntpages li:hover{background:var(--surface-2)}}
 /* L'étiquette d'une catégorie dans le dossier : un intertitre, pas une
    rangée — rien ne s'y clique, rien ne s'y allume. */
-.ntpages li.ntcat{display:flex;align-items:baseline;gap:.45rem;padding:.55rem .7rem .3rem 1.25rem;
-  font-size:.64rem;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);font-weight:600}
+.ntpages li.ntcat{display:flex;align-items:baseline;gap:.45rem;
+  padding:.7rem 1.15rem .25rem;border-top:1px solid var(--line);
+  font-size:.62rem;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--faint);font-weight:600}
+.ntpages li.ntcat:first-child{border-top:0}
+.ntpages li.ntcat+li{border-top:0}
 @media (hover:hover){.ntpages li.ntcat:hover{background:transparent}}
-.ntpage{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:.14rem;text-align:left;
-  padding:.6rem 0 .6rem 1.25rem}
-.ntpage b{font-size:.84rem;font-weight:600;color:var(--ink)}
-.ntpage span{font-size:.72rem;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+
+/* Une rangée se lit comme un courriel : le nom et sa date sur la première
+   ligne, ce que la page porte sur la seconde. */
+.ntpage{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:.15rem;
+  text-align:left;padding:.62rem 0 .62rem 1.15rem}
+.ntpt{display:flex;align-items:baseline;gap:.6rem;width:100%;min-width:0}
+/* Le titre débordait sur deux lignes et faisait gonfler la carte pendant que
+   la description, elle, était tronquée : l'inverse de ce qu'il faut. */
+.ntpt b{flex:1 1 auto;min-width:0;font-size:.83rem;font-weight:600;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ntpt time{flex:0 0 auto;font-size:.68rem;color:var(--faint);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.ntwhat{font-size:.73rem;color:var(--dim);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:100%}
+/* Quand il n'y a rien à citer, la ligne dit la nature de la page — et le dit
+   sur un autre ton, pour qu'on ne la prenne pas pour du contenu. */
+.ntwhat.void{color:var(--faint);font-style:italic}
 /* Supprimer une page pleine se confirme sur place : le × devient un mot, et
    l'hésitation retombe seule. */
-.ntpages .kill.arm{opacity:1;color:var(--p3);font-size:.72rem;font-weight:600}
-.ntadd{margin:.35rem 1.25rem 1.1rem;align-self:flex-start}
-/* Un dossier vide ne s'explique pas : le titre, puis le geste, serrés
-   comme s'ils avaient toujours été seuls. */
-.ntfold.ntempty .ch{padding-bottom:.15rem}
-.ntfold.ntempty .ntadd{margin-top:0}
+.ntpages .kill.arm{opacity:1;color:var(--p3);font-size:.7rem;font-weight:600}
+/* Le dossier d'une rangée : même discrétion que le ×, mais une page déjà
+   rangée le garde visible — on reclasse plus souvent qu'on ne classe. */
+.ntcatb{flex:0 0 auto;display:flex;align-items:center;padding:.25rem;color:var(--faint);
+  opacity:0;transition:opacity .15s,color .15s}
+.ntcatb svg{width:14px;height:14px}
+.ntcatb.on{opacity:.55}
+@media (hover:hover){.ntpages li:hover .ntcatb{opacity:1}
+  .ntcatb:hover{color:var(--ink)}}
+
+/* Le geste est au même endroit sur toutes les cartes : au pied, poussé par
+   la liste. Sans ça il remontait coller le titre sur les dossiers courts, et
+   le bas des rangées partait en escalier. */
+.ntadd{margin-top:auto;display:flex;align-items:center;gap:.45rem;
+  padding:.68rem 1.15rem;border-top:1px solid var(--line);
+  font-size:.78rem;font-weight:550;color:var(--faint);
+  transition:background .15s,color .15s}
+.ntadd svg{width:13px;height:13px;flex:0 0 auto}
+@media (hover:hover){.ntadd:hover{background:var(--surface-2);color:var(--ink)}}
+
+/* Les matières encore vides : une rangée de puces, pas cinq cartes creuses.
+   Elles n'ont rien à montrer — seulement une porte à ouvrir. */
+.ntseedh{display:flex;align-items:baseline;gap:.5rem;padding:1.5rem .35rem .6rem;
+  font-size:.66rem;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--faint);font-weight:600}
+.ntseedh[hidden]{display:none}
+.ntseeds{display:flex;flex-wrap:wrap;gap:.45rem;padding:0 .35rem}
+.ntseed{display:inline-flex;align-items:center;gap:.5rem;min-width:0;
+  background:var(--surface);box-shadow:var(--shadow);border-radius:999px;
+  padding:.5rem .95rem .5rem .78rem;font-size:.8rem;color:var(--dim);
+  transition:color .15s,translate .15s}
+.ntseed .mpip{margin-right:0}
+.ntseed span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (hover:hover){.ntseed:hover{color:var(--ink);translate:0 -1px}}
 
 /* Encres. Chaque teinte a sa version sombre : un bleu à 48 % de clarté
    disparaît sur une carte noire. */
@@ -1779,6 +1889,7 @@ html,body{overflow-x:clip}
 a,button{touch-action:manipulation}
 @media (hover:none){
   .kill{opacity:.45}
+  .ntcatb{opacity:.45}
   .anno .kill{opacity:.45}
   .grab{opacity:.5}
   .xweek{opacity:.55}
@@ -1830,6 +1941,17 @@ a,button{touch-action:manipulation}
     <a class="navi" href="guide.html" style="text-decoration:none"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 7.5h.01"/></svg> <span class="lb">Guide d'installation</span></a>
     <button class="navi" id="t-print"><svg class="i" viewBox="0 0 24 24"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="7.5" rx="2"/><path d="M7 14h10v6.5H7z"/></svg> <span class="lb">Imprimer</span></button>
   </aside>
+
+  <!-- Barre d'onglets du téléphone : les cinq ancres du tableau, sous le
+       pouce. Les boutons sont des .navi[data-go] comme ceux de la barre
+       latérale — l'état « on » et la navigation se synchronisent tout seuls. -->
+  <nav class="tabbar" aria-label="Sections">
+    <button class="navi on" data-go="top"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg><span class="tbl">Tableau</span></button>
+    <button class="navi" data-go="horaire"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4"/></svg><span class="tbl">Horaire</span></button>
+    <button class="navi" data-go="echeances"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg><span class="tbl">Échéances</span></button>
+    <button class="navi" data-go="mios"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 8.2 6 8.2-6"/></svg><span class="tbl">MIO</span></button>
+    <button class="navi" data-go="cours"><svg class="i" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 18.5V21h16"/></svg><span class="tbl">Cours</span></button>
+  </nav>
 
   <div class="main">
     <header class="head" id="apphead">
@@ -2079,7 +2201,7 @@ a,button{touch-action:manipulation}
         <div class="mcol">
           <section class="card fx fill" id="m-notecard">
             <div class="ch"><h3>Notes</h3>
-              <select class="pgsel" id="m-pgsel" title="Changer de page"></select>
+              <button class="pgsel" id="m-pgsel" title="Changer de page"><span id="m-pgsel-t"></span><svg class="i" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg></button>
               <button class="link" id="m-pgadd" title="Ouvrir une page blanche de plus"><svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M12 5v14M5 12h14"/></svg> Page</button>
               <button class="link" id="m-pgcat"><svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M3.5 7A2.5 2.5 0 0 1 6 4.5h3.6l2 2.5H18a2.5 2.5 0 0 1 2.5 2.5v7.5A2.5 2.5 0 0 1 18 19.5H6A2.5 2.5 0 0 1 3.5 17z"/></svg> <span id="m-pgcat-t">Ranger</span></button>
               <button class="link" id="m-imp" title="Importer un PDF ou une image — la page le porte, et on écrit dessus"><svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9"/><path d="M4.5 15.5v3A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5v-3"/></svg> Importer</button>
@@ -2108,13 +2230,8 @@ a,button{touch-action:manipulation}
               <div class="mdoc" id="m-doc"></div>
               <svg class="inklayer hl" id="m-hl" aria-hidden="true"></svg>
               <textarea id="m-page" class="page" spellcheck="true"
-                placeholder="Page blanche. Écris, dessine, surligne, annote — tout reste sur cet appareil."></textarea>
+                placeholder="Page blanche. Écris, dessine, surligne, annote — tes pages restent à toi, et suivent ton compte."></textarea>
               <svg class="inklayer pen" id="m-pen" aria-hidden="true"></svg>
-              <button class="mdrop" id="m-drop" hidden>
-                <svg class="i" viewBox="0 0 24 24"><path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9"/><path d="M4.5 15.5v3A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5v-3"/></svg>
-                <span><b>Dépose un document ici — ou clique pour choisir</b>
-                <em>Plan de cours, diapos Moodle, exercices (PDF ou image) — puis dessine, surligne, annote par-dessus.</em></span>
-              </button>
               <div class="annos" id="m-annos"></div>
               <div class="cap" id="m-cap"></div>
               <div class="dsel" id="m-dsel" hidden>
@@ -2157,6 +2274,8 @@ a,button{touch-action:manipulation}
       <div class="sect"><h2>Toutes les notes <span class="dim" id="nt-n"></span></h2><span class="grow"></span>
         <button class="link" id="nt-back"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg> Retour au tableau de bord</button></div>
       <div class="ntgrid" id="nt-grid"></div>
+      <div class="ntseedh" id="nt-seedh" hidden>Pas encore de notes</div>
+      <div class="ntseeds" id="nt-seeds"></div>
     </div>
 
     <div id="landing" hidden>
@@ -2796,6 +2915,8 @@ a,button{touch-action:manipulation}
     const m = { id: p.id, t: p.t, at: p.at };
     if (p.cat) m.cat = p.cat;
     if (p.doc) m.doc = p.doc;
+    if (p.up) m.up = p.up;      // l'horodatage de fusion doit survivre au rechargement
+    if (p.cl) m.cl = p.cl;      // le lien vers la séance de classe aussi
     const line = (p.page || "").split("\n").find(l => l.trim());
     if (line) m.ap = line.trim().slice(0, 140);   // l'aperçu que montrent les listes
     if (p.ink?.length) m.ni = p.ink.length;
@@ -2842,6 +2963,7 @@ a,button{touch-action:manipulation}
     sun:'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg>',
     moon:'<svg class="i" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5z"/></svg>',
     plus:'<svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+    ranger:'<svg class="i" viewBox="0 0 24 24"><path d="M3.5 7A2.5 2.5 0 0 1 6 4.5h3.6l2 2.5H18a2.5 2.5 0 0 1 2.5 2.5v7.5A2.5 2.5 0 0 1 18 19.5H6A2.5 2.5 0 0 1 3.5 17z"/></svg>',
     examen:'<svg class="i" viewBox="0 0 24 24"><path d="M6 3.5h12v17H6z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>',
     remise:'<svg class="i" viewBox="0 0 24 24"><path d="M6 3.5h8l4.5 4.5v12.5H6z"/><path d="M14 3.5V8h4.5"/></svg>',
     autre:'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v4.5l3 2"/></svg>',
@@ -2958,15 +3080,17 @@ a,button{touch-action:manipulation}
       for (const d of shown) grid.append(buildCell(d, hr));
     }
     const wrap = mk("div","gwrap"); wrap.append(grid);
-    if (tabs) { card.append(head, tabs, wrap); attachSwipe(card); }
+    if (tabs) card.append(head, tabs, wrap);
     else card.append(head, wrap);
+    attachSwipe(card);
     return card;
   }
 
-  /* Balayer la carte change de jour ; au bord de la semaine, on passe à la
-     suivante (ou la précédente) quand les semaines défilent une à une. Le
-     geste ne vaut que si aucune sélection n'est en cours et que le doigt a
-     clairement voyagé de côté. */
+  /* Balayer la carte change de jour (téléphone) ou de semaine (tablette,
+     quand les semaines défilent une à une). Au bord de la semaine, la vue
+     jour enchaîne sur la semaine voisine. Le geste ne vaut que si aucune
+     sélection n'est en cours et que le doigt a clairement voyagé de côté —
+     et jamais quand c'est la grille elle-même qui défile de côté. */
   function stepDay(delta) {
     const n = cols();
     const i = mday + delta;
@@ -2986,7 +3110,11 @@ a,button{touch-action:manipulation}
       if (sel || touchSel) return;
       const dx = ev.clientX - sx, dy = ev.clientY - sy;
       if (Date.now() - st > 600 || Math.abs(dx) < 56 || Math.abs(dy) > Math.abs(dx) * .6) return;
-      stepDay(dx < 0 ? 1 : -1);
+      if (mqPhone.matches) { stepDay(dx < 0 ? 1 : -1); return; }
+      if (state.wview === "pile") return;
+      const wrap = card.querySelector(".gwrap");
+      if (wrap && wrap.scrollWidth > wrap.clientWidth + 2) return;
+      stepWeek(dx < 0 ? 1 : -1);
     });
   }
 
@@ -3361,7 +3489,7 @@ a,button{touch-action:manipulation}
     pop = box; place(box, cell, true); input.focus(); input.select();
   }
   document.addEventListener("pointerdown", ev => {
-    if (pop && !pop.contains(ev.target) && !ev.target.closest(".cell,.bar")) closePop();
+    if (pop && !pop.contains(ev.target) && !ev.target.closest(".cell,.bar,.pgsel")) closePop();
   });
 
   function openCourse(cell, e) {
@@ -4912,7 +5040,7 @@ a,button{touch-action:manipulation}
     pgPush(c, cur);          // le corps modifié descendra dans IndexedDB
   };
   const addPage = c => { const p = { ...PAGE0, id: uid(), t: pgTitle(c) };
-    mWrite(c, { pages: [...mPages(c), p], pg: p.id }); save(); return p; };
+    mWrite(c, { pages: [...mPages(c), p], pg: p.id }); pgPush(c, p.id); save(); return p; };
   /* ── Ranger les pages ────────────────────────────────────────────
      Une page se range sous une catégorie qu'on nomme soi-même — « Cours 5 »,
      « Préparation minitest », « Préparation examen ». C'est du texte libre :
@@ -4922,6 +5050,7 @@ a,button{touch-action:manipulation}
   const pgCat = p => String(p.cat || "").trim();
   const setPageCat = (c, id, cat) => {
     mWrite(c, { pages: mPages(c).map(p => p.id === id ? { ...p, cat: String(cat || "").trim() } : p) });
+    pgPush(c, id);   // la catégorie voyage avec la page
     save();
   };
   /* Deux suggestions toutes faites pour la première fois ; ensuite, tes
@@ -4936,6 +5065,22 @@ a,button{touch-action:manipulation}
     for (const o of COURSES) if (o !== c) take(mPages(o).map(pgCat));
     take(CAT_IDEES);
     return out;
+  };
+  /* La séance se compte toute seule plutôt que de se demander. Depuis la
+     rentrée, on additionne les jours où la matière s'est réellement donnée —
+     un cours annulé ce jour-là ne compte pas — et le total nomme la page du
+     jour : « Cours 5 ». Deux blocs le même jour (la théorie puis le labo)
+     restent une seule séance : c'est un cours, pas deux. */
+  const catSuggest = c => {
+    if (today0 < SEMESTER_START) return "";
+    const mine = TT.filter(e => e.t === c);
+    if (!mine.length) return "";
+    let n = 0;
+    for (let d = new Date(SEMESTER_START); d <= today0; d = addDays(d, 1)) {
+      const wd = (d.getDay() + 6) % 7, dISO = iso(d);
+      if (mine.some(e => e.d === wd && ttOn(dISO, e))) n++;
+    }
+    return n ? `Cours ${n}` : "";
   };
   /* Une page se tape en continu : réécrire tout l'état à chaque touche ferait
      saccader les longues pages. Le texte entre en mémoire tout de suite, il
@@ -4957,8 +5102,13 @@ a,button{touch-action:manipulation}
   let pgDirty = new Map(), pgT = 0;
   function pgPush(c, id) {
     if (!id) return;
+    /* Chaque retouche horodate la page : c'est cette date qui départage deux
+       appareils à la fusion — le plus récent gagne, page par page. */
+    const sh = mRaw(c), p = Array.isArray(sh.pages) && sh.pages.find(x => x.id === id);
+    if (p) p.up = new Date().toISOString();
     pgDirty.set(id, c);
     clearTimeout(pgT); pgT = setTimeout(pgFlushIdb, 400);
+    cloudMark(c, id);
   }
   async function pgFlushIdb() {
     clearTimeout(pgT); pgT = 0;
@@ -4969,7 +5119,8 @@ a,button{touch-action:manipulation}
       const p = mPages(c).find(x => x.id === id);
       if (!p) continue;
       try {
-        await idbPut(`pg/${id}`, { page: p.page, ink: p.ink, annos: p.annos });
+        await idbPut(`pg/${id}`, { page: p.page, ink: p.ink, annos: p.annos,
+          ...(p.sent ? { sent: p.sent } : {}) });
         if (!pgSafe.has(id)) { pgSafe.add(id); neuf = true; }
       } catch { /* IndexedDB indisponible : le corps reste dans le blob, rien ne se perd */ }
     }
@@ -4977,6 +5128,102 @@ a,button{touch-action:manipulation}
   }
   /* Fermer l'onglet ne doit pas emporter les 400 dernières millisecondes. */
   addEventListener("pagehide", mFlush);
+
+  /* ── Les pages suivent le compte ─────────────────────────────────
+     Une ligne par page dans agenda_pages_perso : le corps voyage, les
+     images des documents importés restent locales (leurs métadonnées
+     passent, la page d'en face saura dire ce qui manque). L'envoi se fait
+     par page touchée, en lot, un peu après le geste ; la fusion se fait par
+     date, page par page — jamais un écrase-tout. Sans compte, tout ceci
+     dort : rien ne casse, rien ne part. */
+  let cloudDirty = new Map(), cloudT = 0;
+  function cloudMark(c, id) {
+    if (!sbSession()) return;
+    cloudDirty.set(id, c);
+    clearTimeout(cloudT); cloudT = setTimeout(cloudFlush, 1500);
+  }
+  async function cloudFlush() {
+    clearTimeout(cloudT); cloudT = 0;
+    /* Jamais avant le réveil des corps : pousser une page pas encore
+       hydratée enverrait une coquille vide écraser la vraie. */
+    await pgHydrated;
+    const s0 = sbSession();
+    if (!cloudDirty.size || !s0?.uid) return;
+    const lot = [...cloudDirty]; cloudDirty.clear();
+    const rows = [];
+    for (const [id, c] of lot) {
+      const p = mPages(c).find(x => x.id === id);
+      if (!p) continue;
+      rows.push({ user_id: s0.uid, id, course: mKeys(c)[0], titre: p.t || "",
+        cat: p.cat || "", at: p.at || "", page: p.page || "",
+        ink: p.ink || [], annos: p.annos || [], doc: p.doc || null,
+        lien: p.cl || null,
+        updated_at: p.up || new Date().toISOString() });
+    }
+    if (!rows.length) return;
+    try {
+      await sbApi("agenda_pages_perso", { method: "POST",
+        headers: { prefer: "resolution=merge-duplicates" }, body: JSON.stringify(rows) });
+    } catch { for (const [id, c] of lot) cloudDirty.set(id, c); }   // on retentera au prochain geste
+  }
+  /* La fusion au réveil et à la connexion : le nuage descend, page par page,
+     et seule une page plus récente que la mienne me remplace. Une page à moi
+     que le nuage ignore — ou connaît en plus vieux — repart vers lui. Une
+     page supprimée ICI porte une tombe : elle ne revient pas. */
+  const tsDe = s => Date.parse(s || 0) || 0;
+  let cloudPullEnCours = false;
+  async function cloudPagesPull() {
+    if (cloudPullEnCours || !sbSession()) return;
+    cloudPullEnCours = true;
+    try {
+      await pgHydrated;   // comparer des pages hydratées, jamais des coquilles
+      const rows = await sbApi("agenda_pages_perso?select=*");
+      let bouge = false;
+      const vues = new Set();
+      for (const r of rows || []) {
+        vues.add(r.id);
+        if (state.gone[`pg:${r.id}`]) {   // supprimée ici : on efface aussi là-bas
+          sbApi(`agenda_pages_perso?id=eq.${encodeURIComponent(r.id)}`, { method: "DELETE" }).catch(() => {});
+          continue;
+        }
+        /* Retrouver la page locale — l'identifiant est unique toutes fiches
+           confondues. */
+        let cLoc = null, pLoc = null;
+        for (const [k, sh] of Object.entries(state.sheets || {})) {
+          const p = Array.isArray(sh.pages) && sh.pages.find(x => x.id === r.id);
+          if (p) { cLoc = k; pLoc = p; break; }
+        }
+        const distant = { id: r.id, t: r.titre || "", cat: r.cat || "", at: r.at || "",
+          page: r.page || "", ink: r.ink || [], annos: r.annos || [],
+          ...(r.doc ? { doc: r.doc } : {}), ...(r.lien ? { cl: r.lien } : {}), up: r.updated_at };
+        if (!pLoc) {
+          const k = r.course || "?";
+          const sh = state.sheets[k] = state.sheets[k] || { ...MSHEET };
+          sh.pages = [...(Array.isArray(sh.pages) ? sh.pages : []), distant];
+          if (!sh.pg) sh.pg = r.id;
+          pgDirty.set(r.id, k);   // le corps venu du nuage descend aussi dans IndexedDB
+          bouge = true;
+        } else if (tsDe(r.updated_at) > tsDe(pLoc.up)) {
+          const sh = mRaw(cLoc);
+          sh.pages = sh.pages.map(p => p.id === r.id ? { ...p, ...distant } : p);
+          pgDirty.set(r.id, cLoc);
+          bouge = true;
+        } else if (tsDe(pLoc.up) > tsDe(r.updated_at)) {
+          cloudMark(cLoc, r.id);   // la mienne est plus fraîche : elle repart
+        }
+      }
+      /* Les pages locales que le nuage n'a jamais vues montent aussi. */
+      for (const [k, sh] of Object.entries(state.sheets || {}))
+        if (Array.isArray(sh.pages))
+          for (const p of sh.pages) if (p.id && !vues.has(p.id)) cloudMark(k, p.id);
+      if (bouge) {
+        clearTimeout(pgT); pgT = setTimeout(pgFlushIdb, 400);
+        save(); renderCourses();
+        if (mCur && !el("matiere").hidden) renderMatiere();
+      }
+    } catch { /* hors ligne ou session périmée : la prochaine synchro suffira */ }
+    finally { cloudPullEnCours = false; }
+  }
   const mDates = c => state.deadlines.filter(d => courseOf(d) === c);
   /* La page fait la hauteur de ce qu'elle porte : son texte, mais aussi le
      trait le plus bas et l'annotation la plus basse — sinon on ne pourrait
@@ -5455,9 +5702,6 @@ a,button{touch-action:manipulation}
     const ta = el("m-page");
     const blank = mCur && !pgFull(mPage(mCur));
     ta.placeholder = blank && mTool === "write" && document.activeElement !== ta ? M_HINT : "";
-    /* L'invitation à déposer suit la même règle que l'invite : une page
-       vierge, l'outil d'écriture — et elle s'efface au premier geste. */
-    el("m-drop").hidden = !(blank && mTool === "write");
   }
   /* Un geste vient de changer la page : on tamponne l'heure et on programme
      l'écriture sur disque. Un seul endroit, donc jamais de page modifiée
@@ -5516,7 +5760,7 @@ a,button{touch-action:manipulation}
   function renderMPage() {
     const c = mCur; if (!c) return;
     const p = mPage(c);
-    renderPgSel(); renderPgCat();
+    renderPgSel(); renderPgCat(); renderShareState();
     el("m-page").value = p.page || "";
     el("m-pat").textContent = pgFull(p) && p.at ? `modifiée ${p.at}` : "";
     drawDoc(); setTool("write"); drawSwatches(); drawAnnos(); histInit();
@@ -5526,23 +5770,64 @@ a,button{touch-action:manipulation}
        en arrière-plan ne rend jamais ce cadre — d'où les deux. */
     mGrow(); requestAnimationFrame(mGrow);
   }
-  /* Le dossier, déplié dans l'en-tête de la carte : une option par page. Un
-     dossier encore vide montre le titre que prendra la page au premier trait. */
+  /* Le dossier, déplié depuis l'en-tête. Le bouton ne porte que le titre de
+     la page ouverte ; le reste attend qu'on le demande. */
   function renderPgSel() {
-    const c = mCur, sel = el("m-pgsel"); if (!c) return;
-    sel.textContent = "";
+    const c = mCur; if (!c) return;
+    const ps = mPages(c);
+    el("m-pgsel-t").textContent = ps.length ? (mPage(c).t || "Page") : pgTitle(c);
+    el("m-pgsel").title = ps.length > 1
+      ? `${ps.length} pages dans ce cours — en choisir une` : "Changer de page";
+  }
+  /* Changer de page écrit d'abord ce qui est en attente : le texte tapé sur
+     l'une ne doit jamais atterrir sur l'autre. */
+  function pgGoto(id) {
+    const c = mCur; if (!c) return;
+    mFlush();
+    const prev = mPage(c);   // la page qu'on quitte, relue après l'écriture
+    if (id) { mWrite(c, { pg: id }); save(); }
+    renderMPage();
+    if (prev.id && prev.id !== mRaw(c).pg) catNudge(c, prev);
+  }
+  /* Le menu des pages. Chaque ligne dit ce qu'elle porte — transcrite, rédigée,
+     un document — parce que « Cours du 28 août » et « Cours du 28 août · 2 »
+     ne se distinguent pas autrement. */
+  function pgPop() {
+    const c = mCur; if (!c) return;
+    closePop();
     const ps = mPages(c), cur = mPage(c);
-    if (!ps.length) sel.append(mk("option", null, pgTitle(c)));
-    /* Les pages rangées se regroupent sous leur catégorie, dans l'ordre où
-       les catégories sont apparues ; les pages libres gardent la tête. */
+    const box = mk("div","pop pgpop");
+    box.append(mk("h4", null, "Pages de ce cours"));
+    if (!ps.length) {
+      box.append(mk("p","vide", "Ce dossier est encore vide — la page naîtra au premier mot."));
+      pop = box; place(box, el("m-pgsel")); return;
+    }
+    /* Les pages rangées se regroupent sous leur catégorie, dans l'ordre où les
+       catégories sont apparues ; les pages libres gardent la tête. */
     const grps = new Map();
-    const under = cat => { if (!cat) return sel;
-      const k = cat.toLowerCase();
-      if (!grps.has(k)) { const g = mk("optgroup"); g.label = cat; grps.set(k, g); }
-      return grps.get(k); };
-    for (const p of ps) { const o = mk("option", null, p.t || "Page");
-      o.value = p.id; o.selected = p.id === cur.id; under(pgCat(p)).append(o); }
-    for (const g of grps.values()) sel.append(g);
+    for (const p of ps) {
+      const k = pgCat(p);
+      if (!grps.has(k)) grps.set(k, []);
+      grps.get(k).push(p);
+    }
+    const list = mk("div","pglist");
+    for (const cat of [...grps.keys()].sort((a, b) => (a ? 1 : 0) - (b ? 1 : 0))) {
+      if (cat) list.append(mk("div","pgcat", cat));
+      for (const p of grps.get(cat)) {
+        const b = mk("button","pgitem" + (p.id === cur.id ? " on" : ""));
+        b.append(mk("span","t", p.t || "Page"));
+        const quoi = [];
+        if ((p.ia || "").trim()) quoi.push("notes rédigées");
+        if (p.tr) quoi.push("transcrite");
+        if (pgDoc(p)) quoi.push("document");
+        if (p.page.trim() && !quoi.length) quoi.push("écrite");
+        if (quoi.length) b.append(mk("span","s", quoi.join(" · ")));
+        b.addEventListener("click", () => { closePop(); if (p.id !== cur.id) pgGoto(p.id); });
+        list.append(b);
+      }
+    }
+    box.append(list);
+    pop = box; place(box, el("m-pgsel"));
   }
   /* Le bouton « Ranger » de l'en-tête porte la catégorie de la page ouverte ;
      tant qu'elle n'en a pas, il propose le geste. */
@@ -5624,7 +5909,7 @@ a,button{touch-action:manipulation}
   }
   addEventListener("resize", () => { if (!el("matiere").hidden) mGrow(); });
 
-  el("m-back").addEventListener("click", () => { closeMatiere(); scrollTo({ top:0, behavior:"smooth" }); });
+  el("m-back").addEventListener("click", () => { closeMatiere(); scrollTo({ top:0, behavior:lisse }); });
   el("m-filter").addEventListener("click", () => {
     const c = mCur; if (!c) return;
     /* Filtrer, c'est vouloir voir la grille : on y va. Retirer le filtre se
@@ -5648,15 +5933,10 @@ a,button{touch-action:manipulation}
   });
   el("m-page").addEventListener("focus", mHint);
   el("m-page").addEventListener("blur", () => { mFlush(); renderCourses(); mHint(); });
-  /* Changer de page écrit d'abord ce qui est en attente : le texte tapé sur
-     l'une ne doit jamais atterrir sur l'autre. */
-  el("m-pgsel").addEventListener("change", () => {
-    const c = mCur; if (!c) return;
-    mFlush();
-    const prev = mPage(c);   // la page qu'on quitte, relue après l'écriture
-    if (el("m-pgsel").value) { mWrite(c, { pg: el("m-pgsel").value }); save(); }
-    renderMPage();
-    if (prev.id && prev.id !== mRaw(c).pg) catNudge(c, prev);
+  el("m-pgsel").addEventListener("click", () => {
+    /* Deuxième clic sur le même bouton : on referme, comme tout menu. */
+    if (pop && popAnchor === el("m-pgsel")) { closePop(); return; }
+    pgPop();
   });
   el("m-pgadd").addEventListener("click", () => {
     const c = mCur; if (!c) return;
@@ -5696,9 +5976,21 @@ a,button{touch-action:manipulation}
     const chips = mk("div","chips");
     const paint = () => chips.querySelectorAll(".chip").forEach(b =>
       b.classList.toggle("on", !!pick && b.dataset.cat.toLowerCase() === pick.toLowerCase()));
-    for (const cat of catList(c)) {
-      const b = mk("button","chip", cat); b.dataset.cat = cat;
-      b.title = `Ranger sous « ${cat} »`;
+    /* La séance du jour passe devant, proposée plutôt que demandée : dans le
+       cas courant — ranger la page du cours qu'on vient de suivre — il ne
+       reste qu'une tape, et plus rien à taper. Elle garde son liseré tant
+       qu'elle n'est pas choisie : une proposition n'est pas un choix. */
+    const sugg = catSuggest(c);
+    const cats = catList(c);
+    if (sugg) {
+      const i = cats.findIndex(x => x.toLowerCase() === sugg.toLowerCase());
+      if (i >= 0) cats.splice(i, 1);
+      cats.unshift(sugg);
+    }
+    for (const cat of cats) {
+      const propose = !!sugg && cat === sugg;
+      const b = mk("button","chip" + (propose ? " sugg" : ""), cat); b.dataset.cat = cat;
+      b.title = propose ? `${cat} — la séance d'aujourd'hui` : `Ranger sous « ${cat} »`;
       b.addEventListener("click", () => {
         pick = pick.toLowerCase() === cat.toLowerCase() ? "" : cat;
         input.value = ""; paint(); syncOk();
@@ -5817,15 +6109,18 @@ a,button{touch-action:manipulation}
   /* Assez de matière pour qu'un résumé ait du sens, assez souvent pour que
      les notes s'écrivent PENDANT le cours et non après. */
   const SC_MIN = 700, SC_MAX = 2600, SC_DELAI = 150000;
-  /* La découpe de l'enregistrement. Quatre-vingt-dix secondes : assez long
-     pour que Whisper ait du contexte, assez court pour que le texte arrive
-     pendant qu'on suit encore le cours. */
-  const SC_MORCEAU = 90000;
+  /* La découpe de l'enregistrement. Vingt secondes : c'est le compromis entre
+     le contexte dont Whisper a besoin pour bien entendre et le retard qu'un
+     étudiant accepte de voir à l'écran. Groq facture dix secondes au minimum
+     par requête, donc rien ne se perd à ce rythme ; et à trois heures de cours
+     cela fait cinq cent quarante requêtes, loin des deux mille offertes. */
+  const SC_MORCEAU = 20000;
   const SC_FILE_MAX = 8;                // au-delà, le réseau est mort : on lâche le plus vieux
   const IDB_TR = "agenda-tr";
 
   let scOn = false, scRec = null, scArret = false, scForce = false;
   let scVoie = "", scFlux = null, scEnr = null, scEnrFini = null, scCycle = 0;
+  let scEcoute = null, scLiveF = "", scLiveP = "";   // le direct, affichage seul
   let scFile = [], scEnvoiAudio = false;
   let scCours = "", scPage = "";
   let scBrut = "", scAttente = "", scProv = "";
@@ -5899,8 +6194,11 @@ a,button{touch-action:manipulation}
 
     el("m-scia").textContent = ia;
     el("m-scia").hidden = !ia;
-    el("m-scprov").textContent = (scOn && ici) ? scProv : "";
-    el("m-scprov").hidden = !(scOn && ici && scProv);
+    /* Ce qui s'entend à l'instant : la dictée du navigateur en mode audio,
+       le provisoire de la reconnaissance quand c'est elle qui transcrit. */
+    const direct = scVoie === "audio" ? `${scLiveF} ${scLiveP}`.trim() : scProv;
+    el("m-scprov").textContent = (scOn && ici) ? direct : "";
+    el("m-scprov").hidden = !(scOn && ici && direct);
     el("m-scverse").hidden = !ia;
     el("m-scpropre").hidden = !ia || scVol || (scOn && !ici);
     el("m-sctrv").hidden = !(p && p.tr);
@@ -5979,6 +6277,9 @@ a,button{touch-action:manipulation}
           scEcrire({ tr: 1 });
           trPut(scPage, scBrut);
           scNote = "";
+          /* Whisper vient de dire vrai sur ce passage : l'aperçu du direct
+             n'a plus lieu d'être, il repart de zéro pour la suite. */
+          scLiveF = ""; scLiveP = "";
         }
         if (d.appels != null) scQuota = `${d.appels}/${d.plafond} morceaux`;
         scPeindre();
@@ -6007,6 +6308,41 @@ a,button{touch-action:manipulation}
     scEnr = enr;
     try { enr.start(); } catch { scDire("L'enregistrement n'a pas pu démarrer."); return; }
     scCycle = setTimeout(() => { try { enr.stop(); } catch {} }, SC_MORCEAU);
+  }
+
+  /* ── Le direct ───────────────────────────────────────────────────
+     Whisper dit juste, mais par paquets de vingt secondes. Un étudiant qui
+     regarde son écran veut voir les mots arriver pendant qu'ils sont
+     prononcés, sinon il croit que rien n'écoute.
+
+     Alors les deux tournent ensemble : la dictée du navigateur écrit au fil
+     des mots, et Whisper repasse derrière avec le texte qui restera. RIEN de
+     ce qui sort d'ici n'est conservé — ni dans le transcript, ni dans les
+     notes. C'est une fenêtre, pas une source. Elle s'efface dès que Whisper
+     a parlé du même passage.
+
+     Si ce doublage échoue, tant pis : le texte vrai arrive quand même. */
+  function scDoubler() {
+    if (!SR) return;
+    try {
+      const r = new SR();
+      r.lang = "fr-CA"; r.continuous = true; r.interimResults = true;
+      r.onresult = ev => {
+        for (let i = ev.resultIndex; i < ev.results.length; i++) {
+          const t = (ev.results[i][0]?.transcript || "").trim();
+          if (!t) continue;
+          /* Borné : l'aperçu ne doit pas grandir sans fin entre deux
+             morceaux, c'est une ligne qui défile. */
+          if (ev.results[i].isFinal) { scLiveF = `${scLiveF} ${t}`.trim().slice(-300); scLiveP = ""; }
+          else scLiveP = t;
+        }
+        scPeindre();
+      };
+      r.onerror = () => {};                 // le direct qui tombe n'est pas une panne
+      r.onend = () => { if (scOn && !scArret) { try { r.start(); } catch {} } };
+      scEcoute = r;
+      r.start();
+    } catch {}
   }
 
   /* Le filet : la reconnaissance du navigateur, quand on ne peut pas
@@ -6126,7 +6462,7 @@ a,button{touch-action:manipulation}
     if (!voie) { scDire("Ce navigateur ne sait ni enregistrer ni transcrire."); return; }
 
     scVoie = voie; scOn = true; scArret = false;
-    if (voie === "audio") scMorceau();
+    if (voie === "audio") { scMorceau(); scDoubler(); }
     else if (!scVoixDemarrer()) { scOn = false; scDire("La transcription n'a pas pu démarrer."); return; }
 
     /* Sans ça, l'écran s'endort au bout d'une minute et emporte l'écoute. */
@@ -6151,6 +6487,8 @@ a,button{touch-action:manipulation}
       scEnr = null;
       scFlux?.getTracks().forEach(t => { try { t.stop(); } catch {} });
       scFlux = null;
+      try { scEcoute?.stop(); } catch {}
+      scEcoute = null; scLiveF = ""; scLiveP = "";
       await scVider();
     } else {
       try { scRec?.stop(); } catch {}
@@ -6271,6 +6609,26 @@ a,button{touch-action:manipulation}
     ...p.annos.map(a => (a.t || "").trim()).filter(Boolean).map(t => `• ${t}`)]
     .filter(Boolean).join("\n\n");
   const NEUF = "·neuf·";       // valeur d'option : créer plutôt que choisir
+  /* « Cours du 27 août · 2 » sait quel jour il est : la séance créée dans la
+     classe prend la date de la page, pas celle de l'envoi. L'année est celle
+     d'aujourd'hui — les pages vivent dans le semestre courant. */
+  const dateDeTitre = t => {
+    const m = /du\s+(\d{1,2})(?:er)?\s+([a-zà-ü.]+)/i.exec(t || "");
+    if (!m) return null;
+    const mois = MONTH.findIndex(x => x.toLowerCase().startsWith(m[2].toLowerCase().replace(/\.$/, "")));
+    if (mois < 0) return null;
+    return iso(new Date(today0.getFullYear(), mois, +m[1]));
+  };
+  /* Le bouton « Partager » dit l'état du lien : une page déjà liée à une
+     séance l'affiche — et l'envoi suivant mettra la séance à jour au lieu
+     d'empiler. */
+  function renderShareState() {
+    const b = el("m-share"); if (!b || !mCur) return;
+    const cl = mPage(mCur).cl;
+    b.classList.toggle("on", !!cl);
+    b.title = cl ? `Liée à « ${cl.n || "une séance"} » — partager mettra la séance à jour`
+      : "Stocker cette page dans une classe — choisis la classe, le cours, la séance";
+  }
   function sharePop(anchor) {
     const c = mCur; if (!c) return;
     mFlush();
@@ -6310,6 +6668,19 @@ a,button{touch-action:manipulation}
     ok.disabled = true;
     pop = box; place(box, anchor, false);
 
+    /* La page se souvient de la séance où elle est partie (p.cl) : le
+       panneau retombe dessus d'office, et le bouton dit ce qui va se passer
+       — mettre à jour son propre dépôt, ou s'ajouter ailleurs. */
+    const lien = p.cl || null;
+    const majEtiquette = () => {
+      const surLien = !!(lien && selK.value === lien.k);
+      ok.textContent = surLien ? "Mettre à jour" : "Envoyer";
+      hint.textContent = surLien
+        ? `Déjà liée à « ${lien.n || "cette séance"} » : l'envoi remplace ce que la page y avait déposé — le reste de la page de séance n'est pas touché.`
+        : "Le texte de la page part dans la page de séance — toute la classe le voit. Ce qui y est déjà écrit reste au-dessus.";
+    };
+    selK.addEventListener("change", majEtiquette);
+
     let classes = [];
     const matsDe  = id => (classes.find(x => x.id === id)?.agenda_matieres || [])
       .slice().sort((a, b) => (a.ordre - b.ordre) || a.nom.localeCompare(b.nom, "fr"));
@@ -6334,6 +6705,7 @@ a,button{touch-action:manipulation}
       if (selM.value !== NEUF)
         for (const k of coursDe(selC.value, selM.value))
           opt(selK, k.id, `${k.titre || "Séance"}${k.jour ? ` · ${frDate(k.jour)}` : ""}`);
+      majEtiquette();
     }
     selC.addEventListener("change", majM);
     selM.addEventListener("change", majK);
@@ -6352,6 +6724,13 @@ a,button{touch-action:manipulation}
         for (const s of [selC, selM, selK]) s.disabled = false;
         ok.disabled = false;
         majM();
+        /* Retomber sur la séance liée, si elle existe encore. */
+        if (lien && classes.some(x => x.id === lien.cls)) {
+          selC.value = lien.cls; majM();
+          if (matsDe(lien.cls).some(m => m.id === lien.mat)) { selM.value = lien.mat; majK(); }
+          if ([...selK.options].some(o => o.value === lien.k)) selK.value = lien.k;
+        }
+        majEtiquette();
       })
       .catch(e => { err.textContent = frErr(e); err.hidden = false; });
 
@@ -6369,23 +6748,41 @@ a,button{touch-action:manipulation}
         }
         if (coursId === NEUF) {
           const d = await sbApi("agenda_cours", { method:"POST", headers:{ prefer:"return=representation" },
-            body: JSON.stringify([{ matiere_id: matId, titre: p.t || "", jour: iso(today0), created_by: uid0 }]) });
+            body: JSON.stringify([{ matiere_id: matId, titre: p.t || "",
+              jour: dateDeTitre(p.t) || iso(today0), created_by: uid0 }]) });
           coursId = d[0].id;
         }
         /* Une seule note de page par séance, la plus ancienne fait foi —
-           même règle que dans classes.html. On s'ajoute à sa suite. */
+           même règle que dans classes.html. Sur SA séance, la page remplace
+           son propre dernier envoi ; partout ailleurs — ou si quelqu'un a
+           remanié le passage — elle s'ajoute à la suite, sans rien détruire. */
         const notes = await sbApi(`agenda_notes?cours_id=eq.${coursId}&select=id,contenu&order=created_at.asc&limit=1`);
+        const dejaEnvoye = (lien && coursId === lien.k && p.sent) ? p.sent : null;
         if (notes.length) {
-          const avant = (notes[0].contenu || "").replace(/\s+$/, "");
+          const la = notes[0].contenu || "";
+          const contenu = dejaEnvoye && la.includes(dejaEnvoye)
+            ? la.replace(dejaEnvoye, texte)
+            : (la.replace(/\s+$/, "") ? `${la.replace(/\s+$/, "")}\n\n${texte}` : texte);
           await sbApi(`agenda_notes?id=eq.${notes[0].id}`, { method:"PATCH",
-            body: JSON.stringify({ contenu: avant ? `${avant}\n\n${texte}` : texte, updated_by: uid0 }) });
+            body: JSON.stringify({ contenu, updated_by: uid0 }) });
         } else {
           await sbApi("agenda_notes", { method:"POST",
             body: JSON.stringify([{ cours_id: coursId, contenu: texte, created_by: uid0, updated_by: uid0 }]) });
         }
+        /* La page retient sa séance — et ce qu'elle vient d'y déposer, pour
+           savoir quoi remplacer la prochaine fois. Le lien voyage avec la
+           page (compte), le dépôt reste local (IndexedDB). */
+        const etiquette = [selC.selectedOptions[0]?.textContent,
+          (selM.selectedOptions[0]?.textContent || "").replace(/^Nouveau — /, ""),
+          (selK.selectedOptions[0]?.textContent || "").replace(/^Nouvelle séance — /, "")]
+          .filter(Boolean).join(" › ");
+        mWrite(c, { pages: mPages(c).map(x => x.id === p.id
+          ? { ...x, cl: { cls: selC.value, mat: matId, k: coursId, n: etiquette }, sent: texte } : x) });
+        pgPush(c, p.id); save();
+        renderShareState();
         /* Réussi : le panneau le dit et offre d'aller voir — sur place, pas
            une redirection qu'on n'a pas demandée. */
-        box.replaceChildren(mk("h4", null, "Envoyée ✓"),
+        box.replaceChildren(mk("h4", null, dejaEnvoye ? "Mise à jour ✓" : "Envoyée ✓"),
           mk("p","when", `${selC.selectedOptions[0].textContent} · la classe la voit maintenant.`));
         const a2 = mk("div","acts");
         const voir = mk("a","btn solid"); voir.textContent = "Ouvrir la séance";
@@ -6576,7 +6973,7 @@ a,button{touch-action:manipulation}
     renderCourses();
     if (mCur && !el("matiere").hidden) renderMatiere();
   }
-  pgHydrate();
+  const pgHydrated = pgHydrate();   // la synchro nuage attend ce réveil
 
   /* pdf.js n'entre en scène qu'au premier PDF, et depuis le réseau : le
      module pèse plus que l'app entière — l'emporter d'office punirait tous
@@ -6654,6 +7051,7 @@ a,button{touch-action:manipulation}
         at: mStamp(), doc: { name: file.name, k, n: sheets.length, r: sheets.map(x => x.r) } };
       mFlush();
       mWrite(c, { pages: [...mPages(c), p], pg: p.id });
+      pgPush(c, p.id);   // la page-document part aussi vers le compte (ses métadonnées)
       if (!save()) say("⚠ mémoire de l'appareil pleine — document non enregistré");
       renderMPage(); renderCourses();
     } catch (e) {
@@ -6708,7 +7106,6 @@ a,button{touch-action:manipulation}
     el("m-file").value = "";      // réimporter le même fichier doit redéclencher change
     if (f) importDoc(f);
   });
-  el("m-drop").addEventListener("click", () => { if (mCur) el("m-file").click(); });
   /* Déposer le fichier vaut l'importer : le geste évident — et toute la
      carte des notes l'accepte, on ne vise pas un timbre-poste. Le voile
      s'allume dès que le fichier survole, et le compteur encaisse les
@@ -6750,60 +7147,82 @@ a,button{touch-action:manipulation}
   }
   function renderNotes() {
     const box = el("nt-grid"); box.textContent = "";
-    let total = 0;
+    const seeds = el("nt-seeds"); seeds.textContent = "";
+    let total = 0, nseed = 0;
     for (const c of COURSES) {
       const ps = mPages(c); total += ps.length;
+      /* Une matière sans page n'a pas de dossier à montrer : lui donner une
+         carte pleine, c'est mettre du contenant là où il n'y a pas de
+         contenu. Elle descend en puce, tout en bas — un clic, une page. */
+      if (!ps.length) { seeds.append(ntSeed(c)); nseed++; continue; }
       const card = mk("section","card fx ntfold");
-      const ch = mk("div","ch");
-      const h = mk("h3");
+      const ch = mk("header","ntch");
       const pip = mk("i","mpip"); pip.style.background = `hsl(${hueOf(c)} 62% 52%)`;
-      h.append(pip, document.createTextNode(c));
-      ch.append(h, mk("span","grow"),
-        mk("span","dim mono", ps.length ? `${ps.length} page${ps.length > 1 ? "s" : ""}` : ""));
+      ch.append(pip, mk("h3", null, c), mk("span","ntcount", `${ps.length}`));
+      ch.querySelector(".ntcount").title = `${ps.length} page${ps.length > 1 ? "s" : ""}`;
       card.append(ch);
-      if (ps.length) {
-        /* Les pages rangées se regroupent sous leur catégorie — « Cours 5 »,
-           « Préparation examen » — dans l'ordre où les catégories sont
-           apparues ; les pages libres gardent la tête du dossier, sans
-           étiquette inventée. */
-        const grps = new Map();
-        for (const p of ps) { const k = pgCat(p).toLowerCase();
-          if (!grps.has(k)) grps.set(k, { cat: pgCat(p), pages: [] });
-          grps.get(k).pages.push(p); }
-        const order = [...grps.values()];
-        const free = grps.get("");
-        if (free) { order.splice(order.indexOf(free), 1); order.unshift(free); }
-        const ul = mk("ul","ntpages");
-        for (const g of order) {
-          if (g.cat) { const hd = mk("li","ntcat");
-            hd.append(mk("span", null, g.cat), mk("span","dim mono", `${g.pages.length}`));
-            ul.append(hd); }
-          for (const p of g.pages) ul.append(ntRow(c, p));
-        }
-        card.append(ul);
-      } else card.classList.add("ntempty");   // titre + geste, rien d'autre
-      const add = mk("button","btn quiet ntadd","Nouvelle page");
-      add.title = `Ouvrir une page blanche sous ${c}`;
-      add.addEventListener("click", () => { addPage(c); openMatiere(c);
-        el("m-page").focus({ preventScroll:true }); });
-      card.append(add);
+      /* Les pages rangées se regroupent sous leur catégorie — « Cours 5 »,
+         « Préparation examen » — dans l'ordre où les catégories sont
+         apparues ; les pages libres gardent la tête du dossier, sans
+         étiquette inventée. */
+      const grps = new Map();
+      for (const p of ps) { const k = pgCat(p).toLowerCase();
+        if (!grps.has(k)) grps.set(k, { cat: pgCat(p), pages: [] });
+        grps.get(k).pages.push(p); }
+      const order = [...grps.values()];
+      const free = grps.get("");
+      if (free) { order.splice(order.indexOf(free), 1); order.unshift(free); }
+      const ul = mk("ul","ntpages");
+      for (const g of order) {
+        if (g.cat) { const hd = mk("li","ntcat");
+          hd.append(mk("span", null, g.cat), mk("span","dim mono", `${g.pages.length}`));
+          ul.append(hd); }
+        for (const p of g.pages) ul.append(ntRow(c, p));
+      }
+      card.append(ul, ntAdd(c, "Nouvelle page"));
       box.append(card);
     }
+    el("nt-seedh").hidden = !nseed;
     el("nt-n").textContent = total ? `(${total})` : "";
+  }
+  /* Le même geste, au même endroit sur toutes les cartes. */
+  function ntAdd(c, label) {
+    const b = mk("button","ntadd");
+    b.innerHTML = ICON.plus;
+    b.append(mk("span", null, label));
+    b.title = `Ouvrir une page blanche sous ${c}`;
+    b.addEventListener("click", () => { addPage(c); openMatiere(c);
+      el("m-page").focus({ preventScroll:true }); });
+    return b;
+  }
+  function ntSeed(c) {
+    const b = mk("button","ntseed");
+    const pip = mk("i","mpip"); pip.style.background = `hsl(${hueOf(c)} 62% 52%)`;
+    b.append(pip, mk("span", null, c));
+    b.title = `Ouvrir une première page sous ${c}`;
+    b.addEventListener("click", () => { addPage(c); openMatiere(c);
+      el("m-page").focus({ preventScroll:true }); });
+    return b;
   }
   function ntRow(c, p) {
     const li = mk("li");
     const btn = mk("button","ntpage");
-    /* Ce que la page porte, dit en une ligne : sa première phrase s'il y a du
-       texte, sinon la nature de ce qui s'y trouve. */
+    /* Ce que la page porte : sa première phrase s'il y a du texte, sinon la
+       nature de ce qui s'y trouve. */
     const line = (p.page.split("\n").find(l => l.trim()) || p.ap || "").trim();
     const doc = pgDoc(p);
     const what = line || (doc ? `Document · ${doc.n} feuille${doc.n > 1 ? "s" : ""}`
       : (p.ink.length || p.ni) ? "Page dessinée"
       : (p.annos.length || p.na) ? "Annotations posées" : "Page vide");
-    btn.append(mk("b", null, p.t || "Page"),
-      mk("span", null, [p.at && `modifiée ${p.at}`, what].filter(Boolean).join(" · ")));
-    btn.title = `Ouvrir cette page — ${c}`;
+    /* La date reste au bout du titre — le jour suffit ici, l'heure vit dans
+       l'infobulle et sur la fiche ouverte. La seconde ligne est la citation,
+       ou, à défaut, la nature de la page dite sur un autre ton. */
+    const top = mk("span","ntpt");
+    top.append(mk("b", null, p.t || "Page"));
+    if (p.at) top.append(mk("time", null, p.at.split(" · ")[0]));
+    btn.append(top, mk("span", `ntwhat${line ? "" : " void"}`, what));
+    btn.title = [`Ouvrir cette page — ${c}`, p.at && `modifiée ${p.at}`]
+      .filter(Boolean).join("\n");
     btn.addEventListener("click", () => openNotePage(c, p.id));
     /* Une page pleine ne part pas d'un seul clic : le premier arme le bouton,
        le second seulement supprime — et l'hésitation désarme toute seule. */
@@ -6817,12 +7236,26 @@ a,button{touch-action:manipulation}
       docPurge(p);       // ses feuilles dans IndexedDB partent avec elle
       trDel(p.id);       // son transcript brut aussi
       idbDel(`pg/${p.id}`).catch(() => {});   // et son corps
-      pgSafe.delete(p.id); pgDirty.delete(p.id);
+      pgSafe.delete(p.id); pgDirty.delete(p.id); cloudDirty.delete(p.id);
+      /* Une tombe, puis l'effacement là-bas : sans la tombe, la copie du
+         nuage — ou celle d'un autre appareil — ressusciterait la page à la
+         prochaine fusion. */
+      state.gone[`pg:${p.id}`] = { k: "page", t: p.t || "", at: Date.now() };
+      sbPushGone();
+      sbApi(`agenda_pages_perso?id=eq.${encodeURIComponent(p.id)}`, { method: "DELETE" }).catch(() => {});
       const ps = mPages(c).filter(x => x.id !== p.id);
       mWrite(c, { pages: ps, pg: ps[0]?.id || "" }); save();
       renderCourses();   // remet les compteurs à jour, et la vue avec eux
     });
-    li.append(btn, kill);
+    /* Ranger sans ouvrir la page : un arriéré se classe d'ici, rangée par
+       rangée, au lieu d'entrer dans chaque fiche pour en sortir aussitôt.
+       Le dossier se montre au survol comme le ×, et reste allumé sur une
+       page déjà rangée — c'est là qu'on la reclasse. */
+    const tidy = mk("button","ntcatb" + (pgCat(p) ? " on" : ""));
+    tidy.innerHTML = ICON.ranger;
+    tidy.title = pgCat(p) ? `Rangée sous « ${pgCat(p)} » — reclasser` : "Ranger cette page";
+    tidy.addEventListener("click", () => catPop(c, p.id, true));
+    li.append(btn, tidy, kill);
     return li;
   }
   el("nav-notes").addEventListener("click", openNotes);
@@ -6876,12 +7309,12 @@ a,button{touch-action:manipulation}
   }
   const flipSide = () => { state.sideMini = !state.sideMini; applySide(); save(); };
   const addWeek = () => { state.wks.push(Math.max(...state.wks) + 1); renderWeeks();
-    host.lastElementChild?.scrollIntoView({ behavior:"smooth", block:"start" }); };
+    host.lastElementChild?.scrollIntoView({ behavior:lisse, block:"start" }); };
   /* Le bouton de l'en-tête suit le mode : il ajoute une semaine à la pile, ou
      avance d'une semaine quand on les fait défiler. */
   const weekPill = () => state.wview === "pile" ? addWeek() : (stepWeek(1), goto("horaire"));
   /* Toute navigation vers une section referme d'abord la vue profil. */
-  const goto = id => { showProfile(false); el(id)?.scrollIntoView({ behavior:"smooth", block:"start" }); };
+  const goto = id => { showProfile(false); el(id)?.scrollIntoView({ behavior:lisse, block:"start" }); };
 
   document.querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => {
     const t = b.dataset.go;
@@ -6889,7 +7322,7 @@ a,button{touch-action:manipulation}
       document.querySelectorAll(".navi[data-go]").forEach(x => x.classList.remove("on"));
       b.classList.add("on");
     }
-    t === "top" ? (showProfile(false), scrollTo({ top:0, behavior:"smooth" })) : goto(t);
+    t === "top" ? (showProfile(false), scrollTo({ top:0, behavior:lisse })) : goto(t);
   }));
   el("add-week").addEventListener("click", weekPill);
   el("add-week2").addEventListener("click", addWeek);
@@ -6983,6 +7416,9 @@ a,button{touch-action:manipulation}
      grands chiffres, tracé des anneaux. Une seule fois par carte, et rien du
      tout si l'utilisateur préfère réduire les animations. */
   const noMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  /* Le glissement des navigations respecte le même choix que les cartes :
+     qui réduit les animations obtient des sauts nets, pas des travellings. */
+  const lisse = noMotion ? "auto" : "smooth";
   function countUp(node) {
     const target = Number(node.textContent);
     if (noMotion || !Number.isFinite(target) || target <= 0) return;
@@ -7220,6 +7656,10 @@ a,button{touch-action:manipulation}
   /* sbFetchSnapshot rend une liste [{kind, payload}] : l'export nourrit
      échéances et MIO, l'horaire remplit la grille. */
   function applyCloud(rows) {
+    /* Chaque moment de synchro tire aussi les pages — même quand les
+       instantanés sont vides (compte tout neuf) : rows est alors null, mais
+       les pages, elles, existent peut-être déjà sur l'autre appareil. */
+    cloudPagesPull();
     if (!Array.isArray(rows)) return;
     const of = k => rows.find(r => r.kind === k)?.payload;
     fusionneSuppressions(of("suppressions"));  // d'abord : rien de supprimé ne doit revenir
@@ -7346,7 +7786,7 @@ a,button{touch-action:manipulation}
     el("apphead").classList.toggle("bare", name !== "board");
     document.body.classList.toggle("lp", hors);
     document.body.classList.toggle("mv", name === "matiere");
-    if (name !== "board") scrollTo({ top:0, behavior:"smooth" });
+    if (name !== "board") scrollTo({ top:0, behavior:lisse });
   }
   function showProfile(on) {
     if (on) { showView("profil"); refreshProfile(); }
@@ -7372,7 +7812,7 @@ a,button{touch-action:manipulation}
 
   el("go-profile").addEventListener("click", () => showProfile(true));
   el("p-back").addEventListener("click", () => {
-    showProfile(false); scrollTo({ top:0, behavior:"smooth" });
+    showProfile(false); scrollTo({ top:0, behavior:lisse });
   });
   el("go-home").addEventListener("click", () => {
     showView("landing");
@@ -7390,7 +7830,7 @@ a,button{touch-action:manipulation}
   const enterBoard = () => {
     showView("board");
     document.querySelectorAll(".navi[data-go]").forEach(x => x.classList.toggle("on", x.dataset.go === "top"));
-    scrollTo({ top:0, behavior:"smooth" });
+    scrollTo({ top:0, behavior:lisse });
   };
   /* Le compte n'est pas facultatif : sans session, l'accueil ne mène qu'à
      l'inscription. Une session déjà ouverte entre directement. */
@@ -7413,12 +7853,13 @@ a,button{touch-action:manipulation}
     const up = joMode === "signup", conf = joMode === "confirm";
     el("jo-title").textContent = conf ? "Confirme ton courriel"
       : up ? "Crée ton compte d'agenda" : "Connecte-toi";
-    /* Le gabarit de courriel appartient au projet Supabase, partagé avec une
-       autre application : le message arrive au nom de « Shift » et porte un
-       code, pas un lien. On l'annonce — sinon l'étudiant croit à une erreur
-       d'adresse et n'ouvre jamais le courriel. */
+    /* Le courriel porte un code, pas un lien — le gabarit du projet Supabase
+       n'en met pas. On ne nomme pas l'expéditeur ici : ce nom se règle dans le
+       tableau de bord et cette phrase deviendrait fausse au prochain
+       changement. Le rappel des indésirables, lui, sert toujours : un premier
+       courriel d'un expéditeur inconnu y tombe souvent. */
     el("jo-sub").textContent = conf
-      ? `Un code à 6 chiffres vient de partir vers ${joEmail}. Le courriel arrive au nom de « Shift » — même serveur, c'est normal. Entre le code ici pour activer ton compte.`
+      ? `Un code à 6 chiffres vient de partir vers ${joEmail}. Il arrive en moins d'une minute — pense à regarder tes indésirables. Entre-le ici pour activer ton compte.`
       : up
       ? "Un courriel et un mot de passe, rien de plus : ils servent à retrouver tes échéances et tes résumés sur tes autres appareils. Tes identifiants Omnivox n'y transitent jamais."
       : "Le compte d'agenda, pas Omnivox. Tes échéances et tes résumés reviennent tels que l'agent les a laissés.";

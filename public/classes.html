@@ -376,6 +376,15 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
   .tile .go{transition:none;transform:none}
   .tick path{animation:none;stroke-dashoffset:0}
 }
+/* ── Tactile — même socle que l'agenda : pas de survol au doigt, pas de
+   zoom d'iOS à la mise au point. */
+a,button{touch-action:manipulation}
+@media (hover:none){
+  .tile .go{opacity:.5;transform:none}
+}
+@media (pointer:coarse){
+  .pmeta .field,.row .field,.compo textarea,.cases .raw{font-size:16px}
+}
 </style>
 </head>
 <body>

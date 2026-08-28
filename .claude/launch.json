@@ -143,6 +143,17 @@
         "/private/tmp/claude-501/-Users-maverickmenard-Desktop-agenda/5a41ecfb-d5d8-44b7-b9b3-1df0d4fa12c8/scratchpad/preview"
       ],
       "port": 4261
+    },
+    {
+      "name": "nt-bench-4271",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "4271",
+        "/private/tmp/claude-501/-Users-maverickmenard-Desktop-agenda/9e019ff1-7052-4b57-9f1d-ba1fdb3c4f53/scratchpad/nt"
+      ],
+      "port": 4271
     }
   ]
 }
