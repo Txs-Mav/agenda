@@ -199,12 +199,6 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 li.done .box{background:var(--invert);border-color:var(--invert);color:var(--on-invert)}
 .tx{flex:1 1 auto;font-size:.86rem;line-height:1.32;min-width:0;overflow-wrap:anywhere}
 li.done .tx{color:var(--faint);text-decoration:line-through}
-/* Échéance venue avec son URL exacte (Moodle) : le titre ouvre la page du
-   devoir. Discret au repos, souligné au survol — les boutons fait/supprimer
-   gardent leurs zones à eux. */
-.tx a{color:inherit;text-decoration:none}
-.tx a:hover{text-decoration:underline}
-.tx a .lnk{font-size:.72em;opacity:.55;margin-left:.22em}
 .kill{flex:0 0 auto;color:var(--faint);font-size:1.05rem;line-height:1;padding:0 .15rem;opacity:0;transition:opacity .15s,color .15s}
 @media (hover:hover){li:hover .kill{opacity:1}}
 @media (hover:hover){.kill:hover{color:var(--p3)}}
@@ -707,6 +701,17 @@ button.me,.mk{background-image:linear-gradient(160deg,var(--invert-2),var(--inve
   border-radius:6px;padding:.05rem .35rem;white-space:nowrap;
 }
 @media print{.card,.work,.course,.dl,.side,body{background-image:none}}
+
+/* ── Avant l'aiguillage ──────────────────────────────────────────
+   Le tableau de bord est la vue visible par défaut dans le balisage, et le
+   script qui décide où l'on va ne s'exécute qu'après 350 ko de page : le
+   navigateur a largement le temps de peindre entre les deux. Un visiteur
+   qui arrivait pour la première fois voyait donc passer le coin d'un compte
+   — barre latérale, en-tête, cartes — avant d'atterrir sur l'accueil.
+   On voile, on ne replie pas : `visibility` garde la mise en page, donc les
+   mesures que les graphiques prennent au démarrage restent justes. La
+   première vue affichée lève le voile. */
+.shell.avant{visibility:hidden}
 
 /* ── Page d'accueil ──────────────────────────────────────────────
    Une vraie page de présentation : pleine largeur, sans la barre latérale
@@ -1559,7 +1564,7 @@ a,button{touch-action:manipulation}
 }
 </style>
 
-<div class="shell">
+<div class="shell avant">
   <aside class="side">
     <button class="brand" id="go-home" title="Retour à l'accueil">
       <span class="mk"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h7M4 12h16M4 18h11"/></svg></span>
@@ -3383,19 +3388,6 @@ a,button{touch-action:manipulation}
   });
 
   /* ── Échéances ────────────────────────────────────────────────── */
-  /* Le titre d'une échéance : un lien quand la source fournit l'URL exacte
-     (Moodle) — l'agenda t'amène au devoir lui-même, pas à une page d'accueil. */
-  function titreDe(d) {
-    const p = mk("p","tx");
-    if (d.url) {
-      const a = mk("a", null, d.t);
-      a.href = d.url; a.target = "_blank"; a.rel = "noopener";
-      a.title = "Ouvrir la page du devoir";
-      a.append(mk("span","lnk","↗"));
-      p.append(a);
-    } else p.textContent = d.t;
-    return p;
-  }
   function renderDeadlines() {
     const box = el("deadlines"); box.textContent = "";
     const list = [...state.deadlines].sort((a,b) =>
@@ -3407,7 +3399,7 @@ a,button{touch-action:manipulation}
       li.style.setProperty("--h", hueOf(courseOf(d)));
       const bar = mk("span","bar4");
       const bd = mk("div","al");
-      bd.append(titreDe(d));
+      bd.append(mk("p","tx", d.t));
       const meta = mk("p","w");
       const cdn = mk("b","cd l" + cd.lvl, cd.txt);
       meta.append(cdn, document.createTextNode(` · ${frDate(d.date)}`));
@@ -4012,7 +4004,7 @@ a,button{touch-action:manipulation}
       const start = new Date(y, m - 1, da, t ? +t[1] : 23, t ? +t[2] : 59);
       if (start <= now) continue;
       const c = courseOf(d);
-      out.push({ key:`e:${d.id}`, t:d.t, url:d.url, hue:hueOf(c), sub:c, start, end:null, jour:!t,
+      out.push({ key:`e:${d.id}`, t:d.t, hue:hueOf(c), sub:c, start, end:null, jour:!t,
         kind:d.kind === "examen" ? "examen" : d.kind === "remise" ? "remise" : "echeance",
         at:t ? new Date(+start - LEAD_MIN * 6e4) : new Date(y, m - 1, da, 8) });
     }
@@ -4101,7 +4093,7 @@ a,button{touch-action:manipulation}
       li.style.setProperty("--h", x.hue);
       const ic = mk("span","kdi"); ic.innerHTML = ICON[KD_ICON[x.kind]];
       const al = mk("div","al");
-      al.append(titreDe(x));
+      al.append(mk("p","tx", x.t));
       const w = mk("p","w");
       w.append(mk("b","cd l" + lvl, untilTxt(x.start - now)),
         document.createTextNode(` · ${dayTxt(x.start, now)}${x.jour ? "" : " " + clock(x.start)}`));
@@ -4452,7 +4444,7 @@ a,button{touch-action:manipulation}
       const li = mk("li","nrow dline" + (d.done ? " done" : ""));
       li.style.setProperty("--p", `var(--p${cd.lvl})`);
       const bd = mk("div","al");
-      bd.append(titreDe(d));
+      bd.append(mk("p","tx", d.t));
       const meta = mk("p","w");
       const label = ACT_LBL[d.kind] || "date";
       meta.append(mk("b","cd l" + cd.lvl, cd.txt),
@@ -5936,6 +5928,8 @@ a,button{touch-action:manipulation}
        body garderait overflow:hidden devant une carte devenue invisible. */
     if (name !== "matiere") setZen(false);
     for (const v of ["board","profil","matiere","landing","onboard","notes"]) el(v).hidden = v !== name;
+    /* Une vue est choisie : le voile de départ n'a plus rien à cacher. */
+    document.querySelector(".shell").classList.remove("avant");
     /* L'entrée « Toutes les notes » n'est pas une ancre du tableau : elle
        s'allume avec sa vue, et éteint les ancres qui croiraient l'être encore. */
     el("nav-notes").classList.toggle("on", name === "notes");
