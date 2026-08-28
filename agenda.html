@@ -7625,24 +7625,26 @@ a,button{touch-action:manipulation}
     .catch(err => console.warn("data.json indisponible ou illisible :", err));
 
   /* L'extension Chrome (extension/bridge.js) pousse sa collecte par
-     postMessage, au même contrat que data.json. Ses MIO arrivent sans analyse
-     d'agent : quand on tient déjà une version enrichie (résumé différent de
-     l'objet, ou actions), ces champs survivent à la version fraîche. */
+     postMessage, au même contrat que data.json — à une nuance près : ses MIO
+     FUSIONNENT par identifiant au lieu de remplacer, parce qu'une poussée
+     partielle (page de boîte incomplète, collecte à peine commencée) ne doit
+     jamais effacer ce qu'on tient déjà. Et quand on tient une version
+     enrichie par l'agent (résumé différent de l'objet, ou actions), ces
+     champs survivent à la version fraîche. */
   window.addEventListener("message", (e) => {
     if (e.source !== window || e.origin !== location.origin) return;
     const d = e.data;
     if (!d || d.source !== "agenda-cegep-ext" || d.type !== "export") return;
     const p = d.payload;
     if (!p || (!Array.isArray(p.mios) && !Array.isArray(p.deadlines))) return;
-    const riches = new Map(state.mios.map(m => [m.id, m]));
-    ingest({
-      ...p,
-      mios: (p.mios || []).map(m => {
-        const r = riches.get(m.id);
-        return r && (r.actions?.length || (r.summary && r.summary !== r.subject))
-          ? { ...m, summary: r.summary, actions: r.actions } : m;
-      }),
-    });
+    const fusion = new Map(state.mios.map(m => [m.id, m]));
+    for (const m of p.mios || []) {
+      const r = fusion.get(m.id);
+      fusion.set(m.id, r && (r.actions?.length || (r.summary && r.summary !== r.subject))
+        ? { ...m, summary: r.summary, actions: r.actions } : m);
+    }
+    ingest({ ...p, mios: [...fusion.values()]
+      .sort((a, b) => (b.date || "").localeCompare(a.date || "")) });
   });
 
   /* Vitrine : révélation au défilement, une seule fois par élément. */
