@@ -1113,11 +1113,16 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
 /* Trois objets seulement passent à l'ambre : au-delà, la trame se réchauffe
    et cesse d'être un fond. */
 .jodeco .wm{color:var(--wa)}
-:root[data-theme="dark"] .jodeco{opacity:.15}
+:root[data-theme="dark"] .jodeco{opacity:.12}
 /* La carte doit rester au-dessus du calque : positionnée, elle reprend la
    main sur un pseudo-fond en z-index 0. */
 #onboard .joinbox{position:relative;z-index:1}
-@media (max-width:720px){.jodeco{opacity:.09}}
+/* Au téléphone, la carte mange l'écran : il ne reste qu'une bordure, et un
+   compas de 60 px n'y entre plus qu'en morceaux. On rapetisse la trame — le
+   calque déborde d'autant qu'on le réduit, pour couvrir quand même l'écran. */
+@media (max-width:720px){
+  .jodeco{opacity:.1;width:165%;height:165%;transform:scale(.62);transform-origin:top left}
+}
 /* ── Fiabilité du mot de passe ──────────────────────────────────
    Une jauge, pas un verdict : elle dit ce que vaut le mot de passe
    pendant qu'on le tape, et le laisse passer quand même. Rien ne part
@@ -2346,6 +2351,34 @@ a,button{touch-action:manipulation}
             <button class="btn solid" id="p-pw-btn" style="align-self:flex-start">Changer le mot de passe</button>
           </div>
         </section>
+        <!-- ── Brancher Moodle ─────────────────────────────────────────
+             Deux champs, un bouton, et c'est fini. Aucune commande à taper,
+             aucun ordinateur à emprunter : l'iPad se branche tout seul.
+             Le mot de passe part du NAVIGATEUR vers le Moodle du cégep —
+             `login/token.php` répond en CORS ouvert. Il ne traverse ni notre
+             serveur, ni notre base, ni nos journaux. Seul le jeton remonte,
+             et il ne redescend jamais. -->
+        <section class="card fx" id="p-moodle">
+          <div class="ch"><h3>Moodle</h3><span class="grow"></span>
+            <span class="dim mono" id="mdl-etat" style="font-size:.72rem"></span></div>
+          <div class="pbody">
+            <p class="dim" style="font-size:.78rem" id="mdl-note">Tes remises et tes tests arrivent tout seuls dans l'agenda, même appareil éteint.</p>
+            <div id="mdl-form">
+              <input class="pin" id="mdl-user" type="text" placeholder="Identifiant Moodle" autocomplete="username" autocapitalize="none" spellcheck="false">
+              <input class="pin" id="mdl-pw" type="password" placeholder="Mot de passe Moodle" autocomplete="current-password">
+              <p class="dim" id="mdl-msg" style="font-size:.78rem"></p>
+              <button class="btn solid" id="mdl-go" style="align-self:flex-start">Brancher Moodle</button>
+              <p class="hint">Ton mot de passe va de cet appareil au Moodle du cégep, directement. Il ne passe pas par nous et n'est enregistré nulle part — seul le jeton de lecture est gardé.</p>
+            </div>
+            <div id="mdl-on" hidden>
+              <p class="dim" id="mdl-quand" style="font-size:.78rem"></p>
+              <div class="prow" style="gap:.5rem;flex-wrap:wrap">
+                <button class="ghost" id="mdl-now" style="flex:0 1 auto;padding:.6rem 1.1rem">Collecter maintenant</button>
+                <button class="ghost" id="mdl-off" style="flex:0 1 auto;padding:.6rem 1.1rem;color:var(--p3)">Débrancher</button>
+              </div>
+            </div>
+          </div>
+        </section>
         <section class="card fx" id="p-photocard">
           <div class="ch"><h3>Photo d'horaire</h3></div>
           <div class="pbody">
@@ -2702,7 +2735,7 @@ a,button{touch-action:manipulation}
           <div class="gl">
             <p><b>Tes identifiants restent chez toi.</b> Un fichier local, sur ta machine.</p>
             <p><b>La double authentification n'est jamais contournée.</b> Le code, c'est toujours toi.</p>
-            <p><b>Ton compte ne transporte que le résultat.</b> Échéances et résumés &#8212; rien d'Omnivox.</p>
+            <p><b>Ton compte ne transporte que le résultat.</b> Échéances et résumés, rien d'Omnivox.</p>
           </div>
         </div>
       </section>
@@ -8254,6 +8287,11 @@ a,button{touch-action:manipulation}
     [/only request this after (\d+)/i, "Trop de tentatives d'affilée. Attends une minute."],
     [/token has expired|otp.*expired|expired.*otp/i, "Code expiré — demande-en un nouveau."],
     [/invalid.*(token|otp)|(token|otp).*invalid/i, "Code refusé. Recopie celui du dernier courriel reçu."],
+    /* Ce que renvoient Google et Microsoft en cas de refus : l'anglais arrive
+       par l'adresse, parfois sans phrase complète. */
+    [/provider is not enabled|unsupported provider/i, "Ce fournisseur n'est pas encore activé côté serveur."],
+    [/access.?denied|user denied|cancell?ed/i, "Connexion annulée."],
+    [/code.?verifier|invalid.*(auth.?code|grant)/i, "Le détour a échoué — reprends la connexion."],
     /* Le serveur injoignable et le réseau coupé donnent la même exception côté
        navigateur. On ne promet donc pas que c'est le réseau de l'étudiant. */
     [/failed to fetch|networkerror/i, "Serveur injoignable — réessaie dans un instant."],
@@ -8531,7 +8569,7 @@ a,button{touch-action:manipulation}
         try {
           const d = await sbAuth("token?grant_type=password", { email: courriel, password: pw.value });
           if (d.access_token) {
-            sbKeep(d); adopteNom(d); avatarSync(); renderAccount(); closePop();
+            sbKeep(d); adopteNom(d); avatarSync(d); renderAccount(); closePop();
             applyCloud(await sbFetchSnapshot());
           } else {
             /* Compte créé mais endormi : la fenêtre ne sait pas saisir un
@@ -8554,7 +8592,12 @@ a,button{touch-action:manipulation}
   }
   el("sb-account").addEventListener("click", ev => openAccount(ev.currentTarget));
   renderAccount();
-  if (sbSession()) { avatarSync(); sbFetchSnapshot().then(applyCloud).catch(() => {}); }
+  /* avatarSync lit `avatarLu`, une const déclarée PLUS BAS dans ce fichier :
+     l'appeler ici, au fil de l'exécution, jette « Cannot access before
+     initialization » et emporte tout ce qui reste à brancher — y compris les
+     écouteurs de clic. Une microtâche attend la fin du script, donc la fin
+     des initialisations, et ne coûte rien de visible. */
+  if (sbSession()) { queueMicrotask(avatarSync); sbFetchSnapshot().then(applyCloud).catch(() => {}); }
 
   /* ── Profil ──────────────────────────────────────────────────────
      L'avatar ouvre la vue profil (infos, mot de passe du compte
@@ -8756,13 +8799,42 @@ a,button{touch-action:manipulation}
       localStorage.setItem(AV_KEY, url); localStorage.setItem(AV_MONTEE, "1"); renderIdentity();
     } catch { /* aucune photo au compte, ou pas de réseau : les initiales font foi */ }
   }
-  /* À chaque session retrouvée : ce qui n'est pas encore monté monte, sinon
-     on va chercher ce que le compte garde — l'appareil neuf hérite du rond. */
-  function avatarSync() {
+  /* Entrer par Google ou Microsoft, c'est arriver avec une photo déjà prise.
+     On la recopie UNE fois, chez nous, plutôt que de dépendre d'une adresse
+     tierce à chaque affichage — et elle devient une photo comme une autre,
+     qu'on peut changer ou retirer. Fournisseur qui refuse (CORS, jeton
+     exigé) : les initiales font l'affaire, sans un mot. */
+  async function avatarDuFournisseur(d) {
+    const m = d?.user?.user_metadata || {};
+    const src = String(m.picture || m.avatar_url || "").trim();
+    if (!src || avatarLu()) return;
+    try {
+      const b = await (await fetch(src, { mode: "cors" })).blob();
+      if (!b.type.startsWith("image/")) return;
+      await new Promise((res, rej) => {
+        const img = new Image();
+        img.onload = () => {
+          URL.revokeObjectURL(img.src);
+          const c = Math.min(img.width, img.height), T = 256;
+          const cv = document.createElement("canvas"); cv.width = cv.height = T;
+          cv.getContext("2d").drawImage(img, (img.width - c) / 2, (img.height - c) / 2, c, c, 0, 0, T, T);
+          avatarEcrire(cv.toDataURL("image/jpeg", .82)); res();
+        };
+        img.onerror = () => { URL.revokeObjectURL(img.src); rej(new Error("image illisible")); };
+        img.src = URL.createObjectURL(b);
+      });
+    } catch { /* rien à recopier : le rond reste aux initiales */ }
+  }
+  /* À chaque session retrouvée : ce qui n'est pas encore monté monte, sinon on
+     va chercher ce que le compte garde — l'appareil neuf hérite du rond. Rien
+     au compte non plus, et le fournisseur en a une : on la reprend. */
+  function avatarSync(d) {
     if (!sbSession()?.uid) return;
-    const dejaLa = avatarLu();
-    if (dejaLa && localStorage.getItem(AV_MONTEE)) return;
-    (dejaLa ? avatarPousse() : avatarTire()).catch(() => {});
+    if (avatarLu()) {
+      if (!localStorage.getItem(AV_MONTEE)) avatarPousse().catch(() => {});
+      return;
+    }
+    avatarTire().then(() => avatarLu() || avatarDuFournisseur(d)).catch(() => {});
   }
 
   /* Se déconnecter, c'est rendre l'appareil : le nom et la photo repartent
@@ -8810,6 +8882,7 @@ a,button{touch-action:manipulation}
     if (!compte && (state.name || "").trim()) sbEnvoieNom(state.name.trim()).catch(() => {});
   }
   function refreshProfile() {
+    mdlRender().catch(() => {});
     el("p-name").value = state.name || "";
     const s0 = sbSession();
     el("p-email").textContent = s0?.email || "Aucun compte connecté — tes données restent sur cet appareil.";
@@ -8818,6 +8891,130 @@ a,button{touch-action:manipulation}
     ["p-pw1","p-pw2","p-pw-btn"].forEach(id => { el(id).disabled = !s0; });
     el("p-pw-msg").textContent = s0 ? "" : "Connecte-toi pour changer ton mot de passe.";
   }
+
+  /* ── Brancher Moodle, en un bouton ────────────────────────────────
+     Toute la mécanique d'appariement tient ici, et elle ne demande ni
+     terminal, ni ordinateur emprunté. C'est ce qui fait qu'un iPad se
+     branche seul.
+
+     Le point qui décide de tout : `login/token.php` du Moodle du cégep
+     répond en `access-control-allow-origin: *`. Le navigateur peut donc
+     parler à l'école DIRECTEMENT. Le mot de passe va de cet appareil au
+     serveur du cégep et nulle part ailleurs — il ne traverse ni notre
+     fonction edge, ni notre base, ni un journal. On ne garde que le jeton,
+     en écriture seule : la colonne est hors de portée en lecture, même pour
+     son propriétaire.
+
+     C'est la doctrine d'Omnivox tenue mot pour mot, pas contournée. */
+  const MOODLE_SITE = "cegeptr.moodle.decclic.qc.ca";
+
+  const mdlDit = (txt, mauvais) => { const n = el("mdl-msg");
+    n.textContent = txt; n.style.color = mauvais ? "var(--p3)" : "var(--dim)"; };
+
+  /* L'état vient de la base, pas d'une mémoire locale : c'est la collecte
+     serveur qui l'écrit, et elle tourne quand l'appareil est éteint. */
+  async function mdlRender() {
+    const carte = el("p-moodle"); if (!carte) return;
+    if (!sbSession()) {
+      carte.hidden = true; return;
+    }
+    carte.hidden = false;
+    let ligne = null;
+    try {
+      const r = await sbApi("agenda_moodle_jetons?select=site,valide_le,erreur&limit=1");
+      ligne = Array.isArray(r) ? r[0] : null;
+    } catch { /* hors ligne : on laisse la carte dans son dernier état connu */ return; }
+    const branche = !!ligne;
+    el("mdl-form").hidden = branche;
+    el("mdl-on").hidden = !branche;
+    el("mdl-etat").textContent = branche ? "branché" : "";
+    if (!branche) {
+      el("mdl-note").textContent = "Tes remises et tes tests arrivent tout seuls dans l'agenda, même appareil éteint.";
+      return;
+    }
+    el("mdl-note").textContent = `Relié à ${ligne.site}.`;
+    if (ligne.erreur) {
+      el("mdl-quand").textContent = `La dernière collecte a échoué : ${ligne.erreur}`;
+      el("mdl-quand").style.color = "var(--p3)";
+    } else {
+      el("mdl-quand").style.color = "";
+      el("mdl-quand").textContent = ligne.valide_le
+        ? `Dernière collecte : ${new Date(ligne.valide_le).toLocaleString("fr-CA", { dateStyle:"medium", timeStyle:"short" })}.`
+        : "Aucune collecte encore — elle part dans l'heure, ou tout de suite avec le bouton.";
+    }
+  }
+
+  /* Un passage serveur, lancé à la main. La fonction edge accepte le jeton
+     de session de l'utilisateur et ne collecte alors QUE pour lui. */
+  async function mdlCollecte(bouton) {
+    const at = await sbJeton();
+    if (!at) { mdlDit("Pas de réseau — réessaie dans un instant.", true); return; }
+    const avant = bouton?.textContent;
+    if (bouton) { bouton.disabled = true; bouton.textContent = "Collecte…"; }
+    try {
+      const r = await fetch(`${SB_URL}/functions/v1/agenda-moodle`, {
+        method: "POST", headers: { apikey: SB_KEY, authorization: `Bearer ${at}`,
+                                   "content-type": "application/json" }, body: "{}" });
+      if (!r.ok) throw new Error(`la collecte a répondu ${r.status}`);
+      /* Les items arrivent : on relit la collection tout de suite, pour que
+         les remises apparaissent pendant qu'on regarde. */
+      await sbFetchItems().then(ingestItems);
+    } finally {
+      if (bouton) { bouton.disabled = false; bouton.textContent = avant; }
+    }
+    await mdlRender();
+  }
+
+  async function mdlBrancher() {
+    const u = el("mdl-user").value.trim(), pw = el("mdl-pw").value;
+    if (!u || !pw) { mdlDit("Il manque l'identifiant ou le mot de passe.", true); return; }
+    if (!sbSession()) { mdlDit("Connecte-toi à ton compte d'agenda d'abord.", true); return; }
+    const b = el("mdl-go");
+    b.disabled = true; b.textContent = "Connexion…"; mdlDit("");
+    try {
+      /* Vers l'école, directement. Rien de ce POST ne nous appartient. */
+      const corps = new URLSearchParams({ username: u, password: pw, service: "moodle_mobile_app" });
+      const r = await fetch(`https://${MOODLE_SITE}/login/token.php`, { method: "POST", body: corps });
+      const d = await r.json().catch(() => ({}));
+      if (d.error || !d.token) {
+        /* Deux échecs très différents, et le second n'est pas une faute de
+           frappe : un compte qui n'existe que par Microsoft n'a pas de mot
+           de passe Moodle à donner. Le dire, plutôt que de laisser croire
+           qu'on s'est trompé trois fois. */
+        mdlDit(d.errorcode === "invalidlogin"
+          ? "Identifiant ou mot de passe refusé par Moodle. Si tu te connectes d'habitude par Microsoft, ton compte n'a peut-être pas de mot de passe Moodle — dans ce cas, l'appariement se fait depuis un ordinateur (npm run moodle-apparier)."
+          : (d.error || "Moodle a refusé la connexion."), true);
+        return;
+      }
+      /* Seul le jeton monte. Le mot de passe n'existe plus après cette ligne :
+         il n'a jamais quitté l'appareil que pour aller à l'école. */
+      await sbApi("agenda_moodle_jetons?on_conflict=user_id", {
+        method: "POST",
+        headers: { prefer: "resolution=merge-duplicates" },
+        body: JSON.stringify([{ site: MOODLE_SITE, jeton: d.token, erreur: null }]),
+      });
+      el("mdl-pw").value = ""; el("mdl-user").value = "";
+      mdlDit("");
+      await mdlRender();
+      /* Et on collecte tout de suite : sans ça, « branché » ne montre rien
+         avant l'heure suivante, et on doute d'avoir réussi. */
+      await mdlCollecte(el("mdl-now"));
+    } catch (e) {
+      mdlDit(e instanceof Error ? e.message : "Impossible de joindre Moodle.", true);
+    } finally {
+      b.disabled = false; b.textContent = "Brancher Moodle";
+    }
+  }
+
+  el("mdl-go").addEventListener("click", mdlBrancher);
+  el("mdl-pw").addEventListener("keydown", e => { if (e.key === "Enter") mdlBrancher(); });
+  el("mdl-now").addEventListener("click", ev => mdlCollecte(ev.currentTarget).catch(() =>
+    mdlDit("La collecte n'a pas abouti — réessaie dans un instant.", true)));
+  el("mdl-off").addEventListener("click", async () => {
+    try { await sbApi("agenda_moodle_jetons?user_id=not.is.null", { method: "DELETE" }); }
+    catch { /* rien à retirer, ou pas de réseau */ }
+    await mdlRender();
+  });
 
   el("go-profile").addEventListener("click", () => showProfile(true));
   el("p-back").addEventListener("click", () => {
@@ -8909,10 +9106,11 @@ a,button{touch-action:manipulation}
     el("jo-avbloc").hidden = m !== "nom";
     /* Les autres chemins que la carte porte : l'entrée par Google ou Microsoft
        se propose à la PORTE — première étape, ou connexion — pas au milieu
-       d'une inscription déjà commencée ; la jauge du mot de passe ne vaut que
-       là où un mot de passe se saisit. */
-    const sso = el("jo-sso"); if (sso) sso.hidden = m === "compte" || m === "confirm";
-    const jauge = el("jo-pw-j"); if (jauge && !montre.includes("jo-pw")) jauge.hidden = true;
+       d'une inscription déjà commencée. La jauge, elle, ne vaut que là où un
+       mot de passe se CRÉE : à la connexion il existe déjà, le noter serait
+       une leçon sans usage. */
+    el("jo-sso").hidden = m === "compte" || m === "confirm";
+    majJauge("jo", el("jo-pw").value, m === "compte", el("jo-name").value, el("jo-email").value);
     /* À la première étape, le rond-photo EST l'image de la carte : la pastille
        du haut ferait un second rond pour rien. */
     el("jo-ic").hidden = m === "nom";
@@ -8928,22 +9126,59 @@ a,button{touch-action:manipulation}
     showView("onboard");
     el(montre[0]).focus();
   }
-  /* Le filtre « mot de passe compromis » de Supabase est réservé au plan
-     Pro ; même protection ici, gratuite et k-anonyme (HaveIBeenPwned) :
-     seuls les 5 premiers caractères du SHA-1 quittent le navigateur.
-     Service injoignable → on laisse passer plutôt que de bloquer. */
-  async function pwnedCount(pw) {
-    try {
-      const buf = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(pw));
-      const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("").toUpperCase();
-      const r = await fetch(`https://api.pwnedpasswords.com/range/${hex.slice(0, 5)}`);
-      if (!r.ok) return 0;
-      const hit = (await r.text()).split("\n").find(l => l.trim().startsWith(hex.slice(5)));
-      return hit ? Number(hit.split(":")[1]) || 1 : 0;
-    } catch { return 0; }
+  /* ── Ce que vaut un mot de passe ────────────────────────────────
+     Une jauge, pas un verdict : on documente, on ne barre plus la porte.
+     Le calcul tient ici, sans réseau — l'alphabet employé et la longueur
+     donnent un ordre de grandeur en bits, puis on retranche ce qui se
+     devine : un mot qu'on essaie en premier, une suite de touches, une
+     lettre martelée, son propre nom. Une indication honnête, pas une note. */
+  const PW_CONNUS = /motdepasse|password|passe123|azerty|qwerty|123456|abcdef|iloveyou|soleil|bonjour|admin|letmein|welcome|monkey|dragon|hockey|canadien|cegep|omnivox|agenda|etudiant/;
+  const PW_SUITES = /0123|1234|2345|3456|4567|5678|6789|abcd|bcde|cdef|qwer|azer|wxcv|asdf/;
+  const PW_PALIERS = [[28, 1, "Fragile"], [45, 2, "Passable"], [65, 3, "Solide"], [Infinity, 4, "Costaud"]];
+  function pwForce(pw, ...perso) {
+    const s = String(pw || "");
+    if (!s) return { n: 0, pct: 0, mot: "", dit: "" };
+    let alpha = 0;
+    if (/[a-z]/.test(s)) alpha += 26;
+    if (/[A-Z]/.test(s)) alpha += 26;
+    if (/\d/.test(s)) alpha += 10;
+    if (/[^A-Za-z0-9]/.test(s)) alpha += 33;
+    let bits = s.length * Math.log2(alpha || 2);
+    const bas = s.toLowerCase();
+    /* Le premier reproche est le seul affiché : trois remarques sous un champ
+       de saisie, personne ne les lit. */
+    let dit = "";
+    const coupe = (part, txt) => { bits *= part; if (!dit) dit = txt; };
+    if (PW_CONNUS.test(bas)) coupe(.4, "il contient un mot qu'on essaie en premier");
+    if (PW_SUITES.test(bas)) coupe(.6, "une suite de touches se devine vite");
+    if (/(.)\1{2,}/.test(bas)) coupe(.75, "trois fois la même touche, ça se devine");
+    if (/^\d+$/.test(s)) coupe(.5, "que des chiffres");
+    for (const q of perso) {
+      const mots = String(q || "").toLowerCase().split(/[\s@._-]+/).filter(x => x.length > 2);
+      if (mots.some(x => bas.includes(x))) { coupe(.35, "ton nom ou ton courriel s'y retrouve"); break; }
+    }
+    let [, n, mot] = PW_PALIERS.find(([max]) => bits < max);
+    /* Sous huit caractères, l'envoi sera refusé de toute façon : la jauge le
+       dit pendant la frappe plutôt qu'après le clic. */
+    if (s.length < 8) { n = 1; mot = "Trop court"; dit = "au moins 8 caractères"; }
+    else if (!dit && n < 4) dit = s.length < 14 ? "rallonge-le : c'est ce qui compte le plus"
+                                               : "un chiffre, une majuscule, et c'est réglé";
+    return { n, mot, dit, pct: Math.max(8, Math.min(100, Math.round(bits / 70 * 100))) };
   }
-  const pwnedMsg = n =>
-    `Ce mot de passe figure dans ${n.toLocaleString("fr-CA")} fuites de données connues — choisis-en un autre.`;
+  /* Une jauge, deux endroits — l'inscription et le changement de mot de passe.
+     Même fonction, préfixe d'identifiants différent. Elle ne s'affiche qu'une
+     fois la frappe commencée : un champ vide n'a rien à documenter. */
+  function majJauge(pfx, pw, actif = true, ...perso) {
+    const box = el(pfx + "-pw-j");
+    if (!box) return;
+    box.hidden = !actif || !pw;
+    if (box.hidden) return;
+    const f = pwForce(pw, ...perso);
+    box.className = "pwj n" + f.n;
+    el(pfx + "-pw-fill").style.width = f.pct + "%";
+    el(pfx + "-pw-mot").textContent = f.mot;
+    el(pfx + "-pw-dit").textContent = f.dit ? " — " + f.dit : "";
+  }
 
   function joSay(txt, bad) {
     const m = el("jo-msg"); m.textContent = txt; m.classList.toggle("bad", !!bad);
@@ -8957,7 +9192,7 @@ a,button{touch-action:manipulation}
     try {
       const d = await sbAuth("verify", { type: "signup", email: joEmail, token: code });
       if (!d.access_token) throw new Error("Confirmation refusée — demande un nouveau code.");
-      sbKeep(d); adopteNom(d, joNom); avatarSync(); renderAccount(); markVu(); enterBoard();
+      sbKeep(d); adopteNom(d, joNom); avatarSync(d); renderAccount(); markVu(); enterBoard();
       applyCloud(await sbFetchSnapshot());
     } catch (e2) { joSay(frErr(e2), true); }
     finally { el("jo-go").disabled = false; }
@@ -8983,17 +9218,13 @@ a,button{touch-action:manipulation}
     if (pw.length < 8) { joSay("Mot de passe : au moins 8 caractères.", true); return; }
     el("jo-go").disabled = true; joSay("…");
     try {
-      if (up) {
-        const n = await pwnedCount(pw);
-        if (n) { joSay(pwnedMsg(n), true); return; }
-      }
       const path = up ? "signup" : "token?grant_type=password";
       /* Le nom voyage dans les métadonnées du compte : c'est là qu'il survit
          au changement d'appareil, là où localStorage ne suit pas. */
       const d = await sbAuth(path, up ? { email, password: pw, data: { nom } }
                                      : { email, password: pw });
       if (d.access_token) {
-        sbKeep(d); adopteNom(d, nom); avatarSync(); renderAccount(); markVu(); enterBoard();
+        sbKeep(d); adopteNom(d, nom); avatarSync(d); renderAccount(); markVu(); enterBoard();
         applyCloud(await sbFetchSnapshot());
       } else {
         /* Pas de session au retour : le compte est créé mais dort. On enchaîne
@@ -9015,6 +9246,8 @@ a,button{touch-action:manipulation}
     finally { el("jo-go").disabled = false; }
   }
   el("jo-go").addEventListener("click", joSubmit);
+  el("jo-pw").addEventListener("input", () =>
+    majJauge("jo", el("jo-pw").value, joMode === "compte", el("jo-name").value, el("jo-email").value));
   el("jo-swap").addEventListener("click", () => showJoin(joMode === "signin" ? "signup" : "signin"));
   el("jo-resend").addEventListener("click", async () => {
     if (!joEmail) return;
@@ -9062,11 +9295,99 @@ a,button{touch-action:manipulation}
     if (ev.key === "Enter" && ev.target.tagName === "INPUT") joSubmit();
   });
 
-  /* Vue de départ, en trois cas :
+  /* ── Google et Microsoft ─────────────────────────────────────────
+     Supabase mène la danse : on l'envoie vers /authorize, il renvoie ICI avec
+     un code à échanger. PKCE — le vérificateur reste sur cet appareil, seule
+     son empreinte part avec la demande ; un code intercepté ne vaut donc rien
+     sans lui. Certains projets répondent encore en mode implicite, jetons dans
+     le fragment : les deux retours sont acceptés, le second demande un appel
+     de plus pour savoir à quel compte ils appartiennent. */
+  const OA_CLE = "agenda.oauth";
+  const b64url = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  /* L'adresse de retour ne porte ni hash ni paramètre : Supabase n'accepte que
+     des adresses déclarées, et le routeur d'ici lirait un « #/… » de travers. */
+  const oaRetour = () => location.origin + location.pathname;
+
+  async function oauthDepart(fournisseur, scopes) {
+    const verif = b64url(crypto.getRandomValues(new Uint8Array(48)));
+    const defi = b64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verif)));
+    /* Deux rangements pour un seul secret : l'onglet garde le sien, mais un
+       retour de Safari ouvert dans un autre onglet ne le retrouverait pas. */
+    try { sessionStorage.setItem(OA_CLE, verif); } catch {}
+    try { localStorage.setItem(OA_CLE, verif); } catch {}
+    location.assign(`${SB_URL}/auth/v1/authorize?provider=${fournisseur}`
+      + `&redirect_to=${encodeURIComponent(oaRetour())}`
+      + (scopes ? `&scopes=${encodeURIComponent(scopes)}` : "")
+      + `&code_challenge=${defi}&code_challenge_method=s256`);
+  }
+
+  /* Un « #/echeances » ordinaire ne ressemble à rien de tout ça : lu comme des
+     paramètres, il ne donne ni jeton ni code, et la route suit son cours. */
+  const oauthEntrant = () => {
+    const q = new URLSearchParams(location.search);
+    const h = new URLSearchParams((location.hash || "").replace(/^#/, ""));
+    const err = q.get("error_description") || h.get("error_description")
+             || q.get("error") || h.get("error");
+    const code = q.get("code"), at = h.get("access_token");
+    return (code || at || err) ? { code, at, rt: h.get("refresh_token"), err } : null;
+  };
+
+  /* Mode implicite : le fragment porte les jetons, pas le compte. Un appel de
+     plus le nomme — sans quoi la session repartirait sans courriel ni nom. */
+  async function oauthDepuisJetons({ at, rt }) {
+    const r = await fetch(`${SB_URL}/auth/v1/user`, {
+      headers: { apikey: SB_KEY, authorization: `Bearer ${at}` },
+    });
+    if (!r.ok) throw new Error("Session refusée — reprends la connexion.");
+    return { access_token: at, refresh_token: rt, user: await r.json() };
+  }
+
+  async function oauthArrivee(info) {
+    let verif = "";
+    try { verif = sessionStorage.getItem(OA_CLE) || localStorage.getItem(OA_CLE) || ""; } catch {}
+    try { sessionStorage.removeItem(OA_CLE); localStorage.removeItem(OA_CLE); } catch {}
+    /* L'adresse est nettoyée avant tout : un code d'autorisation n'a rien à
+       faire dans la barre, ni dans un signet, ni dans un historique partagé. */
+    history.replaceState(null, "", location.pathname);
+    showJoin("signin");
+    if (info.err) { joSay(frErr({ message: info.err }), true); return; }
+    joSay("Connexion en cours…");
+    try {
+      const d = info.code
+        ? await sbAuth("token?grant_type=pkce", { auth_code: info.code, code_verifier: verif })
+        : await oauthDepuisJetons(info);
+      if (!d?.access_token) throw new Error("Connexion refusée — reprends depuis le début.");
+      /* Google et Microsoft donnent le nom : adopteNom le prend dans les
+         métadonnées, et ne garde celui d'ici qu'à défaut. */
+      sbKeep(d); adopteNom(d, (state.name || "").trim()); avatarSync(d);
+      renderAccount(); markVu(); enterBoard();
+      applyCloud(await sbFetchSnapshot());
+    } catch (e2) { joSay(frErr(e2), true); }
+  }
+
+  const oauthClic = async (fournisseur, scopes) => {
+    el("jo-google").disabled = el("jo-ms").disabled = true;
+    joSay("Redirection…");
+    try { await oauthDepart(fournisseur, scopes); }
+    catch (e2) {
+      joSay(frErr(e2), true);
+      el("jo-google").disabled = el("jo-ms").disabled = false;
+    }
+  };
+  el("jo-google").addEventListener("click", () => oauthClic("google"));
+  /* Microsoft s'appelle « azure » chez Supabase, et ne rend le courriel que si
+     on le demande — sans ce scope, le compte reviendrait anonyme. */
+  el("jo-ms").addEventListener("click", () => oauthClic("azure", "email"));
+
+  /* Vue de départ, en quatre cas :
+       retour d'un fournisseur → on échange le code avant toute chose ;
        session ouverte        → le tableau de bord, directement ;
        appareil neuf          → la page d'accueil, qui explique ;
        déjà venu, déconnecté  → le formulaire de connexion, sans le laïus. */
   function route() {
+    const oa = oauthEntrant();
+    if (oa) { oauthArrivee(oa); return; }
     if (sbSession()) { markVu(); enterBoard(); }
     else if (firstVisit()) showView("landing");
     else showJoin("signin");
@@ -9125,16 +9446,16 @@ a,button{touch-action:manipulation}
     });
     if (r.status === 401 && retry && await sbRefreshToken()) return sbEnvoieNom(nom, false);
   }
+  el("p-pw1").addEventListener("input", () =>
+    majJauge("p", el("p-pw1").value, true, state.name, sbSession()?.email || ""));
   el("p-pw-btn").addEventListener("click", async () => {
     const a = el("p-pw1").value, b = el("p-pw2").value, msg = el("p-pw-msg");
     if (a.length < 8) { msg.textContent = "Au moins 8 caractères."; return; }
     if (a !== b) { msg.textContent = "Les deux mots de passe ne correspondent pas."; return; }
     msg.textContent = "…";
     try {
-      const n = await pwnedCount(a);
-      if (n) { msg.textContent = pwnedMsg(n); return; }
       await sbUpdatePassword(a);
-      el("p-pw1").value = ""; el("p-pw2").value = "";
+      el("p-pw1").value = ""; el("p-pw2").value = ""; majJauge("p", "");
       msg.textContent = "Mot de passe changé ✓";
     } catch (e2) { msg.textContent = frErr(e2); }
   });

@@ -1,10 +1,13 @@
 {
   "manifest_version": 3,
   "name": "Agenda Cégep — Collecteur",
-  "version": "0.1.0",
-  "description": "Collecte tes évènements Léa et tes MIO pendant que tu utilises Omnivox, et alimente ton tableau de bord Agenda Cégep. Aucun identifiant stocké, aucune connexion automatique.",
+  "version": "0.2.0",
+  "description": "Collecte tes évènements Léa et tes MIO pendant que tu utilises Omnivox, et alimente ton tableau de bord Agenda Cégep. Aucun identifiant Omnivox stocké, aucune connexion automatique.",
   "permissions": ["storage", "alarms", "offscreen"],
-  "host_permissions": ["https://*.omnivox.ca/*"],
+  "host_permissions": [
+    "https://*.omnivox.ca/*",
+    "https://olkbhrbyubejetqygdcy.supabase.co/*"
+  ],
   "background": { "service_worker": "background.js" },
   "content_scripts": [
     {
@@ -25,7 +28,14 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Agenda Cégep"
+    "default_title": "Agenda Cégep",
+    "default_icon": { "16": "icon-16.png", "32": "icon-32.png", "48": "icon-48.png", "128": "icon-128.png" }
   },
-  "icons": { "192": "icon-192.png" }
+  "icons": {
+    "16": "icon-16.png",
+    "32": "icon-32.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png",
+    "192": "icon-192.png"
+  }
 }

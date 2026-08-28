@@ -1,7 +1,8 @@
 /**
  * Content script Omnivox — collecte passive. Il tourne dans chaque cadre des
  * pages Omnivox pendant que TU navigues : aucune requête ajoutée, aucune
- * connexion tentée, tes identifiants ne sont jamais touchés.
+ * connexion tentée, tes identifiants ne sont jamais touchés. Il vaut pour
+ * n'importe quel cégep : l'adresse du portail est relevée, jamais supposée.
  *
  * Trois moissons, selon ce que le cadre contient :
  *  - cartes d'évènement (accueil Léa, vue par mois) → échéances ;
@@ -17,6 +18,12 @@
   const send = (payload) => {
     try { chrome.runtime.sendMessage({ type: "absorb", payload }); } catch { /* SW endormi : re-tenté au prochain passage */ }
   };
+
+  /* L'adresse du portail n'est pas codée en dur : chaque cégep a la sienne.
+     On l'annonce depuis le cadre où l'on tourne — c'est la seule façon de
+     l'apprendre sans la demander, et elle sert ensuite à la collecte
+     horaire, qui n'a aucune page sous la main pour la deviner. */
+  try { chrome.runtime.sendMessage({ type: "hote", hote: location.hostname }); } catch {}
 
   let last = "";
   function run() {

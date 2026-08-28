@@ -48,3 +48,6 @@ supabase/.temp/
 maquette-ux.html
 maquette-apple.html
 maquette-noir.html
+
+# Paquet du Chrome Web Store — reconstruit par `npm run ext:zip`
+agenda-collecteur.zip

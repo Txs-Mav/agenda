@@ -176,6 +176,28 @@
         "public"
       ],
       "port": 4297
+    },
+    {
+      "name": "agenda-compte-4291",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "4291",
+        "/private/tmp/claude-501/-Users-maverickmenard-Desktop-agenda/819b195c-43da-4a66-bdb3-708a685f0cb7/scratchpad/preview"
+      ],
+      "port": 4291
+    },
+    {
+      "name": "agenda-lp-4307",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "4307",
+        "public"
+      ],
+      "port": 4307
     }
   ]
 }
