@@ -1032,7 +1032,6 @@ body.nzen #m-notecard .tools{position:sticky;top:0;z-index:6;background:var(--su
 /* ── Toutes les notes ────────────────────────────────────────────
    Un dossier par matière, ses pages dedans. Chaque rangée dit ce que la page
    porte déjà — sa première ligne, sa date — et n'offre qu'un geste : l'ouvrir. */
-.ntlead{padding:0 .35rem 1rem;font-size:.82rem;line-height:1.55;color:var(--dim);max-width:44rem}
 .ntgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(19rem,1fr));gap:.85rem;align-items:start}
 .ntfold .ch h3{display:flex;align-items:center;min-width:0}
 .ntpages{list-style:none;padding:0}
@@ -1051,7 +1050,10 @@ body.nzen #m-notecard .tools{position:sticky;top:0;z-index:6;background:var(--su
    l'hésitation retombe seule. */
 .ntpages .kill.arm{opacity:1;color:var(--p3);font-size:.72rem;font-weight:600}
 .ntadd{margin:.35rem 1.25rem 1.1rem;align-self:flex-start}
-.ntfold .empty{border-top:1px solid var(--line);padding-top:.75rem}
+/* Un dossier vide ne s'explique pas : le titre, puis le geste, serrés
+   comme s'ils avaient toujours été seuls. */
+.ntfold.ntempty .ch{padding-bottom:.15rem}
+.ntfold.ntempty .ntadd{margin-top:0}
 
 /* Encres. Chaque teinte a sa version sombre : un bleu à 48 % de clarté
    disparaît sur une carte noire. */
@@ -1862,7 +1864,6 @@ a,button{touch-action:manipulation}
     <div id="notes" hidden>
       <div class="sect"><h2>Toutes les notes <span class="dim" id="nt-n"></span></h2><span class="grow"></span>
         <button class="link" id="nt-back"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg> Retour au tableau de bord</button></div>
-      <p class="ntlead">Un dossier par matière, une page blanche par cours — et tes catégories (« Cours 5 », « Préparation examen ») pour t'y retrouver. Ouvre une page pour écrire, dessiner, surligner, annoter — tout reste sur cet appareil.</p>
       <div class="ntgrid" id="nt-grid"></div>
     </div>
 
@@ -5416,9 +5417,7 @@ a,button{touch-action:manipulation}
           for (const p of g.pages) ul.append(ntRow(c, p));
         }
         card.append(ul);
-      } else {
-        card.append(mk("p","empty","Aucune page encore. La première s'ouvre ici — ou au premier trait posé dans la fiche."));
-      }
+      } else card.classList.add("ntempty");   // titre + geste, rien d'autre
       const add = mk("button","btn quiet ntadd","Nouvelle page");
       add.title = `Ouvrir une page blanche sous ${c}`;
       add.addEventListener("click", () => { addPage(c); openMatiere(c);
