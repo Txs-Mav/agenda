@@ -1,7 +1,12 @@
-/* Réseau d'abord pour la page (un nouveau déploiement arrive sans purge),
-   cache d'abord pour les icônes. L'app reste utilisable hors ligne. */
-const CACHE = "agenda-v8";
+/* Réseau d'abord pour la page et les données (un nouveau déploiement arrive
+   sans purge), cache d'abord pour les icônes. L'app reste utilisable hors
+   ligne — dernier horaire et dernières données compris. */
+const CACHE = "agenda-v9";
 const ASSETS = ["/", "/icon.svg", "/icon-180.png", "/icon-192.png", "/icon-512.png", "/manifest.webmanifest"];
+
+/* La clé VAPID publique — la même que dans agenda.html. Elle est publique par
+   conception ; si la paire change, les deux copies changent ensemble. */
+const PUSH_PUB = "BIHAtHD8DrfmZAN_IRBhSi-LXS_ce0SEM0RzgS30avrEDFPygWXwYeIlRdlF1X5fkFNvfYhMjx0tGHrj-4bYOns";
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
@@ -30,6 +35,17 @@ self.addEventListener("fetch", (e) => {
     );
     return;
   }
+  const url = new URL(req.url);
+  /* Les données de même origine (horaire.json, data.json) : réseau d'abord,
+     copie gardée — dans le métro, l'horaire d'hier vaut mieux que rien. */
+  if (url.origin === location.origin && url.pathname.endsWith(".json")) {
+    e.respondWith(
+      fetch(req)
+        .then((r) => { const copy = r.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); return r; })
+        .catch(() => caches.match(req)),
+    );
+    return;
+  }
   // Un raté de cache ne doit jamais casser une image : on retombe
   // toujours sur le réseau, et le réseau sur le cache.
   e.respondWith(
@@ -39,14 +55,45 @@ self.addEventListener("fetch", (e) => {
   );
 });
 
+/* Un push arrive app fermée : c'est tout son intérêt. La charge est du JSON
+   { title, body, url, tag } ; un texte nu fait quand même une notification. */
+self.addEventListener("push", (e) => {
+  let d = {};
+  try { d = e.data?.json() || {}; } catch { d = { body: e.data?.text() || "" }; }
+  e.waitUntil(self.registration.showNotification(d.title || "Agenda", {
+    body: d.body || "", tag: d.tag || "agenda-push", lang: "fr-CA",
+    icon: "icon-192.png", badge: "icon-192.png",
+    data: { url: d.url || "/" },
+  }));
+});
+
+/* Le navigateur peut remplacer un abonnement de son propre chef : on se
+   réabonne sans déranger personne. La nouvelle adresse sera poussée vers le
+   compte à la prochaine ouverture de l'app (pushSync au démarrage). */
+self.addEventListener("pushsubscriptionchange", (e) => {
+  e.waitUntil(
+    self.registration.pushManager
+      .subscribe({ userVisibleOnly: true, applicationServerKey: b64ToU8(PUSH_PUB) })
+      .catch(() => {}),
+  );
+});
+
+function b64ToU8(s) {
+  const pad = "=".repeat((4 - (s.length % 4)) % 4);
+  const bin = atob((s + pad).replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from(bin, (c) => c.charCodeAt(0));
+}
+
 /* Un rappel qui ne ramène pas à l'agenda ne sert qu'à moitié : le clic
-   ramène la fenêtre déjà ouverte au premier plan, ou en ouvre une. */
+   ramène la fenêtre déjà ouverte au premier plan, ou en ouvre une — à la
+   page que la notification désigne. */
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
+  const cible = e.notification.data?.url || "/";
   e.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
       for (const c of list) if ("focus" in c) return c.focus();
-      return self.clients.openWindow("/");
+      return self.clients.openWindow(cible);
     }),
   );
 });

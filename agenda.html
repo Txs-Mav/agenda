@@ -4879,6 +4879,44 @@ a,button{touch-action:manipulation}
   const rapPossible = () => typeof Notification !== "undefined";
   const rapPret = () => rapPossible() && Notification.permission === "granted";
 
+  /* ── Push : le rappel qui survit à l'app fermée ────────────────────
+     Les rappels locaux restent le plancher (ils marchent sans compte et sans
+     serveur). Le push est le bonus : quand l'app est installée (iOS 16.4+ le
+     réserve à l'écran d'accueil) et le compte connecté, l'abonnement part
+     dans agenda_push_subs — un par appareil — et l'émetteur (npm run push)
+     sait alors rejoindre l'appareil même app fermée. Tout est best-effort :
+     aucun échec ici ne doit toucher aux rappels locaux. */
+  const PUSH_PUB = "BIHAtHD8DrfmZAN_IRBhSi-LXS_ce0SEM0RzgS30avrEDFPygWXwYeIlRdlF1X5fkFNvfYhMjx0tGHrj-4bYOns";
+  let pushOk = false;
+  const b64ToU8 = s => {
+    const pad = "=".repeat((4 - s.length % 4) % 4);
+    const bin = atob((s + pad).replace(/-/g, "+").replace(/_/g, "/"));
+    return Uint8Array.from(bin, c => c.charCodeAt(0));
+  };
+  async function pushSync(on) {
+    try {
+      const reg = await navigator.serviceWorker?.getRegistration?.();
+      if (!reg?.pushManager || !PUSH_PUB) return;
+      if (on) {
+        if (!sbSession()) return;   // l'abonnement se range dans le compte
+        const sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:b64ToU8(PUSH_PUB) });
+        const j = sub.toJSON();
+        await sbApi("agenda_push_subs?on_conflict=endpoint", {
+          method:"POST", headers:{ prefer:"resolution=merge-duplicates" },
+          body: JSON.stringify({ endpoint:j.endpoint, p256dh:j.keys.p256dh, auth:j.keys.auth }),
+        });
+        pushOk = true;
+      } else {
+        const sub = await reg.pushManager.getSubscription();
+        pushOk = false;
+        if (!sub) return;
+        await sbApi(`agenda_push_subs?endpoint=eq.${encodeURIComponent(sub.endpoint)}`, { method:"DELETE" }).catch(() => {});
+        await sub.unsubscribe();
+      }
+    } catch { pushOk = false; }
+    renderRappel();
+  }
+
   function rapPrune() {
     const seuil = Date.now() - RAP_TTL;
     for (const [k, at] of Object.entries(state.rappels.vus))
@@ -4996,14 +5034,16 @@ a,button{touch-action:manipulation}
        navigateur qui refuse, ou la condition pour que les rappels sonnent. */
     note.textContent = bloque
       ? "Les notifications sont bloquées pour ce site : c'est dans les réglages du navigateur que ça se rouvre."
-      : on ? "L'app doit rester ouverte — une fenêtre en arrière-plan suffit."
+      : on ? (pushOk
+        ? "Une fenêtre en arrière-plan suffit — et ce que l'agent collecte peut te rejoindre même app fermée."
+        : "L'app doit rester ouverte — une fenêtre en arrière-plan suffit.")
       : "";
     note.hidden = !note.textContent;
   }
 
   async function rapToggle() {
     if (!rapPossible()) return;
-    if (state.rappels.on) { state.rappels.on = false; save(); renderRappel(); return; }
+    if (state.rappels.on) { state.rappels.on = false; save(); renderRappel(); pushSync(false); return; }
     /* La demande d'autorisation ne part que d'un vrai clic : c'est la règle du
        navigateur, et c'est aussi la seule façon honnête de la poser. */
     if (Notification.permission === "default") { try { await Notification.requestPermission(); } catch {} }
@@ -5012,6 +5052,7 @@ a,button{touch-action:manipulation}
     state.rappels.on = true;
     rapPrime();
     renderRappel();
+    pushSync(true);   // en plus, pas à la place : le plancher local est déjà posé
     rapShow("Rappels activés", "Tu seras prévenu une heure avant chaque cours, bloc et remise.", "rap-essai");
   }
   el("rap-go").addEventListener("click", rapToggle);
@@ -6644,6 +6685,21 @@ a,button{touch-action:manipulation}
       throw new Error(d.message || d.hint || `erreur ${r.status}`); }
     return r.status === 204 ? null : r.json();
   }
+  /* Le stockage de fichiers, mêmes clefs et même politesse que sbApi — mais
+     on rend la réponse brute : ici circulent des images, pas du JSON. */
+  async function sbStore(pathQ, init = {}, retry = true) {
+    const at = await sbJeton();
+    if (!at) throw new Error(sbSession() ? "Pas de réseau — réessaie dans un instant." : "pas de session");
+    const r = await fetch(`${SB_URL}/storage/v1/${pathQ}`, { ...init,
+      headers: { apikey: SB_KEY, authorization: `Bearer ${at}`, ...(init.headers || {}) } });
+    if (r.status === 401 && retry && sbSession()?.rt) {
+      try { await sbRenew(); }
+      catch { throw new Error("Session expirée — reconnecte-toi."); }
+      return sbStore(pathQ, init, false);
+    }
+    if (!r.ok) throw new Error(`stockage : erreur ${r.status}`);
+    return r;
+  }
   /* Ce que la page a à dire : son texte, puis ses annotations — chacune est
      une phrase posée quelque part, elle mérite de partir aussi. */
   const pageTexte = p => [(p.page || "").trim(),
@@ -6978,7 +7034,50 @@ a,button{touch-action:manipulation}
     idbOpen().then(db => { const t = db.transaction("img", "readwrite"), s = t.objectStore("img");
       for (let i = 0; i < d.n; i++) s.delete(`${d.k}/${i}`);
       t.oncomplete = () => db.close();
+    }).catch(() => {});
+    /* Ses feuilles au compte partent aussi — supprimé ici, supprimé partout. */
+    const s0 = sbSession();
+    if (s0?.uid && d.cloud) sbStore("object/agenda-docs", { method: "DELETE",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ prefixes: Array.from({ length: d.n }, (_, i) => `${s0.uid}/${d.k}/${i}.jpg`) }),
     }).catch(() => {}); };
+
+  /* ── Le papier suit le compte ────────────────────────────────────
+     Les feuilles montent dans le seau privé « agenda-docs » sous
+     {uid}/{doc}/{i}.jpg — à l'import, ou à la première ouverture pour les
+     documents d'avant. Toutes montées, la page lève le drapeau doc.cloud,
+     qui voyage avec elle (palier 2) : l'appareil d'en face sait alors qu'une
+     feuille absente d'IndexedDB peut redescendre du compte au lieu de
+     s'excuser. Sans compte ou sans réseau, rien ne bouge — on retentera. */
+  const docPushBusy = new Set();
+  async function docCloudPush(c, pageId) {
+    const s0 = sbSession(); if (!s0?.uid) return;
+    const p0 = mPages(c).find(x => x.id === pageId);
+    const d = p0 && pgDoc(p0);
+    if (!d || d.cloud || docPushBusy.has(d.k)) return;
+    docPushBusy.add(d.k);
+    try {
+      for (let i = 0; i < d.n; i++) {
+        const b = await idbGet(`${d.k}/${i}`);
+        if (!b) return;   // une feuille manque ici même : rien à promettre
+        await sbStore(`object/agenda-docs/${s0.uid}/${d.k}/${i}.jpg`,
+          { method: "POST", headers: { "content-type": "image/jpeg", "x-upsert": "true" }, body: b });
+      }
+      mWrite(c, { pages: mPages(c).map(x => x.id === pageId
+        ? { ...x, doc: { ...x.doc, cloud: true } } : x) });
+      pgPush(c, pageId); save();
+    } catch { /* hors ligne ou session périmée : la prochaine ouverture retentera */ }
+    finally { docPushBusy.delete(d.k); }
+  }
+  async function docCloudPull(d, i) {
+    const s0 = sbSession(); if (!s0?.uid) return null;
+    try {
+      const r = await sbStore(`object/agenda-docs/${s0.uid}/${d.k}/${i}.jpg`);
+      const b = await r.blob();
+      idbPut(`${d.k}/${i}`, b).catch(() => {});   // la prochaine fois, elle sera locale
+      return b;
+    } catch { return null; }
+  }
   const idbDel = k => idbOpen().then(db => new Promise((res, rej) => {
     const t = db.transaction("img", "readwrite");
     t.objectStore("img").delete(k);
@@ -7095,6 +7194,7 @@ a,button{touch-action:manipulation}
       pgPush(c, p.id);   // la page-document part aussi vers le compte (ses métadonnées)
       if (!save()) say("⚠ mémoire de l'appareil pleine — document non enregistré");
       renderMPage(); renderCourses();
+      docCloudPush(c, p.id);   // et son papier monte en arrière-plan
     } catch (e) {
       say(`⚠ Import raté : ${(e && e.message) || e}`);
     } finally {
@@ -7126,19 +7226,26 @@ a,button{touch-action:manipulation}
       im.alt = `${doc.name} — feuille ${i + 1}`;
       im.style.aspectRatio = `1000 / ${Math.round((doc.r[i] || 1) * 1000)}`;
       box.append(im);
-      idbGet(`${doc.k}/${i}`).then(b => {
+      idbGet(`${doc.k}/${i}`).then(async b => {
+        /* Absente d'ici mais promise au compte : elle redescend, s'affiche,
+           et s'installe dans IndexedDB pour la prochaine fois. */
+        if (!b && seq === mDocSeq) b = await docCloudPull(doc, i);
         if (seq !== mDocSeq) return;
         if (!b) throw new Error("absente");
         const u = URL.createObjectURL(b);
         mDocUrls.push(u); im.src = u;
       }).catch(() => {
         if (seq !== mDocSeq) return;
-        const miss = mk("div", "miss",
-          `Feuille ${i + 1} de « ${doc.name} » — le fichier n'est pas sur cet appareil. Réimporte le document ici pour la revoir.`);
+        const miss = mk("div", "miss", doc.cloud
+          ? `Feuille ${i + 1} de « ${doc.name} » — elle est sur ton compte, mais le réseau n'a pas répondu. Rouvre la page une fois connecté.`
+          : `Feuille ${i + 1} de « ${doc.name} » — le fichier n'est pas sur cet appareil. Réimporte le document ici pour la revoir.`);
         miss.style.aspectRatio = im.style.aspectRatio;
         im.replaceWith(miss);
       });
     }
+    /* Un papier pas encore au compte (vieil import, envoi raté) monte en
+       arrière-plan pendant qu'il s'affiche. */
+    if (!doc.cloud && mCur) docCloudPush(mCur, mPage(mCur).id);
   }
 
   el("m-imp").addEventListener("click", () => { if (mCur) el("m-file").click(); });
@@ -7521,6 +7628,9 @@ a,button{touch-action:manipulation}
   applyTheme(); applySide(); renderWeeks(); renderSubjects(); renderOverview(); renderChart();
   renderRings(); renderCourses(); renderTodos(); renderDeadlines(); renderMios();
   rapCheck();
+  /* Rappels déjà allumés : on rafraîchit l'abonnement push en silence — le
+     navigateur a pu le remplacer, et une adresse morte ne prévient personne. */
+  if (state.rappels.on && rapPret()) pushSync(true);
   syncTTReset();
   observeCards();
   // Hors-ligne aussi : les actions déjà en mémoire locale s'appliquent.

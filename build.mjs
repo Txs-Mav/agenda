@@ -4,6 +4,7 @@
  * pour Vercel, avec le manifeste PWA qui la rend installable comme app Mac.
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { liensSplash } from "./splash-sizes.mjs";
 
 const src = readFileSync("agenda.html", "utf8");
 // La frontière head/body est la fin du bloc <style> : title, meta et styles
@@ -27,6 +28,7 @@ const page = `<!doctype html>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
 <link rel="apple-touch-icon" href="/icon-180.png">
+${liensSplash()}
 ${head}
 </head>
 <body>

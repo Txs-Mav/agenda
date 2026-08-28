@@ -115,6 +115,31 @@ servirait à rien.
 L'alerte de collecte arrêtée, elle, est une notification macOS envoyée par la
 tâche planifiée : les deux ne se marchent pas dessus.
 
+## Push : le rappel qui survit à l'app fermée
+
+Les rappels locaux restent le plancher. En plus, quand l'app est **installée**
+(iOS 16.4+ réserve le push à l'écran d'accueil) et le **compte connecté**,
+allumer les Rappels abonne aussi l'appareil au push : l'abonnement part dans
+la table `agenda_push_subs` (une ligne par appareil, RLS par compte).
+
+L'émetteur vit ici :
+
+    npm run push -- "Titre" "Corps de la notification" [/chemin]
+
+Il envoie à tous les appareils abonnés du compte d'agenda du `.env`
+(`AGENDA_EMAIL` / `AGENDA_PASSWORD` — les mêmes que la synchronisation), avec
+les clés VAPID du `.env`. Point d'accroche prévu : la collecte peut appeler
+`envoyerPush()` (src/push/envoyer.ts) quand elle rapporte du neuf — nouvelle
+échéance, MIO important — et l'annoncer aux appareils, app fermée comprise.
+
+Si la paire VAPID change, la clé publique est recopiée en dur dans
+`agenda.html` et `public/sw.js`, et chaque appareil doit se réabonner
+(éteindre puis rallumer les Rappels).
+
+Les écrans de démarrage iOS (`public/splash/`) se repeignent avec
+`node splash.mjs` si l'icône ou la table des formats (`splash-sizes.mjs`)
+change.
+
 ## Personnaliser
 
 L'horaire de la session est saisi dans `agenda.html` (constante `TT`) : adapte
