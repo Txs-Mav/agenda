@@ -792,6 +792,47 @@ button.me,.mk{background-image:linear-gradient(160deg,var(--invert-2),var(--inve
 :root[data-theme="dark"] button.me{box-shadow:var(--shadow)}
 :root[data-theme="dark"] .fig b{background-image:none;color:var(--on-invert)}
 :root[data-theme="dark"] .meter i{background:var(--on-invert)}
+
+/* ── Sombre : les grandes surfaces suivent le thème ───────────────
+   « Inverser » veut dire « prendre le contraire du fond ». En clair, ça
+   donne une carte marine sur du blanc — un point focal. En sombre, ça
+   donnait huit cartes de cours BLANCHES sur du quasi-noir : la page
+   éblouissait, et le mot « inversé » l'emportait sur l'intention.
+   Une grande surface suit donc le thème, et c'est l'ÉLÉVATION qui porte
+   l'emphase — un gris à peine plus clair, jamais du blanc. Les petits
+   accents (pastille, bouton plein, avatar) gardent le droit d'être clairs :
+   sur du noir, un bouton blanc reste juste. */
+:root[data-theme="dark"] .card.dark,
+:root[data-theme="dark"] .course{background:var(--surface-2);color:var(--ink)}
+:root[data-theme="dark"] .card.dark .dim{color:var(--dim)}
+:root[data-theme="dark"] .card.dark .ch .ico{color:var(--faint)}
+:root[data-theme="dark"] .fig b{color:var(--ink)}
+/* Les tuiles vivaient sur une carte claire : un voile noir les creusait.
+   Sur une carte sombre, c'est un voile clair qui les fait exister. */
+:root[data-theme="dark"] .tile:not(.on){background:rgba(255,255,255,.05)}
+:root[data-theme="dark"] .tile.on{background:var(--surface-3);color:var(--ink);
+  box-shadow:inset 0 0 0 1px var(--line-hi)}
+:root[data-theme="dark"] .meter{background:rgba(255,255,255,.10)}
+:root[data-theme="dark"] .meter i{background:var(--ac)}
+
+/* ── Sombre : les couleurs de cours ───────────────────────────────
+   Une teinte saturée à 55 % de clarté, posée à 26 % d'opacité sur du
+   quasi-noir, ne donne pas la couleur du cours : elle donne sa boue. Le
+   jaune vire à l'olive, l'orange au brun. On allège et on désature le
+   fond — il ne sert qu'à délimiter — et c'est le liseré, vif et opaque,
+   qui porte l'identité. Le titre monte en clarté pour rester lisible. */
+:root[data-theme="dark"] .ev{
+  background:hsl(var(--h) 40% 60% / .14);
+  box-shadow:inset 0 0 0 1px hsl(var(--h) 35% 58% / .26);
+  border-left-color:hsl(var(--h) 72% 66%);
+}
+:root[data-theme="dark"] .ev .t{color:hsl(var(--h) 52% 86%)}
+:root[data-theme="dark"] .ev .m,
+:root[data-theme="dark"] .ev .h,
+:root[data-theme="dark"] .ev .p{color:hsl(var(--h) 18% 74%)}
+/* La pastille de matière et l'anneau : mêmes règles, même vivacité. */
+:root[data-theme="dark"] .course .st i,
+:root[data-theme="dark"] .chip i{background:hsl(var(--h) 70% 64%)}
 .tile{
   position:relative;overflow:hidden;
   background-image:linear-gradient(180deg,color-mix(in srgb,var(--on-invert) 4%,transparent),transparent 60%);
