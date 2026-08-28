@@ -103,7 +103,20 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
    le pli est imposé par applySide() : le rail garde la semaine entière à
    l'écran. Sous 761 px la barre est une rangée d'icônes en travers de
    l'écran : le pli n'y a plus rien à gagner, d'où le seuil. */
-.sidetop{display:flex;align-items:center;gap:.35rem;padding:0 0 1.4rem;transition:gap var(--fold) var(--fold-e)}
+/* Le haut de la barre ne part pas avec le défilement : la marque et le pli
+   restent en tête pendant que les matières glissent dessous. Le bandeau
+   reprend à son compte la gouttière de la barre — marges négatives, puis son
+   propre rembourrage — sinon son fond s'arrêterait au ras du texte et une
+   entrée se verrait passer au-dessus, dans le coin arrondi. Le `top` négatif
+   annule la marge du haut : le collage se mesure sur la boîte de marge, et
+   sans lui le bandeau se figerait 1,3 rem trop bas. Le fond s'éteint sur son
+   dernier centimètre : ce qui file dessous se dissout au lieu de buter sur
+   une arête. */
+.sidetop{position:sticky;top:-1.3rem;z-index:3;
+  margin:-1.3rem -1rem 0;padding:1.3rem 1rem 1.4rem;
+  background:linear-gradient(180deg,var(--surface) calc(100% - 1.1rem),transparent);
+  display:flex;align-items:center;gap:.35rem;
+  transition:gap var(--fold) var(--fold-e),padding var(--fold) var(--fold-e)}
 .sidetop .brand{width:auto;flex:1 1 auto;min-width:0;padding:0 .55rem;
   transition:gap var(--fold) var(--fold-e),padding var(--fold) var(--fold-e)}
 .sfold{width:2.1rem;height:2.1rem;border-radius:10px;color:var(--faint);display:grid;place-items:center;flex:0 0 auto;
@@ -115,7 +128,8 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 
 @media (min-width:761px){
   .side.mini{width:4.5rem;padding-left:.6rem;padding-right:.6rem}
-  .side.mini .sidetop{flex-direction:column;gap:.5rem;padding-bottom:1.1rem}
+  .side.mini .sidetop{flex-direction:column;gap:.5rem;
+    margin-left:-.6rem;margin-right:-.6rem;padding:1.3rem .6rem 1.1rem}
   .side.mini .sfold{transform:rotate(180deg)}
   .side.mini .navi,.side.mini .subj,.side.mini .brand{gap:0;justify-content:center;padding-left:0;padding-right:0}
   .side.mini .brand b,.side.mini .lb,.side.mini .cnt{
@@ -478,7 +492,7 @@ li.done .tx{color:var(--faint);text-decoration:line-through}
 @media (max-width:760px){
   .shell{grid-template-columns:minmax(0,1fr)}
   .side{position:static;flex-direction:row;flex-wrap:wrap;gap:.35rem;max-height:none;border-radius:22px;padding:.8rem;width:auto}
-  .sidetop{width:100%;padding:0}
+  .sidetop{position:static;width:100%;margin:0;padding:0;background:none}
   .sfold{display:none}
   .brand{padding:0 .5rem;width:100%}
   .grp,.side .grow{display:none}
