@@ -1,15 +1,18 @@
 /**
  * agenda-resume — le seul morceau de serveur de l'agenda.
  *
- * La page de notes écoute le cours et transcrit sur l'appareil. Quand assez de
- * paroles se sont accumulées, elle les envoie ici et reçoit en retour des notes
- * écrites, prêtes à s'ajouter sous celles d'avant.
+ * Deux services derrière une seule porte :
  *
- * Ce relais n'existe que pour une raison : une clé d'API ne peut pas vivre dans
- * un fichier HTML que tout le monde télécharge. Il ne garde rien — le transcript
- * traverse et repart, il n'atterrit dans aucune table. Les seules traces sont
- * des compteurs dans `agenda_ia_usage`, pour que la fonction ne devienne pas
- * une facture surprise.
+ *   POST ?mode=audio   multipart — un morceau de cours enregistré → son texte.
+ *                      Whisper via Groq : huit heures d'audio par jour sans
+ *                      rien payer, et une justesse que la reconnaissance du
+ *                      navigateur n'approche pas dans une salle bruyante.
+ *   POST (JSON)        le texte accumulé → des notes rédigées, par Claude.
+ *
+ * Ce relais n'existe que pour une raison : une clé d'API ne peut pas vivre
+ * dans un fichier HTML que tout le monde télécharge. Il ne garde rien — ni le
+ * son, ni le texte. Les seules traces sont des compteurs dans
+ * `agenda_ia_usage`, pour que la fonction ne devienne pas une facture surprise.
  */
 import Anthropic from "npm:@anthropic-ai/sdk@^0.120.0";
 import { createClient } from "npm:@supabase/supabase-js@^2";
@@ -40,8 +43,15 @@ const entete = (origine: string | null) => {
 const MAX_SEGMENT = 12_000;
 const MAX_CONTEXTE = 1_500;
 const MAX_NOTES = 60_000;
+const MAX_AUDIO = 20 * 1024 * 1024;   // le palier gratuit de Groq plafonne à 25 Mo
+/* Whisper n'accepte que 224 jetons d'amorce — environ 500 caractères. Au-delà
+   il tronque, et c'est la FIN du contexte qui compte pour enchaîner. */
+const MAX_AMORCE = 500;
+
 const PLAFOND = Number(Deno.env.get("AGENDA_IA_PLAFOND") ?? "80");
+const PLAFOND_AUDIO = Number(Deno.env.get("AGENDA_AUDIO_PLAFOND") ?? "300");
 const MODELE = Deno.env.get("AGENDA_IA_MODELE") ?? "claude-haiku-4-5";
+const MODELE_AUDIO = Deno.env.get("AGENDA_AUDIO_MODELE") ?? "whisper-large-v3-turbo";
 
 const coupe = (v: unknown, max: number) =>
   typeof v === "string" ? v.slice(0, max).trim() : "";
@@ -102,27 +112,103 @@ Deno.serve(async (req: Request) => {
      Premier geste, avant même de regarder si le reste est configuré : un
      inconnu n'a pas à apprendre l'état de nos serveurs.
 
-     Et ce contrôle-ci n'est pas une redondance. Vérifié le 26 août 2026 : la
+     Et ce contrôle-ci n'est pas une redondance. Vérifié le 27 août 2026 : la
      passerelle laisse passer la clé publique de l'app présentée en Bearer,
-     alors qu'elle n'appartient à personne. Elle bloque l'absence d'en-tête,
-     rien de plus. La vraie porte, c'est cette ligne — sans compte, pas de
-     quota à débiter, donc pas d'appel. */
+     alors qu'elle n'appartient à personne. Elle ne bloque que l'en-tête
+     absent ou un jeton invalide. La vraie porte, c'est cette ligne — sans
+     compte, pas de quota à débiter, donc pas d'appel. */
   const jeton = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
   const admin = createClient(SB_URL, SB_SERVICE, { auth: { persistSession: false } });
   const { data: { user } } = await admin.auth.getUser(jeton);
   if (!user) return repond({ erreur: "Connecte-toi pour utiliser le résumé." }, 401);
 
-  const CLE = Deno.env.get("ANTHROPIC_API_KEY");
-  if (!CLE) {
-    return repond({ erreur: "Le résumé n'est pas encore configuré côté serveur." }, 503);
+  /* Réserver sa place avant d'appeler qui que ce soit, en une instruction
+     atomique : deux onglets qui transcrivent le même cours ne peuvent pas
+     passer tous les deux par la dernière place. */
+  const reserver = async (genre: "ia" | "audio") => {
+    const plafond = genre === "audio" ? PLAFOND_AUDIO : PLAFOND;
+    const { data, error } = await admin.rpc("agenda_ia_reserver",
+      { p_user: user.id, p_plafond: plafond, p_genre: genre });
+    if (error) { console.error("quota", error.message); return { panne: true }; }
+    return data as { permis: boolean; appels: number; plafond: number };
+  };
+
+  const modeUrl = new URL(req.url).searchParams.get("mode");
+
+  /* ══ Un morceau de cours devient du texte ═════════════════════════ */
+  if (modeUrl === "audio") {
+    const GROQ = Deno.env.get("GROQ_API_KEY");
+    if (!GROQ) return repond({ erreur: "La transcription n'est pas configurée côté serveur." }, 503);
+
+    let form: FormData;
+    try { form = await req.formData(); }
+    catch { return repond({ erreur: "Envoi audio illisible." }, 400); }
+
+    const fichier = form.get("audio");
+    if (!(fichier instanceof File) || fichier.size === 0) {
+      return repond({ erreur: "Aucun son reçu." }, 400);
+    }
+    if (fichier.size > MAX_AUDIO) {
+      return repond({ erreur: "Morceau trop lourd — découpe plus court." }, 413);
+    }
+    /* L'amorce : la fin de ce qui précède. Whisper s'en sert pour enchaîner
+       sur la bonne graphie et le bon vocabulaire d'une découpe à l'autre —
+       c'est ce qui rattrape les mots coupés en deux entre deux morceaux. */
+    const amorce = coupe(form.get("contexte"), MAX_AMORCE);
+
+    const q = await reserver("audio");
+    if ("panne" in q) return repond({ erreur: "Le compteur d'usage n'a pas répondu." }, 500);
+    if (!q.permis) {
+      return repond({
+        erreur: `Plafond de transcription atteint pour aujourd'hui (${q.plafond} morceaux).`,
+        appels: q.appels, plafond: q.plafond,
+      }, 429);
+    }
+
+    try {
+      const gf = new FormData();
+      gf.append("file", fichier, "morceau.webm");
+      gf.append("model", MODELE_AUDIO);
+      gf.append("language", "fr");
+      gf.append("response_format", "verbose_json");   // pour la durée, qu'on comptabilise
+      gf.append("temperature", "0");
+      if (amorce) gf.append("prompt", amorce);
+
+      const gr = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+        method: "POST", headers: { authorization: `Bearer ${GROQ}` }, body: gf,
+      });
+      if (!gr.ok) {
+        const detail = await gr.text().catch(() => "");
+        console.error("groq", gr.status, detail.slice(0, 300));
+        if (gr.status === 429) {
+          return repond({ erreur: "Transcription saturée — ça reprend dans un instant." }, 429);
+        }
+        if (gr.status === 401 || gr.status === 403) {
+          return repond({ erreur: "La transcription est mal configurée côté serveur." }, 503);
+        }
+        return repond({ erreur: "La transcription a échoué pour ce morceau." }, 502);
+      }
+      const d = await gr.json();
+      const texte = String(d.text ?? "").trim();
+      const secondes = Math.round(Number(d.duration) || 0);
+
+      await admin.rpc("agenda_ia_noter",
+        { p_user: user.id, p_in: 0, p_out: 0, p_sec: secondes });
+
+      return repond({ texte, vide: !texte, secondes, appels: q.appels, plafond: q.plafond });
+    } catch (e) {
+      console.error("groq", e instanceof Error ? e.message : String(e));
+      return repond({ erreur: "La transcription n'a pas abouti — le morceau suivant réessaiera." }, 502);
+    }
   }
 
+  /* ══ Le texte accumulé devient des notes ══════════════════════════ */
+  const CLE = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!CLE) return repond({ erreur: "Le résumé n'est pas encore configuré côté serveur." }, 503);
+
   let corps: Record<string, unknown>;
-  try {
-    corps = await req.json();
-  } catch {
-    return repond({ erreur: "Requête illisible." }, 400);
-  }
+  try { corps = await req.json(); }
+  catch { return repond({ erreur: "Requête illisible." }, 400); }
 
   const mode = corps.mode === "final" ? "final" : "segment";
   const matiere = coupe(corps.matiere, 120) || "Cours";
@@ -137,22 +223,13 @@ Deno.serve(async (req: Request) => {
     return repond({ erreur: "Rien à mettre au propre." }, 400);
   }
 
-  /* ── Le plafond ────────────────────────────────────────────────────
-     Réservé AVANT l'appel, en une instruction atomique : deux onglets qui
-     transcrivent le même cours ne peuvent pas passer tous les deux par la
-     dernière place. */
-  const { data: quota, error: eQuota } = await admin
-    .rpc("agenda_ia_reserver", { p_user: user.id, p_plafond: PLAFOND });
-  if (eQuota) {
-    console.error("quota", eQuota.message);
-    return repond({ erreur: "Le compteur d'usage n'a pas répondu." }, 500);
-  }
-  if (!quota?.permis) {
+  const q = await reserver("ia");
+  if ("panne" in q) return repond({ erreur: "Le compteur d'usage n'a pas répondu." }, 500);
+  if (!q.permis) {
     return repond({
-      erreur: `Plafond du jour atteint (${quota?.plafond ?? PLAFOND} résumés). ` +
-        `La transcription continue — seul le résumé automatique se met en pause jusqu'à demain.`,
-      appels: quota?.appels ?? PLAFOND,
-      plafond: quota?.plafond ?? PLAFOND,
+      erreur: `Plafond du jour atteint (${q.plafond} résumés). ` +
+        `La transcription continue — seul le résumé se met en pause jusqu'à demain.`,
+      appels: q.appels, plafond: q.plafond,
     }, 429);
   }
 
@@ -194,12 +271,11 @@ Deno.serve(async (req: Request) => {
       .join("")
       .trim();
 
-    // Ce que ça a coûté, noté après coup : le plafond protège du volume, ces
-    // compteurs-là disent le prix réel.
     await admin.rpc("agenda_ia_noter", {
       p_user: user.id,
       p_in: reponse.usage.input_tokens ?? 0,
       p_out: reponse.usage.output_tokens ?? 0,
+      p_sec: 0,
     });
 
     if (reponse.stop_reason === "refusal") {
@@ -209,8 +285,8 @@ Deno.serve(async (req: Request) => {
     return repond({
       texte,
       vide: !texte || texte === "(rien à noter)",
-      appels: quota.appels,
-      plafond: quota.plafond,
+      appels: q.appels,
+      plafond: q.plafond,
     });
   } catch (e) {
     // Le détail part dans les journaux ; l'étudiant reçoit une phrase utile.

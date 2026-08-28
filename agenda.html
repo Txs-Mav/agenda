@@ -453,7 +453,7 @@ li.done .tx{color:var(--faint);text-decoration:line-through}
 /* Vue jour (téléphone) : la rangée des jours au-dessus de la grille. Le jour
    affiché est inversé, aujourd'hui garde un anneau, une pastille signale une
    échéance ce jour-là. */
-.dtabs{display:flex;gap:.3rem;padding:.1rem 1.05rem .55rem}
+.dtabs{display:flex;gap:.3rem;padding:.1rem 1.05rem .55rem;user-select:none;-webkit-touch-callout:none}
 .dt{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:.06rem;
   padding:.42rem 0 .38rem;border-radius:12px;background:var(--surface-2);color:var(--dim);
   font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;position:relative;
@@ -1688,6 +1688,8 @@ a,button{touch-action:manipulation}
   .xweek{opacity:.55}
 }
 @media (pointer:coarse){
+  /* L'appui long crée un bloc : iOS n'a pas à proposer son propre menu. */
+  .grid{-webkit-touch-callout:none}
   .pin,.dadd .pin,.newrow input[type=text],.pop input,.pop select,
   .joinbox input,.anno textarea,.ntx{font-size:16px}
   .box,.nbox,.kill,.xweek,.grab,.dot,.sw,.sw-c{position:relative}
@@ -2296,10 +2298,13 @@ a,button{touch-action:manipulation}
           rend ton agenda sur n'importe quel appareil. Tes identifiants Omnivox n'y transitent jamais.</p>
         <input id="jo-email" type="email" autocomplete="email" placeholder="Courriel">
         <input id="jo-pw" type="password" autocomplete="new-password" placeholder="Mot de passe (8+ caractères)">
+        <input id="jo-code" class="jcode" type="text" inputmode="numeric" autocomplete="one-time-code"
+               maxlength="6" placeholder="000000" hidden>
         <p class="jmsg" id="jo-msg"></p>
         <button class="cta join-cta" id="jo-go">Créer mon compte</button>
         <div class="jalt">
           <button class="link" id="jo-swap">J'ai déjà un compte</button>
+          <button class="link" id="jo-resend" hidden>Renvoyer le code</button>
           <span class="grow"></span>
           <button class="link" id="jo-home">Retour à l'accueil</button>
         </div>
@@ -2801,11 +2806,39 @@ a,button{touch-action:manipulation}
       const g = mk("div", hr === START_HOUR ? "hr first" : "hr");
       g.append(mk("b", null, `${pad(hr)}:00`));
       grid.append(g);
-      for (const d of days) grid.append(buildCell(d, hr));
+      for (const d of shown) grid.append(buildCell(d, hr));
     }
     const wrap = mk("div","gwrap"); wrap.append(grid);
-    card.append(head, wrap);
+    if (tabs) { card.append(head, tabs, wrap); attachSwipe(card); }
+    else card.append(head, wrap);
     return card;
+  }
+
+  /* Balayer la carte change de jour ; au bord de la semaine, on passe à la
+     suivante (ou la précédente) quand les semaines défilent une à une. Le
+     geste ne vaut que si aucune sélection n'est en cours et que le doigt a
+     clairement voyagé de côté. */
+  function stepDay(delta) {
+    const n = cols();
+    const i = mday + delta;
+    if (i < 0) { if (state.wview !== "pile") { mday = n - 1; stepWeek(-1); } return; }
+    if (i >= n) { if (state.wview !== "pile") { mday = 0; stepWeek(1); } return; }
+    mday = i; renderWeeks(delta);
+  }
+  function attachSwipe(card) {
+    let sx = 0, sy = 0, st = 0, pid = null;
+    card.addEventListener("pointerdown", ev => {
+      if (ev.pointerType !== "touch") return;
+      pid = ev.pointerId; sx = ev.clientX; sy = ev.clientY; st = Date.now();
+    });
+    card.addEventListener("pointerup", ev => {
+      if (ev.pointerId !== pid) return;
+      pid = null;
+      if (sel || touchSel) return;
+      const dx = ev.clientX - sx, dy = ev.clientY - sy;
+      if (Date.now() - st > 600 || Math.abs(dx) < 56 || Math.abs(dy) > Math.abs(dx) * .6) return;
+      stepDay(dx < 0 ? 1 : -1);
+    });
   }
 
   function paint(cell, o) {
@@ -2874,7 +2907,7 @@ a,button{touch-action:manipulation}
       if (state.filter && state.filter !== e.t) cell.querySelector(".ev")?.style.setProperty("opacity",".26");
       cell.style.cursor = "pointer";
       cell.tabIndex = 0;
-      cell.addEventListener("pointerdown", ev => { ev.preventDefault(); openCourse(cell, e); });
+      pressable(cell, () => openCourse(cell, e));
       cell.addEventListener("keydown", ev => {
         if (ev.key === "Enter") { ev.preventDefault(); openCourse(cell, e); }
       });
@@ -2906,7 +2939,7 @@ a,button{touch-action:manipulation}
       ev.style.setProperty("--pt", `var(--p${cd.lvl}t)`);   // variante lisible sur fond clair
       cell.title = `${dl.t}\n${dlc ? `${dlc} · ` : ""}${dlk} · ${cd.txt}`;
       cell.style.cursor = "pointer";
-      cell.addEventListener("pointerdown", e2 => { e2.preventDefault(); goto("echeances"); });
+      pressable(cell, () => goto("echeances"));
       return cell;
     } else {
       cell.classList.add("free");
@@ -2916,10 +2949,70 @@ a,button{touch-action:manipulation}
           openBlock(cell, dISO, { from:hr, to:hr+1, t:"", h:HUES[0] }, true); }
       });
     }
-    cell.addEventListener("pointerdown", ev => { ev.preventDefault(); startSel(dISO, hr, !!blk); });
-    cell.addEventListener("pointerenter", () => extendSel(dISO, hr));
+    cell.addEventListener("pointerdown", ev => {
+      /* Au doigt, poser le doigt ne choisit rien encore : c'est peut-être un
+         défilement. L'appui long amorce la sélection, le tap la fait d'une
+         case — voir armPress. */
+      if (ev.pointerType === "touch") { armPress(ev, dISO, hr, !!blk); return; }
+      ev.preventDefault(); startSel(dISO, hr, !!blk);
+    });
+    cell.addEventListener("pointerup", ev => {
+      if (ev.pointerType !== "touch") return;
+      if (touchSel) { touchSel = false; return; }   // le pointerup du document ouvre le composeur
+      if (pressT && pressPos && Math.hypot(ev.clientX - pressPos.x, ev.clientY - pressPos.y) < 9) {
+        cancelPress(); startSel(dISO, hr, !!blk);   // tap : une case, le composeur suit
+      } else cancelPress();
+    });
+    cell.addEventListener("pointerenter", ev => { if (ev.pointerType !== "touch") extendSel(dISO, hr); });
     return cell;
   }
+
+  /* ── Tactile : tap pour ouvrir, appui long pour créer ─────────────
+     Le doigt n'a ni survol ni clic : un tap ouvre (cours, échéance, case
+     libre), un appui long de 450 ms amorce la sélection qu'on étire ensuite
+     en glissant — pendant qu'elle court, le défilement est retenu. Les
+     événements pointer d'un toucher restent capturés par la case d'origine :
+     l'étirement passe donc par elementFromPoint, pas par pointerenter. */
+  let touchSel = false, pressT = null, pressPos = null;
+  const cancelPress = () => { clearTimeout(pressT); pressT = null; pressPos = null; };
+  function armPress(ev, d, h, onBlock) {
+    cancelPress();
+    pressPos = { x: ev.clientX, y: ev.clientY };
+    pressT = setTimeout(() => {
+      pressT = null;
+      if (!pressPos) return;
+      pressPos = null;
+      touchSel = true;
+      startSel(d, h, onBlock);
+    }, 450);
+  }
+  function pressable(cell, fn) {
+    let px = 0, py = 0, pid = null;
+    cell.addEventListener("pointerdown", ev => {
+      if (ev.pointerType === "touch") { pid = ev.pointerId; px = ev.clientX; py = ev.clientY; return; }
+      ev.preventDefault(); fn();
+    });
+    cell.addEventListener("pointerup", ev => {
+      if (ev.pointerType !== "touch" || ev.pointerId !== pid) return;
+      pid = null;
+      if (Math.hypot(ev.clientX - px, ev.clientY - py) < 9) fn();
+    });
+  }
+  document.addEventListener("pointermove", ev => {
+    if (ev.pointerType !== "touch") return;
+    if (touchSel) {
+      const c = document.elementFromPoint(ev.clientX, ev.clientY)?.closest?.(".cell");
+      if (c?.dataset.d && sel && c.dataset.d === sel.d) extendSel(c.dataset.d, Number(c.dataset.h));
+      return;
+    }
+    // Bouger avant l'échéance du minuteur, c'est défiler : l'appui tombe.
+    if (pressPos && Math.hypot(ev.clientX - pressPos.x, ev.clientY - pressPos.y) > 9) cancelPress();
+  });
+  document.addEventListener("touchmove", ev => { if (touchSel) ev.preventDefault(); }, { passive:false });
+  document.addEventListener("pointercancel", () => {
+    cancelPress();
+    if (touchSel) { touchSel = false; sel = null; clearSel(); }
+  });
 
   function startSel(d, h, onBlock) { sel = { d, a:h, b:h, onBlock }; paintSel(); }
   function extendSel(d, h) {
@@ -2991,13 +3084,18 @@ a,button{touch-action:manipulation}
   let pop = null, popAnchor = null, popSide = false;
   const restBars = () => document.querySelectorAll('.bar[aria-expanded="true"]')
     .forEach(b => b.removeAttribute("aria-expanded"));
-  const closePop = () => { pop?.remove(); pop = null; popAnchor = null; restBars(); clearSel(); sel = null; };
+  const closePop = () => { pop?.remove(); pop = null; popAnchor = null;
+    document.querySelector(".popveil")?.remove(); restBars(); clearSel(); sel = null; };
 
   /* position:fixed : sans repositionnement, le composeur reste collé à l'écran
      pendant que sa case défile — il flotte orphelin par-dessus le reste. On le
      fait suivre l'ancre, et on le ferme quand elle quitte l'écran. */
   document.addEventListener("scroll", () => {
     if (!pop || !popAnchor) return;
+    /* La feuille du téléphone ne suit pas sa case : elle est ancrée en bas,
+       et le clavier d'iOS fait défiler la page en s'ouvrant — la fermer ici
+       la volerait sous les doigts. */
+    if (mqPhone.matches) return;
     const r = popAnchor.getBoundingClientRect();
     // On ferme dès que la case est presque sortie (40 px de marge) : un
     // composeur accroché à 10 px de case visible flotte déjà sur autre chose.
@@ -3009,6 +3107,14 @@ a,button{touch-action:manipulation}
     restBars();
     if (anchorEl.classList?.contains("bar")) anchorEl.setAttribute("aria-expanded","true");
     popAnchor = anchorEl; popSide = !!side;
+    /* Téléphone : le CSS ancre la feuille en bas, il n'y a rien à calculer.
+       Un voile prend l'écran derrière elle — le tap à côté referme. */
+    if (mqPhone.matches) {
+      if (!document.querySelector(".popveil")) document.body.append(mk("div","popveil"));
+      node.style.left = node.style.top = "";
+      document.body.append(node);
+      return;
+    }
     const r = anchorEl.getBoundingClientRect();
     node.style.visibility = "hidden";
     document.body.append(node);
@@ -3442,7 +3548,9 @@ a,button{touch-action:manipulation}
     host.textContent = "";
     for (const off of shownWeeks()) {
       const card = buildWeek(off);
-      if (state.wview !== "pile" && dir) card.classList.add(dir > 0 ? "wr" : "wl");
+      /* Le glissement vaut pour la semaine qui défile — et pour le jour qui
+         défile en vue téléphone, où chaque carte est un jour. */
+      if ((state.wview !== "pile" || mqPhone.matches) && dir) card.classList.add(dir > 0 ? "wr" : "wl");
       host.append(card);
     }
     syncWeekBar();
@@ -3493,14 +3601,17 @@ a,button{touch-action:manipulation}
     if (h < START_HOUR || h > END_HOUR + 1) return;
     const card = document.querySelector(`.card[data-start="${iso(monday(t))}"]`);
     if (!card) return;
-    const grid = card.querySelector(".grid"), dh = grid.querySelector(".dh");
-    const idx = (t.getDay()+6)%7;
-    if (idx >= cols()) return;
+    /* La colonne d'aujourd'hui se lit dans la grille elle-même (.dh.td) :
+       en vue jour elle est seule — ou absente, si on regarde un autre jour. */
+    const grid = card.querySelector(".grid"), dhs = [...grid.querySelectorAll(".dh")];
+    const idx = dhs.findIndex(x => x.classList.contains("td"));
+    if (idx < 0) return;
+    const dh = dhs[0], nb = dhs.length;
     const top = `calc(${dh.offsetTop + dh.offsetHeight}px + var(--row-h) * ${h - START_HOUR})`;
     const line = mk("div","now");
     line.style.top = top;
-    line.style.left = `calc(var(--gutter) + (100% - var(--gutter)) / ${cols()} * ${idx})`;
-    line.style.width = `calc((100% - var(--gutter)) / ${cols()})`;
+    line.style.left = `calc(var(--gutter) + (100% - var(--gutter)) / ${nb} * ${idx})`;
+    line.style.width = `calc((100% - var(--gutter)) / ${nb})`;
     const lab = mk("div","nowlab", `${pad(t.getHours())}:${pad(t.getMinutes())}`);
     lab.style.top = top;
     grid.querySelectorAll(".hr b").forEach(b => { b.style.visibility = ""; });
@@ -6039,15 +6150,24 @@ a,button{touch-action:manipulation}
      reprend le sien en infobulle, sinon une rangée d'icônes devient une
      devinette. (Les matières, elles, gardent la leur en toute occasion —
      voir renderSubjects.) */
+  /* Sur iPad (761–1080 px), le pli n'est plus un choix : le rail est imposé
+     pour que l'horaire garde la semaine entière, et le bouton de pli se
+     retire — un réglage qu'on ne peut pas changer n'a pas à se montrer. Le
+     choix de l'utilisateur (state.sideMini) reste intact pour les écrans
+     larges. */
+  const mqRail = matchMedia("(min-width:761px) and (max-width:1080px)");
+  mqRail.addEventListener("change", () => applySide());
   function applySide() {
     const side = document.querySelector(".side"), b = el("side-fold");
-    side.classList.toggle("mini", !!state.sideMini);
-    b.setAttribute("aria-expanded", state.sideMini ? "false" : "true");
-    b.title = state.sideMini ? "Déplier la barre" : "Replier la barre";
+    const mini = mqRail.matches || !!state.sideMini;
+    side.classList.toggle("mini", mini);
+    b.hidden = mqRail.matches;
+    b.setAttribute("aria-expanded", mini ? "false" : "true");
+    b.title = mini ? "Déplier la barre" : "Replier la barre";
     side.querySelectorAll(".navi").forEach(n => {
       const lb = n.querySelector(".lb");
       if (!lb) return;
-      if (state.sideMini) n.title = lb.textContent.trim();
+      if (mini) n.title = lb.textContent.trim();
       else n.removeAttribute("title");
     });
   }
@@ -6258,10 +6378,14 @@ a,button{touch-action:manipulation}
     [/invalid login credentials/i, "Courriel ou mot de passe incorrect."],
     [/unable to validate email/i, "Ce courriel n'a pas l'air valide."],
     [/user already registered|already been registered/i, "Ce courriel a déjà un compte — connecte-toi plutôt."],
-    [/email not confirmed/i, "Confirme d'abord le lien reçu par courriel."],
+    [/email not confirmed/i, "Confirme d'abord le code reçu par courriel."],
     [/password should be at least/i, "Mot de passe trop court : au moins 8 caractères."],
     [/only request this after (\d+)/i, "Trop de tentatives d'affilée. Attends une minute."],
-    [/failed to fetch|networkerror/i, "Pas de réseau — réessaie dans un instant."],
+    [/token has expired|otp.*expired|expired.*otp/i, "Code expiré — demande-en un nouveau."],
+    [/invalid.*(token|otp)|(token|otp).*invalid/i, "Code refusé. Recopie celui du dernier courriel reçu."],
+    /* Le serveur injoignable et le réseau coupé donnent la même exception côté
+       navigateur. On ne promet donc pas que c'est le réseau de l'étudiant. */
+    [/failed to fetch|networkerror/i, "Serveur injoignable — réessaie dans un instant."],
   ];
   const frErr = (e) => {
     const m = String(e?.message || e || "");
@@ -6453,10 +6577,22 @@ a,button{touch-action:manipulation}
               const n = await pwnedCount(pw.value);
               if (n) { msg.textContent = pwnedMsg(n); return; }
             }
-            const d = await sbAuth(path, { email: em.value.trim(), password: pw.value });
+            const courriel = em.value.trim();
+            const d = await sbAuth(path, { email: courriel, password: pw.value });
             if (d.access_token) { sbKeep(d); renderAccount(); closePop(); applyCloud(await sbFetchSnapshot()); }
-            else msg.textContent = "Compte créé : clique le lien de confirmation reçu par courriel, puis connecte-toi.";
-          } catch (e2) { msg.textContent = frErr(e2); }
+            else {
+              /* Compte créé mais endormi : la fenêtre ne sait pas saisir un
+                 code, l'écran d'accueil si. On y renvoie plutôt que d'énoncer
+                 une consigne que rien ici ne permet de suivre. */
+              joEmail = courriel; closePop(); showJoin("confirm");
+            }
+          } catch (e2) {
+            if (/email not confirmed/i.test(String(e2?.message || ""))) {
+              joEmail = em.value.trim();
+              try { await sbAuth("resend", { type: "signup", email: joEmail }); } catch {}
+              closePop(); showJoin("confirm");
+            } else msg.textContent = frErr(e2);
+          }
         });
         return b;
       };
@@ -6562,23 +6698,41 @@ a,button{touch-action:manipulation}
   for (const id of ["cta-open","cta-open2","cta-open3"]) el(id).addEventListener("click", openApp);
   el("lp-signin").addEventListener("click", () => showJoin(sbSession() ? "signup" : "signin"));
 
-  let joMode = "signup";
+  /* Trois états : « signup », « signin », et « confirm » — le compte existe
+     mais dort tant que le courriel n'est pas confirmé. joEmail retient
+     l'adresse entre l'inscription et la saisie du code. */
+  let joMode = "signup", joEmail = "";
   function showJoin(mode) {
     /* Franchir l'accueil, c'est l'avoir vu : au prochain passage sur cet
        appareil, on ouvre directement le formulaire. */
     markVu();
     joMode = mode;
-    const up = joMode === "signup";
-    el("jo-title").textContent = up ? "Crée ton compte d'agenda" : "Connecte-toi";
-    el("jo-sub").textContent = up
+    const up = joMode === "signup", conf = joMode === "confirm";
+    el("jo-title").textContent = conf ? "Confirme ton courriel"
+      : up ? "Crée ton compte d'agenda" : "Connecte-toi";
+    /* Le gabarit de courriel appartient au projet Supabase, partagé avec une
+       autre application : le message arrive au nom de « Shift » et porte un
+       code, pas un lien. On l'annonce — sinon l'étudiant croit à une erreur
+       d'adresse et n'ouvre jamais le courriel. */
+    el("jo-sub").textContent = conf
+      ? `Un code à 6 chiffres vient de partir vers ${joEmail}. Le courriel arrive au nom de « Shift » — même serveur, c'est normal. Entre le code ici pour activer ton compte.`
+      : up
       ? "Un courriel et un mot de passe, rien de plus : ils servent à retrouver tes échéances et tes résumés sur tes autres appareils. Tes identifiants Omnivox n'y transitent jamais."
       : "Le compte d'agenda, pas Omnivox. Tes échéances et tes résumés reviennent tels que l'agent les a laissés.";
-    el("jo-go").textContent = up ? "Créer mon compte" : "Se connecter";
-    el("jo-swap").textContent = up ? "J'ai déjà un compte" : "Créer un compte plutôt";
+    el("jo-go").textContent = conf ? "Confirmer mon compte" : up ? "Créer mon compte" : "Se connecter";
+    el("jo-swap").textContent = conf ? "Revenir à la connexion"
+      : up ? "J'ai déjà un compte" : "Créer un compte plutôt";
     el("jo-pw").autocomplete = up ? "new-password" : "current-password";
+    /* En confirmation, courriel et mot de passe ont déjà servi : seul le code
+       reste à saisir. */
+    el("jo-email").hidden = conf;
+    el("jo-pw").hidden = conf;
+    el("jo-code").hidden = !conf;
+    el("jo-resend").hidden = !conf;
+    if (conf) el("jo-code").value = "";
     joSay("");
     showView("onboard");
-    el("jo-email").focus();
+    (conf ? el("jo-code") : el("jo-email")).focus();
   }
   /* Le filtre « mot de passe compromis » de Supabase est réservé au plan
      Pro ; même protection ici, gratuite et k-anonyme (HaveIBeenPwned) :
@@ -6600,7 +6754,22 @@ a,button{touch-action:manipulation}
   function joSay(txt, bad) {
     const m = el("jo-msg"); m.textContent = txt; m.classList.toggle("bad", !!bad);
   }
+  /* Le code du courriel s'échange contre une vraie session : confirmé et
+     connecté d'un seul geste, sans repasser par le formulaire de connexion. */
+  async function joConfirm() {
+    const code = el("jo-code").value.replace(/\D/g, "");
+    if (code.length !== 6) { joSay("Le code compte 6 chiffres.", true); return; }
+    el("jo-go").disabled = true; joSay("…");
+    try {
+      const d = await sbAuth("verify", { type: "signup", email: joEmail, token: code });
+      if (!d.access_token) throw new Error("Confirmation refusée — demande un nouveau code.");
+      sbKeep(d); renderAccount(); markVu(); enterBoard();
+      applyCloud(await sbFetchSnapshot());
+    } catch (e2) { joSay(frErr(e2), true); }
+    finally { el("jo-go").disabled = false; }
+  }
   async function joSubmit() {
+    if (joMode === "confirm") return joConfirm();
     const email = el("jo-email").value.trim(), pw = el("jo-pw").value;
     if (!email) { joSay("Il manque le courriel.", true); return; }
     if (pw.length < 8) { joSay("Mot de passe : au moins 8 caractères.", true); return; }
@@ -6616,17 +6785,32 @@ a,button{touch-action:manipulation}
         sbKeep(d); renderAccount(); markVu(); enterBoard();
         applyCloud(await sbFetchSnapshot());
       } else {
-        /* showJoin remet le message à zéro : basculer d'abord, parler ensuite. */
-        showJoin("signin");
-        el("jo-email").value = email;
-        joSay(`Compte créé. Un courriel de confirmation part vers ${email} : clique le lien, `
-            + "puis reviens ici pour te connecter.");
+        /* Pas de session au retour : le compte est créé mais dort. On enchaîne
+           sur le code plutôt que de renvoyer vers une connexion qui refuserait
+           tant que le courriel n'est pas confirmé. */
+        joEmail = email;
+        showJoin("confirm");
       }
-    } catch (e2) { joSay(frErr(e2), true); }
+    } catch (e2) {
+      /* Un compte resté sans confirmation ne peut pas se connecter : plutôt que
+         d'afficher un refus sans issue, on lui renvoie un code et on l'amène à
+         l'écran qui le débloque. */
+      if (/email not confirmed/i.test(String(e2?.message || ""))) {
+        joEmail = email;
+        try { await sbAuth("resend", { type: "signup", email }); } catch {}
+        showJoin("confirm");
+      } else joSay(frErr(e2), true);
+    }
     finally { el("jo-go").disabled = false; }
   }
   el("jo-go").addEventListener("click", joSubmit);
-  el("jo-swap").addEventListener("click", () => showJoin(joMode === "signup" ? "signin" : "signup"));
+  el("jo-swap").addEventListener("click", () => showJoin(joMode === "signin" ? "signup" : "signin"));
+  el("jo-resend").addEventListener("click", async () => {
+    if (!joEmail) return;
+    joSay("…");
+    try { await sbAuth("resend", { type: "signup", email: joEmail }); joSay("Nouveau code envoyé."); }
+    catch (e2) { joSay(frErr(e2), true); }
+  });
   el("jo-home").addEventListener("click", () => showView("landing"));
   el("onboard").addEventListener("keydown", ev => {
     if (ev.key === "Enter" && ev.target.tagName === "INPUT") joSubmit();
