@@ -409,6 +409,16 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 #demobar button:hover{background:rgba(255,255,255,.22)}
 #demobar button[aria-pressed="true"]{background:#fff;color:#16171A}
 body{padding-bottom:4.5rem !important}
+/* Écran étroit : empilée sur trois rangées, la barre mangeait la page. Une
+   seule rangée qui défile de côté, ancrée au bas, au-dessus de la zone sûre. */
+@media (max-width:560px){
+  #demobar{left:.5rem;right:.5rem;bottom:.5rem;transform:none;max-width:none;
+    flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;
+    overscroll-behavior-x:contain;
+    padding:.35rem .4rem calc(.35rem + env(safe-area-inset-bottom, 0px))}
+  #demobar .lab,#demobar button{flex:0 0 auto;white-space:nowrap}
+  body{padding-bottom:5rem !important}
+}
 </style>
 <script>
 /* ── DÉMO — ce fichier n'est pas l'application. C'est public/classes.html

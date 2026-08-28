@@ -9,10 +9,10 @@ Document de travail. La maquette cliquable qui l'accompagne vit hors dépôt
 
 | Mesure | Aujourd'hui | Après |
 |---|---|---|
-| Hauteur du tableau de bord (bureau, 720 px) | **4,8 écrans** (3 451 px) | **1,35 écran** (970 px) |
+| Hauteur du tableau de bord (bureau, 900 px) | **3,4 écrans** (3 088 px) | **1,0 écran** (900 px) |
 | Hauteur sur mobile (375 × 812) | **8,4 écrans** (6 820 px) | **1,88 écran** |
 | Cartes visibles simultanément | **11** | **3** |
-| Éléments cliquables sur le tableau | **76** | 22 |
+| Éléments cliquables sur le tableau | **83** | 23 |
 | Entrées de navigation | **12** (dont 9 matières) | **7 + 2 réglages** |
 | Défilement avant de voir « Ça s'en vient » sur mobile | **~1,5 écran** | **0** |
 
@@ -135,6 +135,150 @@ semaine · Plus tard*.
 
 ---
 
+## 3 bis. « Tout accessible rapidement » — vérifié, pas affirmé
+
+La question mérite une réponse honnête, parce que « rapide » a deux sens qui
+se contredisent : **tout visible sans agir** contre **tout atteignable en un
+geste**. On ne peut pas maximiser les deux.
+
+### Ce que coûte vraiment la barre latérale actuelle
+
+Elle est déjà à *un clic* de chaque section — il faut le reconnaître. Mais ce
+clic déclenche un défilement **animé** de 1 000 à 2 800 px, et surtout :
+
+```
+1. clic « Mes cours »        → la barre dit « Mes cours »  ✓
+2. je remonte à la main      → la barre dit ENCORE « Mes cours »  ✗
+   (alors que le tableau de bord est à l'écran)
+3. bouton retour             → QUITTE L'APP
+```
+
+Mesuré sur l'app en fonctionnement. **La navigation ment sur l'endroit où tu
+es**, il n'y a aucune adresse, et le retour du navigateur sort de l'app. Le
+gain de la refonte n'est donc pas le nombre de clics — c'est que le clic
+atterrit quelque part, et que l'app le dit.
+
+### Le bilan honnête, question par question
+
+| La question de l'étudiant | Aujourd'hui | Après |
+|---|---|---|
+| « Je vais où, et c'est quand ? » *(le cas dominant)* | visible, mais après 1,5 écran sur mobile | **pixel 0, aucun défilement** |
+| « Qu'est-ce qui presse ? » | 3 cartes, 3 tris différents | **1 liste, 1 échelle** |
+| « Mon horaire ? » | 1 clic + défilement animé de 1 569 px | 1 clic, vue dédiée |
+| « Mes MIO / mes cours ? » | 1 clic + 1 000 à 2 400 px | 1 clic, vue dédiée |
+| « Ce cours précis / cette remise ? » | défilement + balayage visuel | **⌘K + 3 lettres** |
+
+### Ce que la refonte rend plus lent — et pourquoi c'est acceptable
+
+Voir **l'horaire et les échéances en même temps** (la planification du
+dimanche) demandait un défilement ; ça demande maintenant un changement de vue.
+C'est la seule régression, et elle est largement absorbée : la grille horaire
+porte **déjà** les pastilles d'échéance sur les en-têtes de jour
+(`deadlinesOn()` dans `buildWeek`). La vue Horaire montre donc la semaine
+*avec* ses remises.
+
+### Ce qui manquait, et qui est ajouté : la palette (⌘K)
+
+Une navigation, si propre soit-elle, coûte un clic par palier. Trois lettres
+n'en coûtent aucun. La palette cherche **les vues, les 9 cours et les
+échéances** dans le même champ, sans accents ni casse (« ecri » trouve
+« Écriture », « geo » trouve « géogr. »).
+
+Point important : **une palette qu'on ne devine pas n'existe pas.** Un cégépien
+n'est pas un développeur — le raccourci reste donc doublé d'un champ visible
+dans l'en-tête (« Chercher un cours, une remise… ⌘K »). Sur mobile, la barre de
+cinq onglets joue ce rôle au pouce.
+
+Clavier complet : `↑ ↓` parcourir · `↵` ouvrir · `esc` fermer.
+
+---
+
+## 3 ter. Direction visuelle retenue : Apple, palette maison
+
+La première maquette était juste sur la structure et fade sur l'exécution —
+des cartes grises sur fond gris, sans point focal. Direction retenue après
+arbitrage : **la rigueur d'Apple, dans la palette maison** (navy + bleu pâle,
+dégradés aplatis — la décision enregistrée est conservée, pas écrasée).
+
+Une référence « verre dépoli sur dégradé lavande » avait été envisagée ; elle
+contredisait frontalement cette décision et a été écartée.
+
+Ce que « Apple » veut dire, concrètement :
+
+| Principe | Application |
+|---|---|
+| **La typographie porte la hiérarchie** | le compte à rebours à 4,1 rem, tracking −.05em. C'est la seule chose grosse à l'écran. |
+| **Listes groupées, pas cartes multiples** | un conteneur arrondi, des filets fins entre rangées — le geste des Réglages iOS |
+| **Filets insérés** | le trait démarre à l'aplomb du texte (2,85 rem), pas bord à bord : l'œil suit une colonne |
+| **Déférence** | la barre latérale sélectionnée est une *teinte* navy, pas un aplat. Le contenu reste le sujet. |
+| **Couleur = signal seul** | la pastille d'urgence porte la couleur ; le délai reste gris, sauf « demain » |
+| **Chevrons** | chaque rangée qui mène quelque part le dit (indicateur de divulgation) |
+| **Cercles, pas cases** | les tâches se cochent comme dans Rappels |
+| **Fond plat** | les dégradés radiaux du `body` disparaissent. Le vide est une matière. |
+
+Résultat : **1,00 écran** exactement en 1440 × 900, structure inchangée
+(7 vues, ⌘K, onglets au pouce sous 900 px).
+
+Piège corrigé : `.t` et `.s` sont des `<span>` — donc `inline` par défaut. Sans
+`display:block`, titre et sous-titre coulent sur la même ligne.
+
+---
+
+## 3 quater. « Sombre noir » + densité restaurée (version retenue)
+
+Deux corrections après essai de la version épurée :
+
+**1. Le vide.** Elle tenait sur 1440 × 900 mais ne *grandissait* pas : à
+1800 px de large, 40 % de l'écran restait nu. Trois blocs ne remplissent pas un
+grand écran.
+
+**2. J'avais coupé trop profond.** Et surtout : la version épurée n'affichait
+**nulle part la forme de la semaine ni les prochaines séances**. Pour un
+agenda, c'est une omission, pas une épure.
+
+### Les sept blocs, et ce que chacun gagne
+
+| Bloc | Pourquoi il est là |
+|---|---|
+| **Prochain cours** (héros) | la question de 15 secondes |
+| **Cette semaine** | la forme de la semaine : heures par jour + pastilles de remise. *Remplace l'histogramme, qui montrait les heures sans les remises.* |
+| **Prochaines séances** | les 5 prochains cours, heure et local. **Manquait totalement.** |
+| **À venir** | remises et examens fusionnés, une échelle |
+| **À faire** | la seule liste où l'on écrit |
+| **MIO récents** | les 3 derniers, pas les 13 |
+| **Mes cours** | pastilles colorées, accès direct |
+
+Restent supprimés : **« Aperçu de la session »** (5 tuiles qui redisaient la
+barre latérale) et **« Progression »** (l'anneau dont « Semaine 4/5 j »
+progressait tout seul avec le temps qui passe). La densité revient par du
+contenu utile, pas par des chiffres décoratifs.
+
+### Mesures
+
+| | Version épurée | Version retenue |
+|---|---|---|
+| Écran rempli à 1800 × 1150 | ~60 % | **91 %** |
+| Blocs | 3 | 7 |
+| Visible sans défiler (1440 × 900) | tout | **les 5 essentiels** ; MIO et Cours à un petit geste |
+
+Ce dégradé est voulu : l'urgent en haut, le consultatif juste en dessous.
+
+### Le thème « sombre noir »
+
+Quasi-noir mat, conforme à la décision maison — aucun dégradé.
+
+```
+fond    #0A0B0D      bloc    #141619      bloc-2  #1A1D21
+accent  #8FB4D9      texte   #F2F4F6      atténué #9BA1A9
+filet   rgba(255,255,255,.075)
+```
+
+Contraste vérifié sur fond de bloc : titres **16,4:1**, texte secondaire
+**6,96:1**, délais **6,47:1** — tous au-dessus du seuil AA (4,5:1).
+Le thème clair reste disponible ; le noir est le défaut.
+
+---
+
 ## 4. Le système de composants
 
 Ces primitives existent déjà dans `agenda.html`. Elles ne sont pas inventées —
@@ -208,6 +352,13 @@ Ordre conseillé, chaque étape livrable seule :
    pleine largeur.
 4. **Le mobile.** `.side{display:none}` sous 860 px, barre de cinq onglets.
 5. **La barre latérale.** Sortir les matières vers « Mes cours ».
+6. **La palette ⌘K** + son champ visible dans l'en-tête.
+
+Piège rencontré et corrigé dans la maquette — il vaut pour l'app : toute classe
+qui pose un `display` (`.emptybox{display:grid}`) **bat `[hidden]`**, et la
+carte vide reste visible sous sa propre liste. Une règle globale
+`[hidden]{display:none!important}` règle la famille entière. Votre code note
+déjà le cas pour `.board`, mais ponctuellement.
 
 ⚠️ `agenda.html` est écrit simultanément par plusieurs sessions. Relire chaque
 zone juste avant de l'éditer.

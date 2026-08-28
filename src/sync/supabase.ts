@@ -18,6 +18,9 @@ type Sess = { token: string; uid: string; email: string };
 let sess: Sess | null | undefined;
 
 /** Ouvre la session UNE fois par exécution : la collecte y touche deux fois. */
+/** Le pont sert aussi à l'émetteur de push : même compte, même session. */
+export async function sessionAgenda(): Promise<Sess | null> { return session(); }
+
 async function session(): Promise<Sess | null> {
   if (sess !== undefined) return sess;
   sess = null;
