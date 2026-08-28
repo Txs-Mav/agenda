@@ -199,6 +199,12 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 li.done .box{background:var(--invert);border-color:var(--invert);color:var(--on-invert)}
 .tx{flex:1 1 auto;font-size:.86rem;line-height:1.32;min-width:0;overflow-wrap:anywhere}
 li.done .tx{color:var(--faint);text-decoration:line-through}
+/* Échéance venue avec son URL exacte (Moodle) : le titre ouvre la page du
+   devoir. Discret au repos, souligné au survol — les boutons fait/supprimer
+   gardent leurs zones à eux. */
+.tx a{color:inherit;text-decoration:none}
+.tx a:hover{text-decoration:underline}
+.tx a .lnk{font-size:.72em;opacity:.55;margin-left:.22em}
 .kill{flex:0 0 auto;color:var(--faint);font-size:1.05rem;line-height:1;padding:0 .15rem;opacity:0;transition:opacity .15s,color .15s}
 @media (hover:hover){li:hover .kill{opacity:1}}
 @media (hover:hover){.kill:hover{color:var(--p3)}}
@@ -3377,6 +3383,19 @@ a,button{touch-action:manipulation}
   });
 
   /* ── Échéances ────────────────────────────────────────────────── */
+  /* Le titre d'une échéance : un lien quand la source fournit l'URL exacte
+     (Moodle) — l'agenda t'amène au devoir lui-même, pas à une page d'accueil. */
+  function titreDe(d) {
+    const p = mk("p","tx");
+    if (d.url) {
+      const a = mk("a", null, d.t);
+      a.href = d.url; a.target = "_blank"; a.rel = "noopener";
+      a.title = "Ouvrir la page du devoir";
+      a.append(mk("span","lnk","↗"));
+      p.append(a);
+    } else p.textContent = d.t;
+    return p;
+  }
   function renderDeadlines() {
     const box = el("deadlines"); box.textContent = "";
     const list = [...state.deadlines].sort((a,b) =>
@@ -3388,7 +3407,7 @@ a,button{touch-action:manipulation}
       li.style.setProperty("--h", hueOf(courseOf(d)));
       const bar = mk("span","bar4");
       const bd = mk("div","al");
-      bd.append(mk("p","tx", d.t));
+      bd.append(titreDe(d));
       const meta = mk("p","w");
       const cdn = mk("b","cd l" + cd.lvl, cd.txt);
       meta.append(cdn, document.createTextNode(` · ${frDate(d.date)}`));
@@ -3993,7 +4012,7 @@ a,button{touch-action:manipulation}
       const start = new Date(y, m - 1, da, t ? +t[1] : 23, t ? +t[2] : 59);
       if (start <= now) continue;
       const c = courseOf(d);
-      out.push({ key:`e:${d.id}`, t:d.t, hue:hueOf(c), sub:c, start, end:null, jour:!t,
+      out.push({ key:`e:${d.id}`, t:d.t, url:d.url, hue:hueOf(c), sub:c, start, end:null, jour:!t,
         kind:d.kind === "examen" ? "examen" : d.kind === "remise" ? "remise" : "echeance",
         at:t ? new Date(+start - LEAD_MIN * 6e4) : new Date(y, m - 1, da, 8) });
     }
@@ -4082,7 +4101,7 @@ a,button{touch-action:manipulation}
       li.style.setProperty("--h", x.hue);
       const ic = mk("span","kdi"); ic.innerHTML = ICON[KD_ICON[x.kind]];
       const al = mk("div","al");
-      al.append(mk("p","tx", x.t));
+      al.append(titreDe(x));
       const w = mk("p","w");
       w.append(mk("b","cd l" + lvl, untilTxt(x.start - now)),
         document.createTextNode(` · ${dayTxt(x.start, now)}${x.jour ? "" : " " + clock(x.start)}`));
@@ -4433,7 +4452,7 @@ a,button{touch-action:manipulation}
       const li = mk("li","nrow dline" + (d.done ? " done" : ""));
       li.style.setProperty("--p", `var(--p${cd.lvl})`);
       const bd = mk("div","al");
-      bd.append(mk("p","tx", d.t));
+      bd.append(titreDe(d));
       const meta = mk("p","w");
       const label = ACT_LBL[d.kind] || "date";
       meta.append(mk("b","cd l" + cd.lvl, cd.txt),

@@ -101,6 +101,8 @@ async function echeancesMoodle(token: string, cours: Cours[]): Promise<Deadline[
         src: "moodle",
         code: sigleDe(c.shortname, c.fullname),
         done: false,
+        // La page du devoir lui-même — celle où tu remets — pas l'accueil du cours.
+        url: `${MOODLE_BASE}/mod/assign/view.php?id=${a.cmid}`,
       });
     }
   }
@@ -123,6 +125,9 @@ async function echeancesMoodle(token: string, cours: Cours[]): Promise<Deadline[
       src: "moodle",
       code: sigleDe(e.course?.shortname, e.course?.fullname),
       done: false,
+      // Le calendrier d'actions fournit l'URL de l'activité visée (le test,
+      // l'atelier…) ; absente, on ne met rien plutôt qu'un lien approximatif.
+      ...(e.url ? { url: e.url } : {}),
     });
   }
 

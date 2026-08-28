@@ -39,6 +39,8 @@ export type Deadline = {
   src: "mio" | "lea" | "manuel" | "moodle";
   code: string;   // sigle du cours, ex. 320-123-RI — sert à retrouver la teinte
   done: boolean;
+  /** URL exacte de la source (page du devoir Moodle…) — le titre devient cliquable. */
+  url?: string;
 };
 
 /**
