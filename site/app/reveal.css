@@ -1,0 +1,29 @@
+/* La révélation au défilement redevient ce qu'elle aurait toujours dû être
+   sur une page publique : une amélioration.
+
+   Dans agenda.html, [data-rev] part à opacity:0 et n'apparaît qu'une fois le
+   JavaScript exécuté. C'est sans conséquence dans une app qui exige de toute
+   façon JS — mais une vitrine doit être lisible tout de suite : réseau lent,
+   JS bloqué, robot d'indexation qui ne rend rien. Ici le contenu est visible
+   par défaut ; seul ce qui est HORS de l'écran au chargement reçoit .rev et
+   s'anime à l'approche. Rien au-dessus de la ligne de flottaison ne clignote,
+   et sans JS tout reste affiché.
+
+   Ce fichier est importé APRÈS vitrine.css : il en écrase les règles
+   [data-rev], qui sont générées et ne doivent pas être retouchées. */
+
+[data-rev] { opacity: 1; transform: none; }
+
+[data-rev].rev {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity .6s cubic-bezier(.2, .7, .3, 1) var(--d, 0ms),
+    transform .6s cubic-bezier(.2, .7, .3, 1) var(--d, 0ms);
+}
+
+[data-rev].rev.in { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-rev].rev { opacity: 1; transform: none; transition: none; }
+}
