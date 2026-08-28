@@ -45,16 +45,60 @@ reconnexion naturelle de l'étudiant re-synchronise la session.
 Si oui, repli : la collecte Omnivox reste sur les appareils (extension), et
 seul Moodle est serveur.
 
-## Étape 3 — Modèle « item » unifié
+## ✅ Étape 3 — Modèle « item » unifié (fait le 2026-08-28)
 
-Un seul enregistrement pour tout ce qui est collecté, quelle que soit la
-source : `{ source (lea | mio | moodle), cours, genre (message | document |
-devoir | examen), titre, resume, url, publie_le, echeance_le, statut (nouveau
-| vu | fait), consigne }`. Un adaptateur par source, une table Supabase
-`agenda_items` (préfixe `agenda_`, RLS par compte — cohérent avec la vision
-classes). Le tableau de bord devient des tris/filtres sur une collection.
+Deux tables et **une règle** : la collecte n'écrit que dans `agenda_items`,
+l'étudiant que dans `agenda_item_etat`. Aucune des deux n'écrase l'autre.
 
-## Étape 4 — Consignes de l'agent avec URL exacte
+| Objet | Rôle |
+|---|---|
+| `agenda_items` | les FAITS — réécrits à chaque collecte, id stable `source:clé` |
+| `agenda_item_etat` | le CALQUE — vu / fait / supprimé / reporté, **sans clé étrangère** vers les items, pour que la pierre tombale survive au retour de l'item |
+| `agenda_vue_items` | la COLLECTION — la jointure, en `security_invoker`. Toute l'interface est une requête dessus |
+| `src/items/modele.ts` | un adaptateur par source, seul endroit qui connaît la forme d'origine |
+| `src/items/pousser.ts` | la poussée, branchée sur `cli.ts` et `moodle/collect.ts` |
+
+C'est ce qui rend `gone`, `mods`, `acted`, `prunGone`, `memeTitre`,
+`dupEcheance` et `actionSupprimee` inutiles : sept mécanismes pour une seule
+question — « la collecte a-t-elle le droit d'effacer ce que l'étudiant a
+fait ? ». Non. Jamais. Ils vivent encore côté client, le temps que le blob
+soit retiré ; la base, elle, n'en a plus besoin.
+
+Réserve assumée : l'id Léa reste un hachage de « sigle + titre + date », donc
+instable quand le prof déplace une remise. Moodle n'a pas ce défaut. Le
+rapprochement des deux se fait à l'ingestion (`fusionne`), pas à l'affichage.
+
+## ✅ Étape 3 bis — Moodle côté serveur (fait le 2026-08-28)
+
+**L'iPad devient un citoyen de première classe.** Fonction edge
+`agenda-moodle` : elle lit les jetons avec le rôle de service, appelle Moodle,
+écrit les items. Deux entrées, une porte — la clé de service passe tout le
+monde (le cron), un jeton d'utilisateur ne passe que lui (« collecter
+maintenant »). `verify_jwt` ne suffit pas : la fonction revérifie elle-même,
+d'abord.
+
+Le point dur, et sa résolution : le flux mobile de Moodle redirige vers
+`moodlemobile://token=…`, un schéma d'URL qu'une PWA iOS **ne peut pas
+capter**. Un iPad ne peut donc pas obtenir son jeton seul. Il l'obtient par
+`npm run moodle-apparier`, fait une fois depuis n'importe quel ordinateur.
+Ensuite l'iPad ne fait plus que lire. Le jeton monte et **ne redescend
+jamais** : la colonne est hors de portée en lecture pour `authenticated`.
+
+## ✅ Étape 4 — Une classe ↔ un cours Moodle (fait le 2026-08-28)
+
+`agenda_classes.moodle_course_id` (unique) et `agenda_matieres.moodle_course_id`.
+Le gain n'est pas l'appariement mais la **preuve d'appartenance** :
+`agenda_join_class_moodle()` n'ouvre la classe qu'à qui est inscrit au cours
+selon `agenda_moodle_inscriptions`, relevé par le serveur. Plus de code à six
+lettres à faire circuler, et personne d'extérieur ne lit les notes d'une
+classe. La vue `agenda_vue_classes_proposees` remplace le champ « code de
+classe » vide par ce qu'on peut rejoindre.
+
+Nullable, exprès : un même sigle peut avoir plusieurs groupes. Le code
+d'invitation reste la voie des classes non appariées.
+
+## Étape 5 — Consignes de l'agent avec URL exacte
+
 
 Nouveau type d'action `consulter` dans `src/scrape/agent.ts` (le pipeline de
 validation existant l'absorbe) : « va regarder / imprime / complète », dérivé

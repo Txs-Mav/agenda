@@ -17,6 +17,8 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileStore, type Deadline, type Mio } from "../store.js";
+import { itemDEcheance, itemDeDocument, type Item as ItemAgenda } from "../items/modele.js";
+import { pousserItems } from "../items/pousser.js";
 import { config } from "../config.js";
 import { log } from "../log.js";
 import { pushSnapshot, fetchSuppressions } from "../sync/supabase.js";
@@ -204,5 +206,25 @@ export async function collecteMoodle(): Promise<{ nouveautes: number; echeances:
   log.info(`${nextD.length} échéances au total dans l'agenda`);
 
   await pushSnapshot(payload);
+
+  /* Le modèle unifié, en parallèle du blob : chaque remise et chaque document
+     devient un item, avec l'identifiant du cours Moodle — c'est LUI la clé du
+     monde partagé (une classe ↔ un cours Moodle), pas le nom affiché, qui
+     change d'une session à l'autre. */
+  const idParNom = new Map(cours.map((c) => [c.fullname, c.id]));
+  const items: ItemAgenda[] = [
+    ...fresh.map((d) => {
+      const it = itemDEcheance(d);
+      const cid = idParNom.get(d.course);
+      return cid ? { ...it, moodle_course_id: cid } : it;
+    }),
+    ...fraiches.map((n) => itemDeDocument({
+      cle: `${n.sigle || n.cours}:${n.titre}`,
+      titre: n.titre, cours: n.cours, sigle: n.sigle, url: n.url, quand: n.quand,
+      moodleCourseId: idParNom.get(n.cours),
+    })),
+  ];
+  await pousserItems(items);
+
   return { nouveautes: fraiches.length, echeances: fresh.length };
 }

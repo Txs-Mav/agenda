@@ -154,6 +154,28 @@
         "/private/tmp/claude-501/-Users-maverickmenard-Desktop-agenda/9e019ff1-7052-4b57-9f1d-ba1fdb3c4f53/scratchpad/nt"
       ],
       "port": 4271
+    },
+    {
+      "name": "agenda-routeur-4283",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "4283",
+        "/private/tmp/claude-501/-Users-maverickmenard-Desktop-agenda/7563bb06-4e65-441d-9cf6-66bf82ccd165/scratchpad/preview"
+      ],
+      "port": 4283
+    },
+    {
+      "name": "agenda-deco-4297",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "4297",
+        "public"
+      ],
+      "port": 4297
     }
   ]
 }

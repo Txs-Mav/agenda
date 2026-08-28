@@ -65,7 +65,7 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
    navigateurs, animer une largeur ne l'est nulle part. */
 .shell{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.85rem;align-items:start}
 .main{min-width:0}
-.board>div{min-width:0}
+.board>div,.vue>div{min-width:0}
 
 /* ── Barre latérale ───────────────────────────────────────────── */
 .side{
@@ -181,7 +181,10 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 .mono{font-family:var(--mono)}
 
 /* ── Plateau ──────────────────────────────────────────────────── */
-.board{display:flex;flex-direction:column;gap:1.25rem}
+/* Le tableau de bord et les quatre destinations partagent le même rythme
+   vertical : une vue n'est pas une autre matière, c'est le même plateau
+   montré sous un autre filtre. */
+.board,.vue{display:flex;flex-direction:column;gap:1.25rem}
 .r0{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:.85rem;align-items:stretch}
 .r1{display:grid;grid-template-columns:1fr 1.35fr 1fr;gap:.85rem;align-items:stretch}
 .r2{display:grid;grid-template-columns:20rem minmax(0,1fr);gap:.85rem;align-items:start}
@@ -1089,7 +1092,93 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
 .join-cta{justify-content:center;margin-top:.6rem;background:var(--invert);color:var(--on-invert)}
 .join-cta:disabled{opacity:.55;translate:none}
 .jalt{display:flex;align-items:center;gap:.6rem;margin-top:1rem;flex-wrap:wrap}
-.jalt .grow{flex:1 1 auto}
+/* La porte de sortie se met AVANT le formulaire, en haut à gauche, là où le
+   regard entre dans la carte. Sous le bouton d'envoi, entre deux autres liens
+   gris, elle existait sans se voir : on la cherchait après avoir renoncé. */
+.joinbox .jback{align-self:flex-start;margin:-.35rem 0 1.05rem -.25rem;padding:.25rem}
+.joinbox .jback .i{width:15px;height:15px}
+/* ── Le fond d'écolier ────────────────────────────────────────────
+   La carte de compte flottait seule au milieu d'un gris uni : correct,
+   mais muet. On déplie derrière elle le contenu d'une trousse — règle,
+   crayon, compas, fiole, cahier — au trait, en bleu de l'encre du site,
+   avec l'ambre pour seul écart chaud. Le masque radial creuse un trou au
+   centre : le motif n'arrive jamais sous le formulaire, il n'habite que
+   les marges, là où il n'y avait rien à lire. */
+.jodeco{
+  position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;
+  color:var(--ac);opacity:.11;
+  -webkit-mask-image:radial-gradient(62% 52% at 50% 47%,transparent 0 30%,#000 84%);
+  mask-image:radial-gradient(62% 52% at 50% 47%,transparent 0 30%,#000 84%);
+}
+/* Trois objets seulement passent à l'ambre : au-delà, la trame se réchauffe
+   et cesse d'être un fond. */
+.jodeco .wm{color:var(--wa)}
+:root[data-theme="dark"] .jodeco{opacity:.15}
+/* La carte doit rester au-dessus du calque : positionnée, elle reprend la
+   main sur un pseudo-fond en z-index 0. */
+#onboard .joinbox{position:relative;z-index:1}
+@media (max-width:720px){.jodeco{opacity:.09}}
+/* ── Fiabilité du mot de passe ──────────────────────────────────
+   Une jauge, pas un verdict : elle dit ce que vaut le mot de passe
+   pendant qu'on le tape, et le laisse passer quand même. Rien ne part
+   sur le réseau — la mesure se fait ici, à la frappe. */
+.pwj{--niv:var(--line-hi);--nivt:var(--dim);margin-top:.55rem;display:flex;flex-direction:column;gap:.4rem}
+.pwj.n1{--niv:var(--p3);--nivt:var(--p3t)}
+.pwj.n2{--niv:var(--p2);--nivt:var(--p2t)}
+.pwj.n3{--niv:var(--p1);--nivt:var(--p1t)}
+.pwj.n4{--niv:var(--p0);--nivt:var(--p0t)}
+.pwtrack{height:4px;border-radius:99px;background:var(--surface-3);overflow:hidden}
+.pwfill{display:block;height:100%;width:0;border-radius:99px;background:var(--niv);
+  transition:width .3s var(--fold-e),background .3s ease}
+.pwnote{font-family:var(--mono);font-size:.7rem;line-height:1.45;color:var(--dim)}
+.pwnote b{font-weight:650;color:var(--nivt)}
+/* ── Google, Microsoft ──────────────────────────────────────────
+   Sous le formulaire, jamais au-dessus : le compte d'agenda reste la
+   voie principale, ces deux-là sont un raccourci pour qui en a déjà un. */
+.jou{display:flex;align-items:center;gap:.7rem;margin-top:1.15rem;
+  font-family:var(--mono);font-size:.68rem;color:var(--faint)}
+.jou::before,.jou::after{content:"";flex:1;height:1px;background:var(--line-hi)}
+.joauth{display:flex;flex-direction:column;gap:.5rem;margin-top:.75rem}
+.oabtn{display:flex;align-items:center;justify-content:center;gap:.6rem;width:100%;
+  padding:.72rem .9rem;border-radius:13px;border:1px solid var(--line-hi);
+  background:var(--surface);color:var(--ink);font:inherit;font-size:.87rem;font-weight:550;
+  cursor:pointer;transition:background .18s ease,border-color .18s ease}
+@media (hover:hover){.oabtn:hover{background:var(--surface-2)}}
+.oabtn:disabled{opacity:.55;cursor:default}
+.oaic{width:17px;height:17px;flex:none}
+/* Le rail d'étapes : trois segments qui se remplissent. Il ne s'affiche pas
+   à la connexion — un écran unique n'a pas d'étapes à annoncer. */
+.jrail{display:flex;gap:.32rem;margin:0 0 1.05rem}
+.jrail i{height:3px;flex:1 1 0;border-radius:2px;background:var(--line);transition:background .25s}
+.jrail i.on{background:var(--invert)}
+/* La photo se choisit dans le rond qui montre déjà ce qu'elle donnera :
+   les initiales tant qu'il n'y en a pas, l'image dès qu'il y en a une. */
+.javbloc{
+  display:flex;align-items:center;gap:.9rem;margin-top:.9rem;padding:.8rem;
+  border-radius:16px;background:var(--surface-2);border:1px dashed transparent;
+  transition:border-color .15s;
+}
+.javbloc.over{border-color:var(--ac)}
+.javatar{
+  position:relative;flex:0 0 auto;width:4.2rem;height:4.2rem;border-radius:50%;
+  display:grid;place-items:center;background:var(--invert);color:var(--on-invert);
+  font-weight:650;font-size:1.02rem;background-size:cover;background-position:center;
+}
+.javatar .cam,.pav .cam{
+  position:absolute;right:-1px;bottom:-1px;border-radius:50%;display:grid;place-items:center;
+  background:var(--surface);color:var(--ink);box-shadow:var(--shadow);
+}
+.javatar .cam{width:1.55rem;height:1.55rem}
+.javatar .cam .i{width:14px;height:14px}
+.javtxt{display:flex;flex-direction:column;gap:.12rem;font-size:.76rem;line-height:1.45;color:var(--dim)}
+.javtxt b{font-size:.83rem;font-weight:600;color:var(--ink)}
+.javacts{display:flex;gap:.85rem;margin-top:.3rem}
+/* Le rond du profil se clique comme celui de l'inscription. */
+.pav{position:relative;cursor:pointer}
+.pav .cam{width:1.3rem;height:1.3rem}
+.pav .cam .i{width:12px;height:12px}
+/* Une photo prend toute la pastille : plus d'initiales dessous. */
+.me.pic,.javatar.pic{background-size:cover;background-position:center}
 /* ── Fiche d'une matière ────────────────────────────────────────
    Cliquer une matière ouvre sa fiche : ce que l'horaire sait déjà,
    les dates qu'on y ajoute, et les notes qu'on y prend. */
@@ -1248,6 +1337,13 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
 #m-pgcat.on{color:var(--ink)}
 /* Une page liée à une séance de classe le montre sur son bouton. */
 #m-share.on{color:var(--ac)}
+/* Les rangées de la corbeille : titre, provenance, deux gestes. */
+.trlist{display:flex;flex-direction:column;margin-top:.6rem;max-height:16rem;overflow:auto}
+.trrow{display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-top:1px solid var(--line)}
+.trrow .tx{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:.12rem}
+.trrow .tx b{font-size:.82rem;font-weight:600}
+.trrow .tx span{font-size:.7rem;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trrow .kill{opacity:1;flex:0 0 auto}
 /* Les catégories déjà employées reviennent en boutons : la même se
    réutilise d'un clic, sans la retaper. */
 .pop .chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.65rem}
@@ -1366,164 +1462,55 @@ body.nzen #m-notecard .tools{position:sticky;top:0;z-index:6;background:var(--su
 #m-notecard .ch{flex-wrap:wrap}
 
 /* ── Toutes les notes ────────────────────────────────────────────
-   Deux sections, comme un vrai classeur : les dossiers d'abord — une tuile
-   par matière, toutes de la même taille, donc pas d'escalier possible — puis
-   toutes les pages à plat, en colonnes, pour retrouver la bonne d'un coup
-   d'œil sans entrer dans neuf dossiers. */
-/* Le rail : l'arbre des dossiers à gauche, le contenu à droite. Sous 900 px
-   il n'y a pas la place pour deux colonnes — le rail s'efface, et les tuiles
-   redeviennent la navigation, ce qu'elles sont déjà au doigt. */
-.ntwrap{display:grid;grid-template-columns:15.5rem minmax(0,1fr);gap:1.2rem;
-  align-items:start}
-.ntrail{position:sticky;top:.4rem;display:flex;flex-direction:column;gap:.08rem;
-  min-width:0}
-.ntmain{min-width:0}
-@media (max-width:900px){
-  .ntwrap{grid-template-columns:minmax(0,1fr);gap:0}
-  .ntrail{display:none}
-}
-/* Une branche de l'arbre : le dossier, son nom, son compte. Ouverte, elle
-   se remplit — c'est le seul signal dont on a besoin pour savoir où l'on
-   est et ce qui est déplié. */
-.ntnode{display:flex;align-items:center;gap:.45rem;width:100%;min-width:0;
-  padding:.42rem .55rem;border-radius:11px;font-size:.84rem;color:var(--dim);
-  transition:background .15s,color .15s}
-@media (hover:hover){.ntnode:hover{background:var(--surface-2);color:var(--ink)}}
-.ntnode.on{background:var(--surface-2);color:var(--ink);font-weight:600}
-.ntnode .i{width:16px;height:16px;flex:0 0 auto;color:var(--faint)}
-.ntnode.on .i{color:var(--ink)}
-.ntnode.op .i{fill:color-mix(in srgb,currentColor 18%,transparent)}
-.ntnode>span{flex:1 1 auto;min-width:0;text-align:left;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ntnode em{flex:0 0 auto;font-style:normal;font-size:.7rem;color:var(--faint);
-  background:var(--surface-2);border-radius:999px;padding:.1rem .42rem;
-  font-variant-numeric:tabular-nums}
-.ntnode.on em{background:var(--surface-3)}
-/* Les traits de branchement : une verticale qui s'arrête au dernier coude,
-   sinon elle pend dans le vide sous le dernier enfant. */
-.ntkids{position:relative;margin-left:1.2rem;padding-left:.8rem}
-.ntkids::before{content:"";position:absolute;left:0;top:-.1rem;bottom:1rem;
-  width:1px;background:var(--line-hi)}
-.ntkids>.ntnode::before{content:"";position:absolute;left:-.8rem;top:50%;
-  width:.6rem;height:1px;background:var(--line-hi)}
-.ntkids>.ntnode{position:relative}
+   Un dossier par matière, ses pages dedans. Trois règles tiennent la page :
+   une matière sans page n'a pas de carte (elle descend en puce, tout en bas),
+   toutes les cartes d'une rangée ont la même hauteur, et chaque carte a la
+   même anatomie — en-tête, liste, un seul geste au pied. */
+.ntgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(21rem,1fr));
+  gap:.85rem;align-items:stretch}
+.ntfold{display:flex;flex-direction:column;min-width:0}
 
-/* Le chemin, quand on est descendu dans un dossier : il dit où l'on est et
-   ramène en haut. Au niveau racine il n'a rien à dire, donc il se tait. */
-.ntcrumb{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;
-  padding:.9rem .35rem 0;font-size:.8rem;color:var(--faint)}
-.ntcrumb[hidden]{display:none}
-.ntcrumb button{color:var(--dim);transition:color .15s}
-@media (hover:hover){.ntcrumb button:hover{color:var(--ink)}}
-.ntcrumb b{color:var(--ink);font-weight:600}
-.ntvide{padding:.2rem .35rem 0;color:var(--faint);font-size:.82rem}
-.ntvide[hidden]{display:none}
+/* En-tête : la pastille, le nom, son compte. Le compte se lisait à l'autre
+   bout de la carte, à douze rem du mot qu'il comptait ; il revient contre
+   lui. Le filet sépare franchement l'identité du contenu. */
+.ntch{display:flex;align-items:center;gap:.5rem;min-width:0;
+  padding:1rem 1.15rem .8rem;border-bottom:1px solid var(--line)}
+.ntch h3{font-size:.95rem;font-weight:600;letter-spacing:-.015em;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ntcount{flex:0 0 auto;margin-left:auto;font-size:.68rem;font-weight:650;
+  color:var(--faint);font-variant-numeric:tabular-nums;
+  background:var(--surface-2);border-radius:999px;padding:.14rem .5rem}
 
-.ntsec{padding:1.6rem .35rem .7rem;font-size:.66rem;letter-spacing:.11em;
-  text-transform:uppercase;color:var(--faint);font-weight:600}
-.ntsec:first-child{padding-top:.2rem}
-.ntsec[hidden]{display:none}
-
-/* La tuile : le dossier se voit avant de se lire. Taille fixe pour toutes,
-   nom et compte sous l'image — la grille ne dépend plus du contenu. */
-/* Le « min(...) » garde deux tuiles de front sur un téléphone : à 12 rem
-   ferme, la grille tombait à une colonne et le dossier prenait l'écran. */
-.ntgrid{display:grid;gap:.35rem;
-  grid-template-columns:repeat(auto-fill,minmax(min(12rem,45%),1fr))}
-.ntfold{display:flex;flex-direction:column;gap:.5rem;min-width:0;text-align:left;
-  padding:.75rem .75rem 1rem;border-radius:22px;transition:background .15s}
-@media (hover:hover){.ntfold:hover{background:var(--surface-2)}}
-.ntfold:focus-visible{background:var(--surface-2)}
-/* Le dossier lui-même : gris de rangement, languette à la couleur de la
-   matière — neuf teintes pleines feraient un arc-en-ciel, une languette
-   suffit à reconnaître le dossier de loin. */
-.ntfig{position:relative;width:100%}
-.ntfig svg{display:block;width:100%;height:auto}
-.ntfig .bk{fill:color-mix(in srgb, hsl(var(--h,214) 56% 52%) 42%, var(--ftab))}
-.ntfig .ft{fill:var(--fbody)}
-.ntfig .sh{fill:var(--fsheet);stroke:var(--fsheet-l);stroke-width:1}
-/* Le papier doit rester du papier sur fond sombre : à prendre la couleur de
-   la surface, les feuilles devenaient des trous noirs dans le dossier. */
-:root{--ftab:#9BA3AC;--fbody:#C3C9D0;--fsheet:#FFFFFF;--fsheet-l:#E2E6EA}
-:root[data-theme="dark"]{--ftab:#4A5159;--fbody:#5E6670;--fsheet:#D6DBE1;--fsheet-l:#AFB7C0}
-/* Ce que le dossier contient, dit par ses pictogrammes : du texte, un dessin,
-   un document, des annotations. Posés sur le dossier, comme des onglets. */
-.ntkinds{position:absolute;left:10%;bottom:22%;display:flex;gap:.22rem}
-.ntkind{width:1.55rem;height:1.55rem;border-radius:50%;background:var(--surface);
-  display:grid;place-items:center;color:var(--dim);
-  box-shadow:0 1px 3px rgba(0,0,0,.22)}
-.ntkind svg{width:14px;height:14px;stroke-width:2}
-.ntfoot{display:flex;flex-direction:column;gap:.1rem;min-width:0;padding:0 .2rem}
-.ntfoot b{display:flex;align-items:center;gap:.4rem;min-width:0;
-  font-size:.85rem;font-weight:600;letter-spacing:-.01em}
-.ntfoot b span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ntfoot .mpip{margin-right:0;flex:0 0 auto}
-.ntfoot em{font-style:normal;font-size:.73rem;color:var(--faint);
-  font-variant-numeric:tabular-nums}
-/* Sur téléphone il n'y a pas d'infobulle pour rattraper un nom coupé : deux
-   lignes lui sont réservées, les mêmes pour toutes, donc la grille reste
-   droite. Au-dessus, les noms tiennent sur une ligne et la réserve ne
-   laisserait qu'un trou. */
-@media (max-width:560px){
-  .ntfoot b span{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;
-    -webkit-line-clamp:2;line-height:1.25;min-height:2.5em}
-  .ntfoot b{align-items:flex-start}
-  .ntfoot .mpip{margin-top:.42em}
-}
-
-/* Les matières encore vides : une rangée de puces, pas des tuiles creuses.
-   Elles n'ont rien à montrer — seulement une porte à ouvrir. */
-.ntseedh{padding:1.3rem .35rem .6rem;font-size:.66rem;letter-spacing:.11em;
-  text-transform:uppercase;color:var(--faint);font-weight:600}
-.ntseedh[hidden]{display:none}
-.ntseeds{display:flex;flex-wrap:wrap;gap:.45rem;padding:0 .35rem}
-.ntseed{display:inline-flex;align-items:center;gap:.5rem;min-width:0;
-  background:var(--surface);box-shadow:var(--shadow);border-radius:999px;
-  padding:.5rem .95rem .5rem .78rem;font-size:.8rem;color:var(--dim);
-  transition:color .15s,translate .15s}
-.ntseed .mpip{margin-right:0}
-.ntseed span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media (hover:hover){.ntseed:hover{color:var(--ink);translate:0 -1px}}
-
-/* Toutes les pages, à plat et en colonnes : matière, titre, ce qu'elle porte,
-   sa date. Les quatre s'alignent d'une rangée à l'autre — c'est ce qui rend
-   une liste lisible en diagonale. */
-.ntlist[hidden]{display:none}
 .ntpages{list-style:none;padding:0;margin:0}
 .ntpages li{display:flex;align-items:center;gap:.2rem;padding-right:.6rem}
 .ntpages li+li{border-top:1px solid var(--line)}
 @media (hover:hover){.ntpages li:hover{background:var(--surface-2)}}
-.ntpage{flex:1 1 auto;min-width:0;display:grid;align-items:baseline;gap:.15rem .9rem;
-  grid-template-columns:12rem minmax(0,1.5fr) minmax(0,1fr) 5.2rem;
+/* L'étiquette d'une catégorie dans le dossier : un intertitre, pas une
+   rangée — rien ne s'y clique, rien ne s'y allume. */
+.ntpages li.ntcat{display:flex;align-items:baseline;gap:.45rem;
+  padding:.7rem 1.15rem .25rem;border-top:1px solid var(--line);
+  font-size:.62rem;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--faint);font-weight:600}
+.ntpages li.ntcat:first-child{border-top:0}
+.ntpages li.ntcat+li{border-top:0}
+@media (hover:hover){.ntpages li.ntcat:hover{background:transparent}}
+
+/* Une rangée se lit comme un courriel : le nom et sa date sur la première
+   ligne, ce que la page porte sur la seconde. */
+.ntpage{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:.15rem;
   text-align:left;padding:.62rem 0 .62rem 1.15rem}
-.ntsubj{display:flex;align-items:center;gap:.4rem;min-width:0;
-  font-size:.74rem;color:var(--faint)}
-/* Descendu dans un dossier, toutes les rangées portent la même matière : la
-   colonne ne dit plus rien et rend la place au titre. */
-.ntlist.solo .ntsubj{display:none}
-.ntlist.solo .ntpage{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) 5.2rem}
-.ntsubj .mpip{margin-right:0;width:.5rem;height:.5rem}
-.ntsubj span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ntpt{display:flex;align-items:baseline;gap:.6rem;width:100%;min-width:0}
 /* Le titre débordait sur deux lignes et faisait gonfler la carte pendant que
    la description, elle, était tronquée : l'inverse de ce qu'il faut. */
-.ntpage b{min-width:0;font-size:.83rem;font-weight:600;color:var(--ink);
+.ntpt b{flex:1 1 auto;min-width:0;font-size:.83rem;font-weight:600;color:var(--ink);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ntwhat{min-width:0;font-size:.75rem;color:var(--dim);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ntpt time{flex:0 0 auto;font-size:.68rem;color:var(--faint);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.ntwhat{font-size:.73rem;color:var(--dim);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:100%}
 /* Quand il n'y a rien à citer, la ligne dit la nature de la page — et le dit
    sur un autre ton, pour qu'on ne la prenne pas pour du contenu. */
 .ntwhat.void{color:var(--faint);font-style:italic}
-.ntpage time{font-size:.72rem;color:var(--faint);white-space:nowrap;
-  font-variant-numeric:tabular-nums;text-align:right}
-/* Sous 760 px les quatre colonnes ne tiennent plus : la matière et la date
-   remontent en tête de rangée, le titre et le contenu passent dessous. */
-@media (max-width:760px){
-  .ntpage{grid-template-columns:minmax(0,1fr) auto}
-  .ntsubj{grid-column:1}
-  .ntpage time{grid-column:2;grid-row:1}
-  .ntpage b{grid-column:1/-1}
-  .ntwhat{grid-column:1/-1}
-}
 /* Supprimer une page pleine se confirme sur place : le × devient un mot, et
    l'hésitation retombe seule. */
 .ntpages .kill.arm{opacity:1;color:var(--p3);font-size:.7rem;font-weight:600}
@@ -1536,29 +1523,45 @@ body.nzen #m-notecard .tools{position:sticky;top:0;z-index:6;background:var(--su
 @media (hover:hover){.ntpages li:hover .ntcatb{opacity:1}
   .ntcatb:hover{color:var(--ink)}}
 
+/* Le geste est au même endroit sur toutes les cartes : au pied, poussé par
+   la liste. Sans ça il remontait coller le titre sur les dossiers courts, et
+   le bas des rangées partait en escalier. */
+.ntadd{margin-top:auto;display:flex;align-items:center;gap:.45rem;
+  padding:.68rem 1.15rem;border-top:1px solid var(--line);
+  font-size:.78rem;font-weight:550;color:var(--faint);
+  transition:background .15s,color .15s}
+.ntadd svg{width:13px;height:13px;flex:0 0 auto}
+@media (hover:hover){.ntadd:hover{background:var(--surface-2);color:var(--ink)}}
 
-/* Encres. Chaque teinte a sa version sombre : un bleu à 48 % de clarté
-   disparaît sur une carte noire. */
-:root{
-  --hlo:.30;
-  --ic-ink:var(--ink);       --ic-rouge:hsl(2 74% 47%);   --ic-ambre:hsl(36 92% 42%);
-  --ic-vert:hsl(148 62% 33%); --ic-bleu:hsl(214 80% 47%); --ic-violet:hsl(272 60% 52%);
-}
-:root[data-theme="dark"]{
-  --hlo:.40;
-  --ic-rouge:hsl(2 90% 69%);  --ic-ambre:hsl(38 94% 62%);
-  --ic-vert:hsl(148 62% 56%); --ic-bleu:hsl(212 92% 68%); --ic-violet:hsl(274 82% 74%);
-}
+/* Les matières encore vides : une rangée de puces, pas cinq cartes creuses.
+   Elles n'ont rien à montrer — seulement une porte à ouvrir. */
+.ntseedh{display:flex;align-items:baseline;gap:.5rem;padding:1.5rem .35rem .6rem;
+  font-size:.66rem;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--faint);font-weight:600}
+.ntseedh[hidden]{display:none}
+.ntseeds{display:flex;flex-wrap:wrap;gap:.45rem;padding:0 .35rem}
+.ntseed{display:inline-flex;align-items:center;gap:.5rem;min-width:0;
+  background:var(--surface);box-shadow:var(--shadow);border-radius:999px;
+  padding:.5rem .95rem .5rem .78rem;font-size:.8rem;color:var(--dim);
+  transition:color .15s,translate .15s}
+.ntseed .mpip{margin-right:0}
+.ntseed span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (hover:hover){.ntseed:hover{color:var(--ink);translate:0 -1px}}
 
-.tools{display:flex;align-items:center;gap:.25rem;flex-wrap:wrap;padding:.1rem 1.2rem .55rem}
-.tools .grow{flex:1 1 auto}
-.tools .sep{width:1px;height:1.15rem;background:var(--line-hi);margin:0 .3rem;flex:0 0 auto}
-.tl{width:2rem;height:2rem;border-radius:10px;display:grid;place-items:center;
-  color:var(--dim);transition:background .15s,color .15s,opacity .15s;flex:0 0 auto}
-@media (hover:hover){.tl:hover:not(:disabled){background:var(--surface-2);color:var(--ink)}}
-.tl.on{background:var(--invert);color:var(--on-invert)}
-.tl:disabled{opacity:.28}
-.tl .i{width:16px;height:16px}
+/* Deux gestes au pied du dossier, côte à côte. */
+.ntfoots{margin-top:auto;display:flex;border-top:1px solid var(--line)}
+.ntfoots .ntadd{margin-top:0;border-top:0;flex:1 1 0;justify-content:center}
+.ntfoots .ntadd+.ntadd{border-left:1px solid var(--line)}
+/* Le + d'un sous-dossier : discret, révélé au survol comme ses voisins. */
+.ntcat .grow{flex:1 1 auto}
+.ntcatadd{flex:0 0 auto;display:flex;align-items:center;padding:.1rem .2rem;color:var(--faint);
+  opacity:0;transition:opacity .15s,color .15s}
+.ntcatadd svg{width:13px;height:13px}
+@media (hover:hover){.ntpages li:hover .ntcatadd{opacity:1}
+  .ntcatadd:hover{color:var(--ink)}}
+/* Au doigt, pas de survol : les gestes de rangée restent visibles, en retrait. */
+@media (hover:none){.ntpages .kill,.ntpages .ntcatb,.ntcatadd{opacity:.5}}
+
 .swz{display:flex;gap:.3rem;align-items:center}
 .swz[hidden]{display:none}
 .sw{width:1.05rem;height:1.05rem;border-radius:50%;background:var(--c);flex:0 0 auto;
@@ -2105,12 +2108,12 @@ a,button{touch-action:manipulation}
 
   <div class="main">
     <header class="head" id="apphead">
-      <h1 class="hi" id="greet">Salut, <span id="hi-name">Maverick</span>&nbsp;!<small id="stamp"></small></h1>
+      <h1 class="hi" id="greet">Salut, <span id="hi-name">Moi</span>&nbsp;!<small id="stamp"></small></h1>
       <span class="grow"></span>
       <button class="pill" id="add-week"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Semaine</button>
       <button class="rnd" id="go-alerts" title="Échéances"><svg class="i" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 13 6 9zM10 18.5a2 2 0 0 0 4 0"/></svg><span class="dot" id="bell-dot" hidden></span></button>
       <button class="rnd" id="go-theme" title="Basculer le thème"><span id="th-icon"></span></button>
-      <button class="me" id="go-profile" title="Mon profil">MM</button>
+      <button class="me" id="go-profile" title="Mon profil">M</button>
     </header>
 
     <div class="board" id="board">
@@ -2188,7 +2191,7 @@ a,button{touch-action:manipulation}
 
         <section class="card fx" id="echeances">
           <div class="ch"><h3>Échéances</h3><span class="dim" id="e-n"></span><span class="grow"></span>
-            <span class="scale" style="width:4.2rem;margin:0" title="L'urgence se calcule à partir de la date"></span></div>
+            <button class="link" data-go="echeances">Tout voir <svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button></div>
           <ul class="nlist" id="deadlines"></ul>
           <div class="emptybox" id="dl-empty">
             <svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg>
@@ -2199,7 +2202,8 @@ a,button{touch-action:manipulation}
         </section>
 
         <section class="card fx" id="mios">
-          <div class="ch"><h3>Résumés MIO</h3><span class="grow"></span><span class="mono dim" id="mio-n" style="font-size:.72rem"></span></div>
+          <div class="ch"><h3>MIO</h3><span class="mono dim" id="mio-n" style="font-size:.72rem"></span><span class="grow"></span>
+            <button class="link" data-go="mios">Tout voir <svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button></div>
           <div class="miolist" id="miolist"></div>
           <div class="emptybox" id="mio-empty">
             <svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 8.2 6 8.2-6"/></svg>
@@ -2211,53 +2215,93 @@ a,button{touch-action:manipulation}
         </section>
       </div>
 
-      <div id="horaire">
-        <div class="sect"><h2>Horaire</h2><span class="dim mono" style="font-size:.75rem" id="h-sub"></span><span class="grow"></span>
-          <button class="fchip" id="h-unfilter" hidden><i></i><b></b><span>&times;</span></button>
-          <div class="wnav" id="wnav">
-            <button class="wn" id="w-prev" title="Semaine précédente" aria-label="Semaine précédente"><svg class="i" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></button>
-            <button class="wn lab" id="w-now">Aujourd'hui</button>
-            <button class="wn" id="w-next" title="Semaine suivante" aria-label="Semaine suivante"><svg class="i" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button>
-          </div>
-          <button class="link" id="add-week2" hidden>Ajouter une semaine <svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button>
-          <button class="link" id="h-reset" hidden></button>
-          <button class="link" id="h-mode"></button></div>
-        <div class="stack" id="weeks"></div>
-      </div>
-
-      <div id="cours">
-        <div class="sect"><h2>Mes cours <span class="dim" id="c-n"></span></h2><span class="grow"></span>
-          <span class="link mono" style="font-size:.7rem">session A26</span></div>
-        <div class="cgrid" id="courses"></div>
-      </div>
-
-      <div id="marques">
-        <div class="sect"><h2>Examens et business</h2><span class="grow"></span>
-          <span class="link mono" style="font-size:.7rem">marqués à l'horaire</span></div>
-        <div class="mkgrid">
-          <section class="card fx" id="w-exam">
-            <div class="ch"><h3>Examens</h3><span class="dim" id="mk-exam-n"></span><span class="grow"></span>
-              <span class="ico"><svg class="i" viewBox="0 0 24 24"><path d="M6 3.5h12v17H6z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span></div>
-            <ul class="nlist" id="mk-exam"></ul>
-            <div class="emptybox" id="mk-exam-empty">
-              <svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><path d="M6 3.5h12v17H6z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
-              <b>Aucun examen marqué</b>
-              <span>Dans l'horaire, choisis une case libre, nomme le bloc, puis clique « Examen » : il se range ici, avec son compte à rebours. Une séance de cours se marque de la même façon — clique-la, « Modifier », « Examen ».</span>
-            </div>
-          </section>
-          <section class="card fx" id="w-biz">
-            <div class="ch"><h3>Business</h3><span class="dim" id="mk-biz-n"></span><span class="grow"></span>
-              <span class="ico"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="7.5" width="18" height="12.5" rx="2.5"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3 12.5h18"/></svg></span></div>
-            <ul class="nlist" id="mk-biz"></ul>
-            <div class="emptybox" id="mk-biz-empty">
-              <svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><rect x="3" y="7.5" width="18" height="12.5" rx="2.5"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3 12.5h18"/></svg>
-              <b>Rien au programme</b>
-              <span>Le même geste, avec « Business » : rendez-vous, appels et livraisons se rangent ici, hors de l'échelle d'urgence scolaire.</span>
-            </div>
-          </section>
-        </div>
-      </div>
     </div>
+
+    <!-- ── Les quatre destinations ──────────────────────────────────────
+         Elles étaient des ancres À L'INTÉRIEUR du tableau de bord, atteintes
+         par un défilement : cliquer « Horaire » ne menait nulle part, la
+         section était déjà à l'écran. Ce sont maintenant des vues à part
+         entière, chacune avec son adresse — #/horaire, #/echeances, #/mio,
+         #/cours. Le bouton retour du navigateur marche, un lien se met en
+         signet, et la barre latérale peut enfin dire OÙ l'on est.
+         Le tableau de bord n'en garde que des extraits, coiffés d'un
+         « Tout voir → » qui mène ici. -->
+    <div class="vue" id="vhoraire" hidden>
+        <div id="horaire">
+          <div class="sect"><h2>Horaire</h2><span class="dim mono" style="font-size:.75rem" id="h-sub"></span><span class="grow"></span>
+            <button class="fchip" id="h-unfilter" hidden><i></i><b></b><span>&times;</span></button>
+            <div class="wnav" id="wnav">
+              <button class="wn" id="w-prev" title="Semaine précédente" aria-label="Semaine précédente"><svg class="i" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></button>
+              <button class="wn lab" id="w-now">Aujourd'hui</button>
+              <button class="wn" id="w-next" title="Semaine suivante" aria-label="Semaine suivante"><svg class="i" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button>
+            </div>
+            <button class="link" id="add-week2" hidden>Ajouter une semaine <svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button>
+            <button class="link" id="h-reset" hidden></button>
+            <button class="link" id="h-mode"></button></div>
+          <div class="stack" id="weeks"></div>
+        </div>
+    </div>
+
+    <div class="vue" id="vecheances" hidden>
+      <div class="sect"><h2>Échéances <span class="dim" id="ev-n"></span></h2><span class="grow"></span>
+        <button class="link" id="ev-add">Ajouter une échéance <svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg></button></div>
+      <section class="card fx" id="ech-page">
+        <ul class="nlist" id="deadlines-all"></ul>
+        <div class="emptybox" id="dla-empty">
+          <svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg>
+          <b>Rien ne presse</b>
+          <span>Aucune remise ni examen pour l'instant. Ce que Léa, MIO et Moodle annoncent se range ici tout seul.</span>
+        </div>
+      </section>
+        <div id="marques">
+          <div class="sect"><h2>Examens et business</h2><span class="grow"></span>
+            <span class="link mono" style="font-size:.7rem">marqués à l'horaire</span></div>
+          <div class="mkgrid">
+            <section class="card fx" id="w-exam">
+              <div class="ch"><h3>Examens</h3><span class="dim" id="mk-exam-n"></span><span class="grow"></span>
+                <span class="ico"><svg class="i" viewBox="0 0 24 24"><path d="M6 3.5h12v17H6z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span></div>
+              <ul class="nlist" id="mk-exam"></ul>
+              <div class="emptybox" id="mk-exam-empty">
+                <svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><path d="M6 3.5h12v17H6z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+                <b>Aucun examen marqué</b>
+                <span>Dans l'horaire, choisis une case libre, nomme le bloc, puis clique « Examen » : il se range ici, avec son compte à rebours. Une séance de cours se marque de la même façon — clique-la, « Modifier », « Examen ».</span>
+              </div>
+            </section>
+            <section class="card fx" id="w-biz">
+              <div class="ch"><h3>Business</h3><span class="dim" id="mk-biz-n"></span><span class="grow"></span>
+                <span class="ico"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="7.5" width="18" height="12.5" rx="2.5"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3 12.5h18"/></svg></span></div>
+              <ul class="nlist" id="mk-biz"></ul>
+              <div class="emptybox" id="mk-biz-empty">
+                <svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><rect x="3" y="7.5" width="18" height="12.5" rx="2.5"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3 12.5h18"/></svg>
+                <b>Rien au programme</b>
+                <span>Le même geste, avec « Business » : rendez-vous, appels et livraisons se rangent ici, hors de l'échelle d'urgence scolaire.</span>
+              </div>
+            </section>
+          </div>
+        </div>
+    </div>
+
+    <div class="vue" id="vmio" hidden>
+      <div class="sect"><h2>MIO <span class="dim" id="mv-n"></span></h2><span class="grow"></span>
+        <span class="link mono" style="font-size:.7rem">collecte à chaque heure <span id="last-scrape2"></span></span></div>
+      <section class="card fx" id="mio-page">
+        <div class="miolist" id="miolist-all"></div>
+        <div class="emptybox" id="mioa-empty">
+          <svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 8.2 6 8.2-6"/></svg>
+          <b>Aucun message collecté</b>
+          <span>Chaque MIO est lu en entier puis résumé ici. Les examens, remises, tâches et rencontres qu'il annonce s'ajoutent tout seuls à l'agenda.</span>
+        </div>
+      </section>
+    </div>
+
+    <div class="vue" id="vcours" hidden>
+        <div id="cours">
+          <div class="sect"><h2>Mes cours <span class="dim" id="c-n"></span></h2><span class="grow"></span>
+            <span class="link mono" style="font-size:.7rem">session A26</span></div>
+          <div class="cgrid" id="courses"></div>
+        </div>
+    </div>
+
 
     <div id="profil" hidden>
       <div class="sect"><h2>Mon profil</h2><span class="grow"></span>
@@ -2266,11 +2310,20 @@ a,button{touch-action:manipulation}
         <section class="card fx">
           <div class="ch"><h3>Mes infos</h3></div>
           <div class="pbody">
-            <div class="prow">
-              <span class="me" id="p-avatar" aria-hidden="true">MM</span>
+            <div class="prow" id="p-avatar-zone">
+              <button class="me pav" id="p-avatar" type="button" title="Changer ma photo">
+                <span class="ini">M</span>
+                <i class="cam"><svg class="i" viewBox="0 0 24 24"><path d="M4 8.5h3.2l1.4-2h6.8l1.4 2H20v10H4z"/><circle cx="12" cy="13" r="3.2"/></svg></i>
+              </button>
               <div><span class="lab">Nom affiché</span>
                 <input class="pin" id="p-name" type="text" maxlength="40" placeholder="Ton nom"></div>
             </div>
+            <div class="javacts">
+              <button class="link" id="p-av-pick">Changer ma photo</button>
+              <button class="link" id="p-av-del" hidden>Retirer la photo</button>
+              <input id="p-av-file" type="file" accept="image/*" hidden>
+            </div>
+            <p class="dim" id="p-av-msg" style="font-size:.78rem"></p>
             <span class="lab">Compte d'agenda</span>
             <p class="dim" id="p-email" style="font-size:.85rem"></p>
             <div class="prow" style="gap:.5rem;flex-wrap:wrap">
@@ -2284,6 +2337,10 @@ a,button{touch-action:manipulation}
           <div class="pbody">
             <p class="dim" style="font-size:.78rem">Change le mot de passe de ton compte d'agenda. Tes identifiants Omnivox ne passent jamais par ici.</p>
             <input class="pin" id="p-pw1" type="password" placeholder="Nouveau mot de passe (8+ caractères)" autocomplete="new-password">
+            <div class="pwj" id="p-pw-j" hidden>
+              <div class="pwtrack" aria-hidden="true"><span class="pwfill" id="p-pw-fill"></span></div>
+              <p class="pwnote" aria-live="polite"><b id="p-pw-mot"></b><span id="p-pw-dit"></span></p>
+            </div>
             <input class="pin" id="p-pw2" type="password" placeholder="Confirme le mot de passe" autocomplete="new-password">
             <p class="dim" id="p-pw-msg" style="font-size:.78rem"></p>
             <button class="btn solid" id="p-pw-btn" style="align-self:flex-start">Changer le mot de passe</button>
@@ -2313,7 +2370,7 @@ a,button{touch-action:manipulation}
     <div id="matiere" hidden>
       <div class="sect"><h2><i class="mpip" id="m-pip"></i><span id="m-title">Matière</span></h2><span class="grow"></span>
         <button class="link" id="m-filter"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17"/></svg> <span id="m-flabel">Voir à l'horaire</span></button>
-        <button class="link" id="m-back"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg> Retour au tableau de bord</button></div>
+        <button class="link" id="m-back"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg> Mes cours</button></div>
       <div class="mgrid">
         <div class="mcol">
           <section class="card fx">
@@ -2422,20 +2479,11 @@ a,button{touch-action:manipulation}
 
     <div id="notes" hidden>
       <div class="sect"><h2>Toutes les notes <span class="dim" id="nt-n"></span></h2><span class="grow"></span>
+        <button class="link" id="nt-trash" hidden title="Les pages supprimées attendent trente jours ici"><svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M5 7h14M9.5 7V5.5A1.5 1.5 0 0 1 11 4h2a1.5 1.5 0 0 1 1.5 1.5V7M7 7l1 12.5h8L17 7"/></svg> <span>Corbeille</span></button>
         <button class="link" id="nt-back"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg> Retour au tableau de bord</button></div>
-      <div class="ntwrap">
-        <aside class="ntrail" id="nt-rail"></aside>
-        <div class="ntmain">
-          <div class="ntcrumb" id="nt-crumb" hidden></div>
-          <div class="ntsec" id="nt-foldh">Dossiers</div>
-          <div class="ntgrid" id="nt-grid"></div>
-          <p class="ntvide" id="nt-vide" hidden></p>
-          <div class="ntseedh" id="nt-seedh" hidden>Pas encore de notes</div>
-          <div class="ntseeds" id="nt-seeds"></div>
-          <div class="ntsec" id="nt-pagesh" hidden>Pages <span class="dim" id="nt-pn"></span></div>
-          <section class="card ntlist" id="nt-list" hidden><ul class="ntpages" id="nt-pages"></ul></section>
-        </div>
-      </div>
+      <div class="ntgrid" id="nt-grid"></div>
+      <div class="ntseedh" id="nt-seedh" hidden>Pas encore de notes</div>
+      <div class="ntseeds" id="nt-seeds"></div>
     </div>
 
     <div id="landing" hidden>
@@ -2453,19 +2501,18 @@ a,button{touch-action:manipulation}
 
       <section class="lp-hero">
         <a class="lp-badge" href="demo-classes.html" data-rev style="--d:0ms">
-          <b>Nouveau</b> Rejoins ta classe — discussions et notes partagées
+          <b>Nouveau</b> Rejoins ta classe&nbsp;: discussions et notes partagées
           <svg class="i" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg>
         </a>
         <h2 data-rev style="--d:60ms">Tout ton cégep,<br><span class="lp-grad">au même endroit.</span></h2>
-        <p class="lp-lead" data-rev style="--d:120ms">Tes notes, tes MIO, tes échéances, ton horaire, tes Moodle —
-          regroupés dans un seul agenda. Et ta classe au complet&nbsp;: discussions, notes partagées,
+        <p class="lp-lead" data-rev style="--d:120ms">Tes notes, tes MIO, tes échéances, ton horaire, tes Moodle,
+          tout est regroupé dans un seul agenda. Et ta classe au complet&nbsp;: discussions, notes partagées,
           documents annotés.</p>
         <div class="ctas lp-ctas" data-rev style="--d:180ms">
           <button class="cta lp-cta" id="cta-open">Créer mon compte
             <svg class="i" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button>
           <a class="cta ghosty lp-ghost" href="#comment">Voir comment ça marche</a>
         </div>
-        <p class="fine" data-rev style="--d:240ms">Courriel + mot de passe · 2 minutes · tes identifiants Omnivox restent chez toi</p>
 
         <!-- Le produit, dessiné en HTML pur : rien à charger, rien à casser. -->
         <div class="lp-shot" data-rev style="--d:120ms">
@@ -2499,7 +2546,7 @@ a,button{touch-action:manipulation}
                     <span class="t">Échéances</span>
                     <div class="row"><i style="background:#E0483A"></i><div><b>Questionnaire médical</b><span class="cd" style="color:#C4392C">Dans 6 jours</span></div></div>
                     <div class="row"><i style="background:#E8912B"></i><div><b>Actualité géographique 1</b><span class="cd" style="color:#A2620F">Dans 8 jours</span></div></div>
-                    <div class="row"><i style="background:#3FA457"></i><div><b>Examen 1 — Philo</b><span class="cd" style="color:#2E7D45">Dans 25 jours</span></div></div>
+                    <div class="row"><i style="background:#3FA457"></i><div><b>Examen 1 · Philo</b><span class="cd" style="color:#2E7D45">Dans 25 jours</span></div></div>
                     <div class="row"><i style="background:#3A6EA5"></i><div><b>Rapport de laboratoire</b><span class="cd" style="color:#1C3D5D">Dans 32 jours</span></div></div>
                   </div>
                 </div>
@@ -2534,7 +2581,7 @@ a,button{touch-action:manipulation}
         <div class="txt">
           <span class="lp-kick" style="--k:#D2503F">Échéances</span>
           <h3>L'urgence se calcule <em class="lp-grad">toute seule</em>.</h3>
-          <p class="dim">Chaque remise et chaque évaluation arrive de Léa, datée et classée —
+          <p class="dim">Chaque remise et chaque évaluation arrive de Léa, datée et classée&nbsp;:
             du vert au rouge à mesure que la date approche.</p>
         </div>
       </section>
@@ -2548,7 +2595,7 @@ a,button{touch-action:manipulation}
         <div class="txt">
           <span class="lp-kick" style="--k:var(--ac)">MIO</span>
           <h3>Chaque message, <em class="lp-grad">une phrase</em>.</h3>
-          <p class="dim">L'agent lit les nouveaux MIO, en tire l'essentiel — et l'action
+          <p class="dim">L'agent lit les nouveaux MIO et en tire l'essentiel. L'action
             qui s'y cache devient une échéance d'un clic.</p>
         </div>
       </section>
@@ -2573,7 +2620,7 @@ a,button{touch-action:manipulation}
         <figure class="lp-pic">
           <div class="lp-nb" aria-hidden="true">
             <div class="tb"><i class="on"></i><i></i><i></i><i></i><em>PHY-NYB · séance 4</em></div>
-            <b>Chute libre — l'essentiel</b>
+            <b>Chute libre&nbsp;: l'essentiel</b>
             <span class="l w9"></span>
             <span class="l hl w7"></span>
             <span class="l w8"></span>
@@ -2585,8 +2632,8 @@ a,button{touch-action:manipulation}
         <div class="txt">
           <span class="lp-kick" style="--k:#D9539B">Notes</span>
           <h3>Une page blanche <em class="lp-grad">par cours</em>.</h3>
-          <p class="dim">Écris, dessine, surligne, annote — tes notes vivent juste à côté de l'horaire
-            et des échéances. Importe tes documents — plan de cours, PDF, diapos — et prends
+          <p class="dim">Écris, dessine, surligne, annote&nbsp;: tes notes vivent juste à côté de l'horaire
+            et des échéances. Importe tes documents (plan de cours, PDF, diapos) et prends
             tes notes directement dessus.</p>
         </div>
       </section>
@@ -2597,15 +2644,15 @@ a,button{touch-action:manipulation}
           <div class="lp-cl" aria-hidden="true">
             <div class="hd"><b>Physique NYB</b><span>code R4KMT7 · 23 élèves</span></div>
             <div class="bub"><i>LB</i><div><b>Laurie</b><span>Quelqu'un a les notes de la séance 4&nbsp;?</span></div></div>
-            <div class="bub me"><div><b>Toi</b><span>Je viens de les partager — schéma annoté inclus.</span></div></div>
-            <div class="doc"><span class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M3.5 7A2.5 2.5 0 0 1 6 4.5h3.6l2 2.5H18a2.5 2.5 0 0 1 2.5 2.5v7.5A2.5 2.5 0 0 1 18 19.5H6A2.5 2.5 0 0 1 3.5 17z"/></svg></span><div><b>Chute libre — l'essentiel</b><span>note partagée · séance 4</span></div></div>
+            <div class="bub me"><div><b>Toi</b><span>Je viens de les partager, schéma annoté inclus.</span></div></div>
+            <div class="doc"><span class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M3.5 7A2.5 2.5 0 0 1 6 4.5h3.6l2 2.5H18a2.5 2.5 0 0 1 2.5 2.5v7.5A2.5 2.5 0 0 1 18 19.5H6A2.5 2.5 0 0 1 3.5 17z"/></svg></span><div><b>Chute libre&nbsp;: l'essentiel</b><span>note partagée · séance 4</span></div></div>
           </div>
         </figure>
         <div class="txt">
           <span class="lp-kick" style="--k:#2E7CD6">Classes</span>
           <h3>Un code, et ta classe <em class="lp-grad">met tout en commun</em>.</h3>
           <p class="dim">Rejoins ta classe par un code d'invitation&nbsp;: fil de discussion, notes de séance
-            partagées, pages de révision par examen — tout le monde y écrit, tout le monde y voit.</p>
+            partagées, pages de révision par examen. Tout le monde y écrit, tout le monde y voit.</p>
           <a class="lp-more" href="demo-classes.html">Explorer une classe de démo
             <svg class="i" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></a>
         </div>
@@ -2673,29 +2720,169 @@ a,button{touch-action:manipulation}
       </section>
 
       <footer class="lpfoot">
-        <span>Agenda Cégep — outil personnel, non affilié au Cégep de Trois-Rivières ni à Skytech.</span>
+        <span>Agenda Cégep&nbsp;: outil personnel, non affilié au Cégep de Trois-Rivières ni à Skytech.</span>
         <span class="grow"></span>
         <a href="guide.html">Guide d'installation</a>
       </footer>
     </div>
 
     <div id="onboard" hidden>
+      <!-- La trousse en filigrane. Un seul motif de 360 px, tourné de sept
+           degrés pour que la répétition ne se lise pas comme un damier. -->
+      <svg class="jodeco" width="100%" height="100%" aria-hidden="true" focusable="false">
+        <defs>
+          <pattern id="jo-trousse" width="360" height="360" patternUnits="userSpaceOnUse"
+                   patternTransform="rotate(-7) scale(.9)">
+            <g fill="none" stroke="currentColor" stroke-width="1.6"
+               stroke-linecap="round" stroke-linejoin="round">
+              <!-- Règle -->
+              <g transform="translate(14 28) rotate(-4)">
+                <rect x=".8" y=".8" width="64" height="15" rx="2.5"/>
+                <path d="M10 .8V6M18 .8V4M26 .8V6M34 .8V4M42 .8V6M50 .8V4M58 .8V6"/>
+              </g>
+              <!-- Ampoule : l'idée qu'on vient chercher ici -->
+              <g class="wm" transform="translate(98 22) rotate(-6)">
+                <circle cx="17" cy="17" r="14"/>
+                <path d="M10 33h14M11.5 38.5h11M13.5 44h7"/>
+                <path d="M2 4 5.5 7.5M32 4 28.5 7.5"/>
+              </g>
+              <!-- Crayon -->
+              <g class="wm" transform="translate(156 20) rotate(12)">
+                <path d="M0 6.5 11 0h37v13H11Z"/>
+                <path d="M11 0v13M41 0v13"/>
+                <path d="M48 0h5a6.5 6.5 0 0 1 0 13h-5"/>
+              </g>
+              <!-- Équerre -->
+              <g transform="translate(262 14) rotate(-10)">
+                <path d="M1 1h56L1 39Z"/>
+                <path d="M8.5 8h34L8.5 31.5Z"/>
+              </g>
+              <!-- Compas, et l'arc qu'il vient de tracer -->
+              <g transform="translate(40 88) rotate(6)">
+                <path d="M30 9 15 54M30 9l14 40M44 48l3 9"/>
+                <circle cx="30" cy="6.5" r="3.4"/>
+                <path d="M30 0v3"/>
+                <path d="M13 57q19 6 36-4" stroke-dasharray="3 4.5"/>
+              </g>
+              <!-- Livre ouvert -->
+              <g transform="translate(146 104) rotate(-5)">
+                <path d="M1 6c9-5 20-5 29 1 9-6 20-6 29-1v30c-9-5-20-5-29 1-9-6-20-6-29-1Z"/>
+                <path d="M30 7v31"/>
+              </g>
+              <!-- Atome -->
+              <g transform="translate(266 92)">
+                <circle cx="30" cy="30" r="3.6"/>
+                <ellipse cx="30" cy="30" rx="28" ry="11"/>
+                <ellipse cx="30" cy="30" rx="28" ry="11" transform="rotate(60 30 30)"/>
+                <ellipse cx="30" cy="30" rx="28" ry="11" transform="rotate(120 30 30)"/>
+              </g>
+              <!-- Rapporteur -->
+              <g transform="translate(12 196) rotate(8)">
+                <path d="M0 32a32 32 0 0 1 64 0Z"/>
+                <path d="M9 32a23 23 0 0 1 46 0"/>
+                <path d="M32 32V21M14.5 27 18 18.5M49.5 27 46 18.5"/>
+              </g>
+              <!-- Pi -->
+              <g transform="translate(92 200) rotate(5)">
+                <path d="M2 6h30M11 6v24M24 6v20c0 4 3 5.5 6.5 4"/>
+              </g>
+              <!-- Fiole -->
+              <g transform="translate(146 182) rotate(-6)">
+                <path d="M15 1v17L8 42a6 6 0 0 0 5 9h19a6 6 0 0 0 5-9l-7-24V1"/>
+                <path d="M12 1h21M10.5 38h26"/>
+              </g>
+              <!-- Calculatrice -->
+              <g transform="translate(212 190) rotate(-5)">
+                <rect x="1" y="1" width="34" height="48" rx="4"/>
+                <rect x="6" y="6.5" width="24" height="9.5" rx="2"/>
+                <path d="M9 25h.01M18 25h.01M27 25h.01M9 32h.01M18 32h.01M27 32h.01M9 39h.01M18 39h.01M27 39h.01"/>
+              </g>
+              <!-- Trombone -->
+              <g transform="translate(300 186) rotate(12)">
+                <path d="M15 54V13a10 10 0 0 1 20 0v33a6.5 6.5 0 0 1-13 0V19"/>
+              </g>
+              <!-- Notes de musique -->
+              <g transform="translate(26 272) rotate(4)">
+                <ellipse cx="7" cy="43" rx="7" ry="5.2" transform="rotate(-20 7 43)"/>
+                <ellipse cx="33" cy="38" rx="7" ry="5.2" transform="rotate(-20 33 38)"/>
+                <path d="M14 41.5V5M40 36.5V1.5M14 5 40 1.5M14 11 40 7.5"/>
+              </g>
+              <!-- Cahier à spirale -->
+              <g transform="translate(140 268) rotate(-8)">
+                <rect x="7" y="8" width="44" height="47" rx="3.5"/>
+                <path d="M15 12a4.5 4.5 0 0 1 0-9M25 12a4.5 4.5 0 0 1 0-9M35 12a4.5 4.5 0 0 1 0-9M45 12a4.5 4.5 0 0 1 0-9"/>
+                <path d="M14 23h30M14 32h30M14 41h20"/>
+              </g>
+              <!-- Globe -->
+              <g transform="translate(222 264)">
+                <circle cx="27" cy="27" r="26"/>
+                <ellipse cx="27" cy="27" rx="11" ry="26"/>
+                <path d="M1 27h52M6 13q21 8 42 0M6 41q21-8 42 0"/>
+              </g>
+              <!-- Gomme -->
+              <g class="wm" transform="translate(292 288) rotate(14)">
+                <rect x="1" y="1" width="42" height="19" rx="3"/>
+                <path d="M18 1v19"/>
+              </g>
+            </g>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#jo-trousse)"/>
+      </svg>
       <section class="card fx joinbox">
-        <span class="jic"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></span>
-        <h2 id="jo-title">Crée ton compte d'agenda</h2>
-        <p class="dim jsub" id="jo-sub">Un courriel et un mot de passe, rien de plus : c'est ce qui te
-          rend ton agenda sur n'importe quel appareil. Tes identifiants Omnivox n'y transitent jamais.</p>
+        <button class="link jback" id="jo-home">
+          <svg class="i" viewBox="0 0 24 24"><path d="M14.5 6 8.5 12l6 6"/></svg><span id="jo-home-t">Retour à l'accueil</span></button>
+        <div class="jrail" id="jo-rail" hidden><i></i><i></i><i></i></div>
+        <span class="jic" id="jo-ic"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></span>
+        <h2 id="jo-title">Comment on t'appelle&nbsp;?</h2>
+        <p class="dim jsub" id="jo-sub">Ce nom accueille ton tableau de bord et te désigne dans tes
+          classes. La photo est facultative — sans elle, ce sont tes initiales.</p>
+        <div class="javbloc" id="jo-avbloc" hidden>
+          <button class="javatar" id="jo-av" type="button" title="Choisir une photo">
+            <span class="ini">?</span>
+            <i class="cam"><svg class="i" viewBox="0 0 24 24"><path d="M4 8.5h3.2l1.4-2h6.8l1.4 2H20v10H4z"/><circle cx="12" cy="13" r="3.2"/></svg></i>
+          </button>
+          <div class="javtxt">
+            <b>Ta photo <span class="dim">— facultative</span></b>
+            <span>Clique le rond ou glisse une image ici.</span>
+            <div class="javacts">
+              <button class="link" id="jo-av-pick">Choisir une image</button>
+              <button class="link" id="jo-av-del" hidden>Retirer</button>
+            </div>
+          </div>
+          <input id="jo-av-file" type="file" accept="image/*" hidden>
+        </div>
+        <input id="jo-name" type="text" autocomplete="name" maxlength="40" placeholder="Ton nom">
         <input id="jo-email" type="email" autocomplete="email" placeholder="Courriel">
         <input id="jo-pw" type="password" autocomplete="new-password" placeholder="Mot de passe (8+ caractères)">
+        <div class="pwj" id="jo-pw-j" hidden>
+          <div class="pwtrack" aria-hidden="true"><span class="pwfill" id="jo-pw-fill"></span></div>
+          <p class="pwnote" aria-live="polite"><b id="jo-pw-mot"></b><span id="jo-pw-dit"></span></p>
+        </div>
         <input id="jo-code" class="jcode" type="text" inputmode="numeric" autocomplete="one-time-code"
                maxlength="6" placeholder="000000" hidden>
         <p class="jmsg" id="jo-msg"></p>
         <button class="cta join-cta" id="jo-go">Créer mon compte</button>
+        <div id="jo-sso">
+          <div class="jou"><span>ou</span></div>
+          <div class="joauth">
+            <button class="oabtn" id="jo-google" type="button">
+              <svg class="oaic" viewBox="0 0 48 48" aria-hidden="true">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.28-3.14.76-4.59l-7.97-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+              </svg>Continuer avec Google</button>
+            <button class="oabtn" id="jo-ms" type="button">
+              <svg class="oaic" viewBox="0 0 23 23" aria-hidden="true">
+                <path fill="#F25022" d="M1 1h10v10H1z"/><path fill="#7FBA00" d="M12 1h10v10H12z"/>
+                <path fill="#00A4EF" d="M1 12h10v10H1z"/><path fill="#FFB900" d="M12 12h10v10H12z"/>
+              </svg>Continuer avec Microsoft</button>
+          </div>
+        </div>
         <div class="jalt">
           <button class="link" id="jo-swap">J'ai déjà un compte</button>
           <button class="link" id="jo-resend" hidden>Renvoyer le code</button>
-          <span class="grow"></span>
-          <button class="link" id="jo-home">Retour à l'accueil</button>
         </div>
       </section>
     </div>
@@ -2970,7 +3157,9 @@ a,button{touch-action:manipulation}
        les semaines empilées les unes sous les autres. wcur = le décalage
        affiché en mode « une ». */
     wview: "une", wcur: 0,
-    name:"Maverick Menard",
+    /* Vide par conception : le nom se donne à la création du compte, il ne
+       se devine pas — et il revient ensuite du compte, pas de cet appareil. */
+    name:"",
     blocks: {},
     /* Retouches de l'horaire, par bloc (« jour-heure ») : ce que tu corriges
        d'un cours mal lu sur la photo, pour toutes les semaines. Voir setTTEdit. */
@@ -3077,6 +3266,7 @@ a,button{touch-action:manipulation}
     if (p.doc) m.doc = p.doc;
     if (p.up) m.up = p.up;      // l'horodatage de fusion doit survivre au rechargement
     if (p.cl) m.cl = p.cl;      // le lien vers la séance de classe aussi
+    if (p.cs) m.cs = p.cs;      // et la dernière version que le nuage a reconnue
     const line = (p.page || "").split("\n").find(l => l.trim());
     if (line) m.ap = line.trim().slice(0, 140);   // l'aperçu que montrent les listes
     if (p.ink?.length) m.ni = p.ink.length;
@@ -4156,45 +4346,66 @@ a,button{touch-action:manipulation}
     } else p.textContent = d.t;
     return p;
   }
+  /* Une rangée d'échéance. Sortie de la boucle parce qu'elle sert DEUX fois :
+     l'extrait du tableau de bord (cinq lignes, puis « Tout voir → ») et la
+     page Échéances, qui les montre toutes. Une seule fabrique, donc aucune
+     variante qui dériverait de son jumeau. */
+  function ligneEcheance(d) {
+    const cd = countdown(d.date, d.time);
+    const li = mk("li","nrow dline" + (d.done ? " done" : ""));
+    li.style.setProperty("--p", `var(--p${cd.lvl})`);
+    li.style.setProperty("--h", hueOf(courseOf(d)));
+    const bar = mk("span","bar4");
+    const bd = mk("div","al");
+    bd.append(titreDe(d));
+    const meta = mk("p","w");
+    const cdn = mk("b","cd l" + cd.lvl, cd.txt);
+    meta.append(cdn, document.createTextNode(` · ${frDate(d.date)}`));
+    const cname = courseOf(d);
+    if (cname) { const c = mk("span","chip"); c.append(mk("i"), document.createTextNode(cname)); bd.append(meta, c); }
+    else bd.append(meta);
+    const bx = mk("button","nbox"); bx.innerHTML = ICON.check;
+    bx.setAttribute("aria-label", d.done ? "Rouvrir" : "Marquer fait");
+    bx.addEventListener("click", () => { d.done = !d.done;
+      /* Le geste part aussi dans le calque : c'est lui qui le fera valoir sur
+         les autres appareils, et qui survivra à la prochaine collecte. */
+      marqueEtat(d, { statut: d.done ? "fait" : "nouveau" });
+      renderDeadlines(); renderWeeks(); renderOverview(); renderRings(); });
+    const kill = mk("button","kill","×");
+    kill.addEventListener("click", () => {
+      noteSuppression("echeance", d);
+      /* La pierre tombale, côté base : sans clé étrangère vers agenda_items,
+         elle survit au retour de l'item à la collecte suivante. */
+      marqueEtat(d, { statut: "supprime" });
+      state.deadlines = state.deadlines.filter(x => x.id !== d.id);
+      renderDeadlines(); renderWeeks(); renderOverview(); renderRings();
+      renderMios(); // une puce d'agent peut repasser à « + »
+    });
+    li.append(bar, bd, bx, kill);
+    return li;
+  }
+  /* Cinq lignes au plus sur le tableau : au-delà, la carte pousse le reste de
+     l'écran hors de vue pour montrer ce qui a déjà sa destination. */
+  const EXTRAIT_ECH = 5;
   function renderDeadlines() {
-    const box = el("deadlines"); box.textContent = "";
     const list = [...state.deadlines].sort((a,b) =>
       (a.done - b.done) || a.date.localeCompare(b.date) || (a.time||"").localeCompare(b.time||""));
-    for (const d of list) {
-      const cd = countdown(d.date, d.time);
-      const li = mk("li","nrow dline" + (d.done ? " done" : ""));
-      li.style.setProperty("--p", `var(--p${cd.lvl})`);
-      li.style.setProperty("--h", hueOf(courseOf(d)));
-      const bar = mk("span","bar4");
-      const bd = mk("div","al");
-      bd.append(titreDe(d));
-      const meta = mk("p","w");
-      const cdn = mk("b","cd l" + cd.lvl, cd.txt);
-      meta.append(cdn, document.createTextNode(` · ${frDate(d.date)}`));
-      const cname = courseOf(d);
-      if (cname) { const c = mk("span","chip"); c.append(mk("i"), document.createTextNode(cname)); bd.append(meta, c); }
-      else bd.append(meta);
-      const bx = mk("button","nbox"); bx.innerHTML = ICON.check;
-      bx.setAttribute("aria-label", d.done ? "Rouvrir" : "Marquer fait");
-      bx.addEventListener("click", () => { d.done = !d.done; renderDeadlines(); renderWeeks(); renderOverview(); renderRings(); });
-      const kill = mk("button","kill","×");
-      kill.addEventListener("click", () => {
-        noteSuppression("echeance", d);
-        state.deadlines = state.deadlines.filter(x => x.id !== d.id);
-        renderDeadlines(); renderWeeks(); renderOverview(); renderRings();
-        renderMios(); // une puce d'agent peut repasser à « + »
-      });
-      li.append(bar, bd, bx, kill);
-      box.append(li);
+    for (const [id, max] of [["deadlines", EXTRAIT_ECH], ["deadlines-all", Infinity]]) {
+      const box = el(id); if (!box) continue;
+      box.textContent = "";
+      for (const d of list.slice(0, max)) box.append(ligneEcheance(d));
     }
     const n = liveDeadlines().length;
     el("e-n").textContent = n ? `(${n})` : "";
+    el("ev-n").textContent = n ? `(${n})` : "";
     el("dl-empty").hidden = state.deadlines.length > 0;
+    el("dla-empty").hidden = state.deadlines.length > 0;
     const urg = liveDeadlines().filter(d => countdown(d.date, d.time).lvl === 3).length;
     el("bell-dot").hidden = !urg;
     renderWidget(); save();
   }
   el("dl-add").addEventListener("click", ev => openDeadline(ev.currentTarget));
+  el("ev-add").addEventListener("click", ev => openDeadline(ev.currentTarget));
 
   function openDeadline(anchorEl, pre) {
     pop?.remove();
@@ -4429,51 +4640,62 @@ a,button{touch-action:manipulation}
   }
 
   /* ── Résumés MIO ──────────────────────────────────────────────── */
-  function renderMios() {
-    const box = el("miolist"); box.textContent = "";
+  /* Trois sur le tableau, tous sur la page MIO. Même fabrique de rangée pour
+     les deux — voir ligneEcheance, même raison. */
+  const EXTRAIT_MIO = 3;
+  function ligneMio(m) {
     const norm = s => (s || "").replace(/\s+/g, " ").trim().toLowerCase();
-    for (const m of state.mios) {
-      const row = mk("div","mio");
-      row.style.setProperty("--h", hueOf(m.course));
-      const parts = (m.from || "?").split(/[^A-Za-zÀ-ÿ]+/).filter(Boolean);
-      const av = mk("span","av", (parts[0]?.[0] ?? "?") + (parts[1]?.[0] ?? ""));
-      const bd = mk("div","bd");
-      const hd = mk("div","hd");
-      /* Tant que le résumé Haiku n'existe pas, le scraper met l'aperçu dans
-         subject ET summary : afficher les deux doublerait chaque carte. */
-      const a = norm(m.subject), b = norm(m.summary);
-      const dupe = !b || a === b || a.startsWith(b) || b.startsWith(a);
-      const title = dupe && (m.summary || "").length > (m.subject || "").length ? m.summary : m.subject;
-      hd.append(mk("h5", null, title), mk("span","dt", frDate(m.date)));
-      bd.append(hd);
-      if (!dupe) bd.append(mk("p","sm", m.summary));
-      bd.append(mk("p","who", [m.from, m.course].filter(Boolean).join(" · ")));
-      if ((m.actions || []).length) {
-        const acts = mk("div","acts");
-        for (const a of m.actions) acts.append(actionChip(a));
-        bd.append(acts);
-      }
-      row.append(av, bd);
-      row.addEventListener("click", ev => {
-        if (ev.target.closest("button") || !row.classList.contains("clip")) return;
-        const open = row.classList.toggle("open");
-        row.title = open ? "Replier" : "Afficher le message complet";
-      });
-      box.append(row);
+    const row = mk("div","mio");
+    row.style.setProperty("--h", hueOf(m.course));
+    const parts = (m.from || "?").split(/[^A-Za-zÀ-ÿ]+/).filter(Boolean);
+    const av = mk("span","av", (parts[0]?.[0] ?? "?") + (parts[1]?.[0] ?? ""));
+    const bd = mk("div","bd");
+    const hd = mk("div","hd");
+    /* Tant que le résumé Haiku n'existe pas, le scraper met l'aperçu dans
+       subject ET summary : afficher les deux doublerait chaque carte. */
+    const a = norm(m.subject), b = norm(m.summary);
+    const dupe = !b || a === b || a.startsWith(b) || b.startsWith(a);
+    const title = dupe && (m.summary || "").length > (m.subject || "").length ? m.summary : m.subject;
+    hd.append(mk("h5", null, title), mk("span","dt", frDate(m.date)));
+    bd.append(hd);
+    if (!dupe) bd.append(mk("p","sm", m.summary));
+    bd.append(mk("p","who", [m.from, m.course].filter(Boolean).join(" · ")));
+    if ((m.actions || []).length) {
+      const acts = mk("div","acts");
+      for (const a of m.actions) acts.append(actionChip(a));
+      bd.append(acts);
     }
-    /* Le clic ne déplie que ce qui est réellement tronqué. */
-    requestAnimationFrame(() => {
-      for (const row of box.children) {
-        const cut = [...row.querySelectorAll("h5,.sm")]
-          .some(n => n.scrollHeight > n.clientHeight + 1);
-        if (cut) { row.classList.add("clip"); row.title = "Afficher le message complet"; }
-      }
+    row.append(av, bd);
+    row.addEventListener("click", ev => {
+      if (ev.target.closest("button") || !row.classList.contains("clip")) return;
+      const open = row.classList.toggle("open");
+      row.title = open ? "Replier" : "Afficher le message complet";
     });
-    el("mio-n").textContent = state.mios.length || "";
-    el("mio-empty").hidden = state.mios.length > 0;
-    el("n-m").textContent = state.mios.length || "";
-    el("last-scrape").textContent = state.lastScrape
-      ? `· ${state.lastScrape}` : "· aucune encore";
+    return row;
+  }
+  function renderMios() {
+    for (const [id, max] of [["miolist", EXTRAIT_MIO], ["miolist-all", Infinity]]) {
+      const box = el(id); if (!box) continue;
+      box.textContent = "";
+      for (const m of state.mios.slice(0, max)) box.append(ligneMio(m));
+      /* Le clic ne déplie que ce qui est réellement tronqué. */
+      requestAnimationFrame(() => {
+        for (const row of box.children) {
+          const cut = [...row.querySelectorAll("h5,.sm")]
+            .some(n => n.scrollHeight > n.clientHeight + 1);
+          if (cut) { row.classList.add("clip"); row.title = "Afficher le message complet"; }
+        }
+      });
+    }
+    const n = state.mios.length;
+    el("mio-n").textContent = n || "";
+    el("mv-n").textContent = n ? `(${n})` : "";
+    el("mio-empty").hidden = n > 0;
+    el("mioa-empty").hidden = n > 0;
+    el("n-m").textContent = n || "";
+    const quand = state.lastScrape ? `· ${state.lastScrape}` : "· aucune encore";
+    el("last-scrape").textContent = quand;
+    el("last-scrape2").textContent = quand;
     save();
   }
 
@@ -5331,6 +5553,13 @@ a,button{touch-action:manipulation}
       } catch { /* IndexedDB indisponible : le corps reste dans le blob, rien ne se perd */ }
     }
     if (neuf) save();   // un corps vient d'être prouvé en lieu sûr : le blob maigrit
+    /* Dès qu'il y a des notes à protéger, on demande au navigateur de ne
+       jamais évincer ce stockage sous pression — sans ça, IndexedDB n'est
+       qu'un prêt. Une seule demande par session suffit. */
+    if (neuf && !pgFlushIdb.persistDemande) {
+      pgFlushIdb.persistDemande = true;
+      navigator.storage?.persist?.().catch(() => {});
+    }
   }
   /* Fermer l'onglet ne doit pas emporter les 400 dernières millisecondes. */
   addEventListener("pagehide", mFlush);
@@ -5364,40 +5593,126 @@ a,button{touch-action:manipulation}
         cat: p.cat || "", at: p.at || "", page: p.page || "",
         ink: p.ink || [], annos: p.annos || [], doc: p.doc || null,
         lien: p.cl || null,
+        deleted_at: null,          // pousser une page vivante la sort de la corbeille
         updated_at: p.up || new Date().toISOString() });
     }
     if (!rows.length) return;
     try {
       await sbApi("agenda_pages_perso", { method: "POST",
         headers: { prefer: "resolution=merge-duplicates" }, body: JSON.stringify(rows) });
+      /* L'accord est scellé : chaque page retient la version que le nuage
+         tient d'elle (cs). C'est cette marque qui distinguera plus tard « le
+         nuage a avancé » d'un vrai conflit entre deux appareils. */
+      for (const r of rows) {
+        const paire = lot.find(([id]) => id === r.id);
+        const sh = paire && mRaw(paire[1]);
+        const p = sh && Array.isArray(sh.pages) && sh.pages.find(x => x.id === r.id);
+        if (p) p.cs = r.updated_at;
+      }
+      save();
     } catch { for (const [id, c] of lot) cloudDirty.set(id, c); }   // on retentera au prochain geste
   }
-  /* La fusion au réveil et à la connexion : le nuage descend, page par page,
-     et seule une page plus récente que la mienne me remplace. Une page à moi
-     que le nuage ignore — ou connaît en plus vieux — repart vers lui. Une
-     page supprimée ICI porte une tombe : elle ne revient pas. */
+
+  /* ── La corbeille ────────────────────────────────────────────────
+     Supprimer ne détruit plus : la page sort du dossier, son corps reste
+     dans IndexedDB et sa ligne au compte se marque deleted_at — trente
+     jours pour se raviser, ici comme sur l'autre appareil. Restaurer remet
+     tout en place ; le balayage des trente jours fait le vrai ménage. */
+  const CORBEILLE_TTL = 30 * 864e5;
+  function corbeilleEntre(c, p, pousserNuage = true) {
+    state.corbeille = state.corbeille || [];
+    if (!state.corbeille.some(e => e.p?.id === p.id))
+      state.corbeille.push({ c, p: pgMeta(p), at: Date.now() });
+    const sh = mRaw(c);
+    if (Array.isArray(sh.pages)) {
+      const ps = sh.pages.filter(x => x.id !== p.id);
+      mWrite(c, { pages: ps, pg: mRaw(c).pg === p.id ? (ps[0]?.id || "") : mRaw(c).pg });
+    }
+    state.gone[`pg:${p.id}`] = { k: "page", t: p.t || "", at: Date.now() };
+    sbPushGone();
+    cloudDirty.delete(p.id); pgDirty.delete(p.id);
+    if (pousserNuage) sbApi(`agenda_pages_perso?id=eq.${encodeURIComponent(p.id)}`, { method: "PATCH",
+      body: JSON.stringify({ deleted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString() }) }).catch(() => {});
+    save();
+  }
+  async function corbeilleRestaure(e) {
+    state.corbeille = (state.corbeille || []).filter(x => x !== e);
+    delete state.gone[`pg:${e.p.id}`]; sbPushGone();
+    const sh = state.sheets[e.c] = state.sheets[e.c] || { ...MSHEET };
+    if (!Array.isArray(sh.pages)) sh.pages = [];
+    if (!sh.pages.some(x => x.id === e.p.id)) {
+      const corps = await idbGet(`pg/${e.p.id}`).catch(() => null);
+      sh.pages = [...sh.pages, { ...e.p, ...(corps || {}), up: new Date().toISOString() }];
+      sh.pg = e.p.id;
+    }
+    pgPush(e.c, e.p.id);   // le corps repart en IndexedDB, la ligne ressuscite au compte
+    save(); renderCourses();
+  }
+  function corbeilleDetruit(e) {
+    state.corbeille = (state.corbeille || []).filter(x => x !== e);
+    docPurge(e.p);                                // son papier, local et au compte
+    try { trDel(e.p.id); } catch {}               // son transcript brut
+    idbDel(`pg/${e.p.id}`).catch(() => {});       // son corps
+    pgSafe.delete(e.p.id);
+    sbApi(`agenda_pages_perso?id=eq.${encodeURIComponent(e.p.id)}`, { method: "DELETE" }).catch(() => {});
+    save();
+  }
+  function corbeilleBalaie() {
+    const lim = Date.now() - CORBEILLE_TTL;
+    for (const e of [...(state.corbeille || [])]) if ((e.at || 0) < lim) corbeilleDetruit(e);
+  }
+
+  /* La fusion au réveil, à la connexion, et au petit trot : le nuage descend
+     page par page. Une page plus récente que la mienne me remplace — sauf si
+     NOUS AVONS TOUTES LES DEUX bougé depuis notre dernier accord (cs) : là,
+     personne ne perd — la version d'en face devient une « copie de conflit »
+     à côté de la mienne. Les suppressions voyagent en corbeille, jamais en
+     trou : le geste le plus récent — supprimer ou restaurer — gagne. */
   const tsDe = s => Date.parse(s || 0) || 0;
-  let cloudPullEnCours = false;
-  async function cloudPagesPull() {
+  let cloudPullEnCours = false, cloudDepuis = "";
+  async function cloudPagesPull(complet = true) {
     if (cloudPullEnCours || !sbSession()) return;
     cloudPullEnCours = true;
     try {
       await pgHydrated;   // comparer des pages hydratées, jamais des coquilles
-      const rows = await sbApi("agenda_pages_perso?select=*");
+      if (!cloudDepuis) complet = true;
+      const rows = await sbApi("agenda_pages_perso?select=*"
+        + (complet ? "" : `&updated_at=gt.${encodeURIComponent(cloudDepuis)}`));
       let bouge = false;
       const vues = new Set();
       for (const r of rows || []) {
         vues.add(r.id);
-        if (state.gone[`pg:${r.id}`]) {   // supprimée ici : on efface aussi là-bas
-          sbApi(`agenda_pages_perso?id=eq.${encodeURIComponent(r.id)}`, { method: "DELETE" }).catch(() => {});
-          continue;
-        }
-        /* Retrouver la page locale — l'identifiant est unique toutes fiches
-           confondues. */
+        if ((r.updated_at || "") > cloudDepuis) cloudDepuis = r.updated_at;
+        const tombe = state.gone[`pg:${r.id}`];
+        /* Retrouver la page locale vivante — l'identifiant est unique. */
         let cLoc = null, pLoc = null;
         for (const [k, sh] of Object.entries(state.sheets || {})) {
           const p = Array.isArray(sh.pages) && sh.pages.find(x => x.id === r.id);
           if (p) { cLoc = k; pLoc = p; break; }
+        }
+        if (r.deleted_at) {
+          /* Supprimée quelque part : si je la tiens encore vivante, elle
+             rejoint MA corbeille — même geste partout. Passé trente jours,
+             la ligne s'efface pour de bon. */
+          if (pLoc) { corbeilleEntre(cLoc, pLoc, false); bouge = true; }
+          if (Date.now() - tsDe(r.deleted_at) > CORBEILLE_TTL)
+            sbApi(`agenda_pages_perso?id=eq.${encodeURIComponent(r.id)}`, { method: "DELETE" }).catch(() => {});
+          continue;
+        }
+        if (tombe) {
+          /* Le nuage la tient vivante, moi je l'ai supprimée. Le geste le
+             plus récent gagne : une restauration d'ailleurs plus fraîche que
+             ma tombe la ramène ; sinon ma suppression part là-bas. */
+          if (tsDe(r.updated_at) > (tombe.at || 0)) {
+            delete state.gone[`pg:${r.id}`]; sbPushGone();
+            state.corbeille = (state.corbeille || []).filter(e => e.p?.id !== r.id);
+          } else {
+            sbApi(`agenda_pages_perso?id=eq.${encodeURIComponent(r.id)}`, { method: "PATCH",
+              body: JSON.stringify({ deleted_at: new Date(tombe.at || Date.now()).toISOString(),
+                updated_at: new Date().toISOString() }) }).catch(() => {});
+            continue;
+          }
         }
         const distant = { id: r.id, t: r.titre || "", cat: r.cat || "", at: r.at || "",
           page: r.page || "", ink: r.ink || [], annos: r.annos || [],
@@ -5405,31 +5720,57 @@ a,button{touch-action:manipulation}
         if (!pLoc) {
           const k = r.course || "?";
           const sh = state.sheets[k] = state.sheets[k] || { ...MSHEET };
-          sh.pages = [...(Array.isArray(sh.pages) ? sh.pages : []), distant];
+          sh.pages = [...(Array.isArray(sh.pages) ? sh.pages : []), { ...distant, cs: r.updated_at }];
           if (!sh.pg) sh.pg = r.id;
           pgDirty.set(r.id, k);   // le corps venu du nuage descend aussi dans IndexedDB
           bouge = true;
-        } else if (tsDe(r.updated_at) > tsDe(pLoc.up)) {
-          const sh = mRaw(cLoc);
-          sh.pages = sh.pages.map(p => p.id === r.id ? { ...p, ...distant } : p);
-          pgDirty.set(r.id, cLoc);
-          bouge = true;
-        } else if (tsDe(pLoc.up) > tsDe(r.updated_at)) {
-          cloudMark(cLoc, r.id);   // la mienne est plus fraîche : elle repart
+        } else {
+          const rUp = tsDe(r.updated_at), lUp = tsDe(pLoc.up), cs = tsDe(pLoc.cs);
+          if (rUp === lUp) { /* d'accord — rien à faire */ }
+          else if (cs && lUp > cs && rUp > cs) {
+            /* Vrai conflit : chacun a écrit depuis le dernier accord. La
+               version d'en face devient une page à part entière, la mienne
+               reste et reprend la ligne du nuage. */
+            const copie = { ...distant, id: uid(), t: `${r.titre || "Page"} — copie de conflit`,
+              up: new Date().toISOString() };
+            const sh = mRaw(cLoc);
+            sh.pages = [...sh.pages, copie];
+            pgDirty.set(copie.id, cLoc); cloudMark(cLoc, copie.id);
+            cloudMark(cLoc, r.id);
+            bouge = true;
+          } else if (rUp > lUp) {
+            const sh = mRaw(cLoc);
+            sh.pages = sh.pages.map(p => p.id === r.id ? { ...p, ...distant, cs: r.updated_at } : p);
+            pgDirty.set(r.id, cLoc);
+            bouge = true;
+          } else if (lUp > rUp) {
+            cloudMark(cLoc, r.id);   // la mienne est plus fraîche : elle repart
+          }
         }
       }
-      /* Les pages locales que le nuage n'a jamais vues montent aussi. */
-      for (const [k, sh] of Object.entries(state.sheets || {}))
-        if (Array.isArray(sh.pages))
-          for (const p of sh.pages) if (p.id && !vues.has(p.id)) cloudMark(k, p.id);
+      /* Les pages locales que le nuage n'a jamais vues montent aussi — au
+         tour complet seulement : un tour incrémental ne voit qu'un morceau
+         du nuage, il ne peut pas juger de ce qui y manque. */
+      if (complet)
+        for (const [k, sh] of Object.entries(state.sheets || {}))
+          if (Array.isArray(sh.pages))
+            for (const p of sh.pages) if (p.id && !vues.has(p.id)) cloudMark(k, p.id);
       if (bouge) {
         clearTimeout(pgT); pgT = setTimeout(pgFlushIdb, 400);
-        save(); renderCourses();
+        save(); renderCourses(); renderTrashBtn();
         if (mCur && !el("matiere").hidden) renderMatiere();
       }
     } catch { /* hors ligne ou session périmée : la prochaine synchro suffira */ }
     finally { cloudPullEnCours = false; }
   }
+  /* ── L'autre appareil, sans y penser ─────────────────────────────
+     Le nuage se consulte tout seul : au retour sur l'onglet, et au petit
+     trot tant qu'il reste visible. Incrémental — seules les lignes qui ont
+     bougé depuis la dernière fois descendent. */
+  setInterval(() => { if (document.visibilityState === "visible") cloudPagesPull(false); }, 75e3);
+  addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") cloudPagesPull(false); });
+  addEventListener("focus", () => cloudPagesPull(false));
   const mDates = c => state.deadlines.filter(d => courseOf(d) === c);
   /* La page fait la hauteur de ce qu'elle porte : son texte, mais aussi le
      trait le plus bas et l'annotation la plus basse — sinon on ne pourrait
@@ -5468,7 +5809,10 @@ a,button{touch-action:manipulation}
   let mCur = null;                     // matière dont la fiche est ouverte
 
   function openMatiere(c) {
-    if (!COURSES.includes(c)) return;
+    /* L'adresse peut nommer une matière qui n'existe plus (horaire relu,
+       lien d'une autre session) : on retombe sur la liste, jamais sur du
+       vide. */
+    if (!COURSES.includes(c)) return showView("cours");
     mCur = c;
     showView("matiere");
     renderMatiere();
@@ -5479,7 +5823,7 @@ a,button{touch-action:manipulation}
      latérale, le logo. Un seul point de sortie, donc un seul rafraîchissement
      des cartes de « Mes cours ». */
   function closeMatiere() {
-    if (!el("matiere").hidden) { showView("board"); return; }
+    if (!el("matiere").hidden) { showView("cours"); return; }
     mCur = null; renderSubjects(); renderCourses();
   }
   /* Les faits viennent de l'horaire ; la saisie manuelle a le dernier mot
@@ -7233,11 +7577,33 @@ a,button{touch-action:manipulation}
         });
     for (const [, id] of attendus) if (corps.has(id)) pgSafe.add(id);
     for (const [c, id] of attendus) if (!corps.has(id)) pgPush(c, id);   // l'héritage descend
+    /* Des notes vivent ici : le stockage ne doit pas être un prêt que le
+       navigateur peut reprendre sous pression. */
+    if (corps.size) navigator.storage?.persist?.().catch(() => {});
     /* Les vues qui comptaient sur l'index relisent les vrais corps. */
     renderCourses();
     if (mCur && !el("matiere").hidden) renderMatiere();
   }
   const pgHydrated = pgHydrate();   // la synchro nuage attend ce réveil
+  pgHydrated.then(() => { corbeilleBalaie(); renderTrashBtn(); });   // les trente jours se comptent au réveil
+
+  /* ── L'autre onglet, en direct ───────────────────────────────────
+     Deux onglets sur le même appareil écrivent le même localStorage et le
+     même IndexedDB : sans se parler, le dernier qui enregistre gagne et
+     l'autre ne s'en aperçoit jamais. L'événement storage prévient : l'onglet
+     au repos se relit — état, corps, et vues. Celui qui a une écriture en
+     attente ne bouge pas : sa sauvegarde imminente fera foi. */
+  let tabT = 0;
+  addEventListener("storage", ev => {
+    if (ev.key !== KEY || ev.newValue == null) return;
+    clearTimeout(tabT);
+    tabT = setTimeout(() => {
+      if (mSaveT || pgT || pgDirty.size) return;
+      try { state = { ...seed(), ...(JSON.parse(localStorage.getItem(KEY)) || {}) }; }
+      catch { return; }
+      pgHydrate().then(() => { refreshAll(); renderTrashBtn(); });
+    }, 350);
+  });
 
   /* pdf.js n'entre en scène qu'au premier PDF, et depuis le réseau : le
      module pèse plus que l'app entière — l'emporter d'office punirait tous
@@ -7417,190 +7783,99 @@ a,button{touch-action:manipulation}
     mWrite(c, { pg: id }); save();
     openMatiere(c);
   }
-  /* Où l'on est descendu dans l'arbre : rien (la racine), une matière, ou
-     une catégorie dedans. Et quelles matières sont dépliées dans le rail. */
-  let ntSel = null;
-  const ntOpen = new Set();
-  /* Les catégories d'une matière, dans l'ordre où elles sont apparues ; les
-     pages libres n'en forment pas une — elles restent à la racine du
-     dossier, sans étiquette inventée. */
-  function ntCats(c) {
-    const m = new Map();
-    for (const p of mPages(c)) { const k = pgCat(p); if (!k) continue;
-      if (!m.has(k)) m.set(k, []); m.get(k).push(p); }
-    return m;
-  }
-  const NTFOLD = '<svg class="i" viewBox="0 0 24 24"><path d="M3.5 7A2.5 2.5 0 0 1 6 4.5h3.6l2 2.5H18a2.5 2.5 0 0 1 2.5 2.5v7.5A2.5 2.5 0 0 1 18 19.5H6A2.5 2.5 0 0 1 3.5 17z"/></svg>';
-  function ntNode(label, n, opts = {}) {
-    const b = mk("button","ntnode" + (opts.on ? " on" : "") + (opts.op ? " op" : ""));
-    b.innerHTML = NTFOLD;
-    b.append(mk("span", null, label));
-    if (n) b.append(mk("em", null, `${n}`));
-    b.title = opts.title || label;
-    b.addEventListener("click", opts.go);
-    return b;
-  }
-  /* L'arbre. Cliquer une matière la sélectionne et la déplie ; recliquer la
-     replie. Un seul geste par rangée, donc rien à deviner. */
-  function renderNtRail() {
-    const rail = el("nt-rail"); rail.textContent = "";
-    const total = COURSES.reduce((n, c) => n + mPages(c).length, 0);
-    rail.append(ntNode("Toutes les notes", total, { on: !ntSel, op: !ntSel,
-      go: () => { ntSel = null; renderNotes(); } }));
-    for (const c of COURSES) {
-      const ps = mPages(c), cats = ntCats(c);
-      const here = ntSel && ntSel.c === c;
-      const open = ntOpen.has(c) && cats.size > 0;
-      rail.append(ntNode(c, ps.length, {
-        on: here && !ntSel.cat, op: open,
-        title: ps.length ? `${c} — ${ps.length} page${ps.length > 1 ? "s" : ""}`
-          : `${c} — aucune page`,
-        go: () => {
-          if (here && !ntSel.cat && ntOpen.has(c)) ntOpen.delete(c); else ntOpen.add(c);
-          ntSel = { c }; renderNotes();
-        } }));
-      if (!open) continue;
-      const kids = mk("div","ntkids");
-      for (const [cat, pages] of cats) {
-        kids.append(ntNode(cat, pages.length, {
-          on: here && ntSel.cat === cat,
-          go: () => { ntSel = { c, cat }; renderNotes(); } }));
-      }
-      rail.append(kids);
-    }
+  /* Les groupes d'une matière — ses sous-dossiers : l'ordre d'apparition des
+     catégories, les pages libres en tête, sans étiquette inventée. */
+  function ntGroupes(c) {
+    const grps = new Map();
+    for (const p of mPages(c)) { const k = pgCat(p).toLowerCase();
+      if (!grps.has(k)) grps.set(k, { cat: pgCat(p), pages: [] });
+      grps.get(k).pages.push(p); }
+    const order = [...grps.values()];
+    const free = grps.get("");
+    if (free) { order.splice(order.indexOf(free), 1); order.unshift(free); }
+    return order;
   }
   function renderNotes() {
-    /* Une page supprimée peut emporter la dernière de sa catégorie : si la
-       sélection ne désigne plus rien, on remonte d'un cran plutôt que de
-       montrer un dossier fantôme. */
-    if (ntSel && !COURSES.includes(ntSel.c)) ntSel = null;
-    if (ntSel && ntSel.cat && !ntCats(ntSel.c).has(ntSel.cat)) ntSel = { c: ntSel.c };
-    renderNtRail();
+    renderTrashBtn();
     const box = el("nt-grid"); box.textContent = "";
     const seeds = el("nt-seeds"); seeds.textContent = "";
-    const list = el("nt-pages"); list.textContent = "";
-    const crumb = el("nt-crumb"); crumb.textContent = "";
-    let pages = [], nseed = 0, nfold = 0;
-
-    if (!ntSel) {
-      /* Racine : un dossier par matière, et toutes les pages dessous. */
-      for (const c of COURSES) {
-        const ps = mPages(c);
-        for (const p of ps) pages.push({ c, p });
-        if (!ps.length) { seeds.append(ntSeed(c)); nseed++; continue; }
-        box.append(ntTile(c, hueOf(c), ps, () => { ntSel = { c }; ntOpen.add(c); renderNotes(); }));
-        nfold++;
-      }
-    } else {
-      const c = ntSel.c, cats = ntCats(c);
-      crumb.append(ntCrumb("Toutes les notes", () => { ntSel = null; renderNotes(); }));
-      if (ntSel.cat) {
-        crumb.append(mk("span", null, "›"), ntCrumb(c, () => { ntSel = { c }; renderNotes(); }),
-          mk("span", null, "›"), mk("b", null, ntSel.cat));
-        pages = (cats.get(ntSel.cat) || []).map(p => ({ c, p }));
-      } else {
-        crumb.append(mk("span", null, "›"), mk("b", null, c));
-        /* Descendre dans une matière montre ses catégories comme dossiers —
-           le même geste qu'à la racine, un cran plus bas. */
-        for (const [cat, ps] of cats) {
-          box.append(ntTile(cat, hueOf(c), ps, () => { ntSel = { c, cat }; renderNotes(); }));
-          nfold++;
+    let total = 0, nseed = 0;
+    for (const c of COURSES) {
+      const ps = mPages(c); total += ps.length;
+      /* Une matière sans page n'a pas de dossier à montrer : elle descend en
+         puce, tout en bas — un clic, une page. */
+      if (!ps.length) { seeds.append(ntSeed(c)); nseed++; continue; }
+      const card = mk("section","card fx ntfold");
+      const ch = mk("header","ntch");
+      const pip = mk("i","mpip"); pip.style.background = `hsl(${hueOf(c)} 62% 52%)`;
+      ch.append(pip, mk("h3", null, c), mk("span","ntcount", `${ps.length}`));
+      ch.querySelector(".ntcount").title = `${ps.length} page${ps.length > 1 ? "s" : ""}`;
+      card.append(ch);
+      const ul = mk("ul","ntpages");
+      for (const g of ntGroupes(c)) {
+        if (g.cat) {
+          const hd = mk("li","ntcat");
+          hd.append(mk("span", null, g.cat), mk("span","dim mono", `${g.pages.length}`));
+          /* Un sous-dossier sait accueillir : son + ouvre une page déjà
+             rangée dedans — pas besoin de créer puis de classer. */
+          const add = mk("button","ntcatadd"); add.innerHTML = ICON.plus;
+          add.title = `Nouvelle page dans « ${g.cat} »`;
+          add.addEventListener("click", () => {
+            const p = addPage(c); setPageCat(c, p.id, g.cat);
+            openMatiere(c); el("m-page").focus({ preventScroll:true });
+          });
+          hd.append(mk("span","grow"), add);
+          ul.append(hd);
         }
-        pages = mPages(c).map(p => ({ c, p }));
+        for (const p of g.pages) ul.append(ntRow(c, p));
       }
-    }
-    crumb.hidden = !ntSel;
-    el("nt-foldh").hidden = !nfold;
-    /* La page touchée en dernier se lit en premier : c'est celle qu'on
-       cherche. Les pages antérieures à la synchronisation n'ont pas
-       d'horodatage — elles gardent l'ordre de leur dossier, en queue, plutôt
-       que de se voir inventer une date. */
-    pages.sort((x, y) => String(y.p.up || "").localeCompare(String(x.p.up || "")));
-    for (const x of pages) list.append(ntRow(x.c, x.p));
-    el("nt-seedh").hidden = !nseed;
-    el("nt-pagesh").hidden = !pages.length;
-    el("nt-list").hidden = !pages.length;
-    el("nt-list").classList.toggle("solo", !!ntSel);
-    el("nt-pn").textContent = pages.length ? `(${pages.length})` : "";
-    el("nt-n").textContent = ntSel ? "" : (pages.length ? `(${pages.length})` : "");
-    /* Un dossier vide le dit, et propose le seul geste qui vaille. */
-    const vide = el("nt-vide"); vide.textContent = "";
-    vide.hidden = !(ntSel && !nfold && !pages.length);
-    if (!vide.hidden) {
-      vide.append(document.createTextNode("Ce dossier est encore vide. "));
-      const go = mk("button","link", "Ouvrir une première page");
-      go.addEventListener("click", () => { addPage(ntSel.c); openMatiere(ntSel.c);
+      card.append(ul);
+      /* Deux gestes au pied de chaque dossier, toujours au même endroit :
+         une page de plus, ou un sous-dossier neuf. */
+      const foots = mk("div","ntfoots");
+      const aj = mk("button","ntadd"); aj.innerHTML = ICON.plus;
+      aj.append(mk("span", null, "Nouvelle page"));
+      aj.title = `Ouvrir une page blanche sous ${c}`;
+      aj.addEventListener("click", () => { addPage(c); openMatiere(c);
         el("m-page").focus({ preventScroll:true }); });
-      vide.append(go);
+      const dj = mk("button","ntadd"); dj.innerHTML = ICON.ranger;
+      dj.append(mk("span", null, "Nouveau dossier"));
+      dj.title = `Créer un sous-dossier dans ${c} — « Cours 5 », « Préparation examen »…`;
+      dj.addEventListener("click", ev => nouvDossierPop(c, ev.currentTarget));
+      foots.append(aj, dj);
+      card.append(foots);
+      box.append(card);
     }
+    el("nt-seedh").hidden = !nseed;
+    el("nt-n").textContent = total ? `(${total})` : "";
   }
-  function ntCrumb(label, go) {
-    const b = mk("button", null, label);
-    b.addEventListener("click", go);
-    return b;
-  }
-  /* Ce qu'un dossier contient, dit par pictogrammes : on sait s'il y a du
-     texte, un dessin, un document ou des annotations sans avoir à l'ouvrir. */
-  const NTKIND = [
-    ["texte",  "Du texte",        '<svg class="i" viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h9"/></svg>'],
-    ["dessin", "Des dessins",     '<svg class="i" viewBox="0 0 24 24"><path d="M4 19c3.4-.6 4.1-8.4 6.9-8.4s2.6 5.4 5.9 2.5"/><path d="m14.5 5.5 4 4"/></svg>'],
-    ["doc",    "Des documents",   '<svg class="i" viewBox="0 0 24 24"><path d="M7 3.5h7l4 4V20.5H7z"/><path d="M14 3.5V8h4"/></svg>'],
-    ["anno",   "Des annotations", '<svg class="i" viewBox="0 0 24 24"><path d="M4.5 5.5h15v10h-9l-6 4.5z"/></svg>'],
-  ];
-  function ntKinds(ps) {
-    const k = new Set();
-    for (const p of ps) {
-      if (p.page.trim() || (p.ia || "").trim()) k.add("texte");
-      if (p.ink.length || p.ni) k.add("dessin");
-      if (pgDoc(p)) k.add("doc");
-      if (p.annos.length || p.na) k.add("anno");
-    }
-    return NTKIND.filter(x => k.has(x[0]));
-  }
-  /* La tuile d'un dossier : le dessin d'abord, le nom ensuite. Toutes les
-     tuiles ont la même taille — c'est ce qui rend la grille droite, quel que
-     soit le nombre de pages dedans. La languette prend la couleur de la
-     matière ; le corps reste gris, sinon neuf dossiers font un arc-en-ciel. */
-  function ntTile(label, hue, ps, go) {
-    const b = mk("button","ntfold fx");
-    b.style.setProperty("--h", hue);
-    const fig = mk("div","ntfig");
-    /* Une feuille de plus dépasse quand le dossier en contient plusieurs :
-       l'épaisseur se voit avant même de lire le compte. */
-    const extra = ps.length > 1
-      ? '<rect class="sh" x="26" y="22" width="52" height="32" rx="4" transform="rotate(-7 52 38)"/>' : "";
-    fig.innerHTML = `<svg viewBox="0 0 120 96" aria-hidden="true">
-        <path class="bk" d="M6 22a9 9 0 0 1 9-9h26a6 6 0 0 1 4.7 2.3L51 22h54a9 9 0 0 1 9 9v46a9 9 0 0 1-9 9H15a9 9 0 0 1-9-9Z"/>
-        ${extra}<rect class="sh" x="42" y="19" width="54" height="32" rx="4" transform="rotate(4 69 35)"/>
-        <path class="ft" d="M6 46a9 9 0 0 1 9-9h90a9 9 0 0 1 9 9v31a9 9 0 0 1-9 9H15a9 9 0 0 1-9-9Z"/>
-      </svg>`;
-    const kinds = ntKinds(ps);
-    if (kinds.length) {
-      const kb = mk("div","ntkinds");
-      for (const [, kl, svg] of kinds) {
-        const chip = mk("i","ntkind"); chip.innerHTML = svg; chip.title = kl;
-        kb.append(chip);
-      }
-      fig.append(kb);
-    }
-    const foot = mk("div","ntfoot");
-    const nm = mk("b");
-    const pip = mk("i","mpip"); pip.style.background = `hsl(${hue} 62% 52%)`;
-    nm.append(pip, mk("span", null, label));
-    foot.append(nm, mk("em", null, `${ps.length} page${ps.length > 1 ? "s" : ""}`));
-    b.append(fig, foot);
-    b.title = `Ouvrir ${label}`;
-    b.addEventListener("click", go);
-    return b;
-  }
-  function ntSeed(c) {
-    const b = mk("button","ntseed");
-    const pip = mk("i","mpip"); pip.style.background = `hsl(${hueOf(c)} 62% 52%)`;
-    b.append(pip, mk("span", null, c));
-    b.title = `Ouvrir une première page sous ${c}`;
-    b.addEventListener("click", () => { addPage(c); openMatiere(c);
-      el("m-page").focus({ preventScroll:true }); });
-    return b;
+  /* Un sous-dossier naît nommé, avec sa première page dedans — une catégorie
+     vide n'existe pas : c'est la page qui la porte. */
+  function nouvDossierPop(c, anchor) {
+    pop?.remove(); pop = null; popAnchor = null;
+    const box = mk("div","pop fx");
+    box.append(mk("h4", null, "Nouveau dossier"));
+    box.append(mk("p","when", `Dans ${c} — il s'ouvre avec une première page dedans.`));
+    const input = mk("input"); input.type = "text"; input.maxLength = 40;
+    input.placeholder = "Ex. Cours 5, Préparation examen";
+    box.append(input);
+    const acts = mk("div","acts");
+    const fin = mk("button","btn quiet","Annuler");
+    fin.addEventListener("click", closePop);
+    const ok = mk("button","btn solid","Créer");
+    const go = () => {
+      const nom = input.value.trim(); if (!nom) return;
+      const p = addPage(c); setPageCat(c, p.id, nom);
+      closePop(); renderNotes(); renderCourses();
+    };
+    ok.addEventListener("click", go);
+    input.addEventListener("keydown", ev => {
+      if (ev.key === "Enter") { ev.preventDefault(); go(); }
+      if (ev.key === "Escape") { ev.preventDefault(); closePop(); }
+    });
+    acts.append(mk("span","grow"), fin, ok); box.append(acts);
+    pop = box; place(box, anchor, false);
+    input.focus();
   }
   function ntRow(c, p) {
     const li = mk("li");
@@ -7612,54 +7887,98 @@ a,button{touch-action:manipulation}
     const what = line || (doc ? `Document · ${doc.n} feuille${doc.n > 1 ? "s" : ""}`
       : (p.ink.length || p.ni) ? "Page dessinée"
       : (p.annos.length || p.na) ? "Annotations posées" : "Page vide");
-    /* La date reste au bout du titre — le jour suffit ici, l'heure vit dans
-       l'infobulle et sur la fiche ouverte. La seconde ligne est la citation,
-       ou, à défaut, la nature de la page dite sur un autre ton. */
-    const subj = mk("span","ntsubj");
-    const spip = mk("i","mpip"); spip.style.background = `hsl(${hueOf(c)} 62% 52%)`;
-    subj.append(spip, mk("span", null, c));
-    btn.append(subj, mk("b", null, p.t || "Page"),
-      mk("span", `ntwhat${line ? "" : " void"}`, what),
-      mk("time", null, p.at ? p.at.split(" · ")[0] : ""));
+    const top = mk("span","ntpt");
+    top.append(mk("b", null, p.t || "Page"));
+    if (p.at) top.append(mk("time", null, p.at.split(" · ")[0]));
+    btn.append(top, mk("span", `ntwhat${line ? "" : " void"}`, what));
     btn.title = [`Ouvrir cette page — ${c}`, p.at && `modifiée ${p.at}`]
       .filter(Boolean).join("\n");
     btn.addEventListener("click", () => openNotePage(c, p.id));
-    /* Une page pleine ne part pas d'un seul clic : le premier arme le bouton,
-       le second seulement supprime — et l'hésitation désarme toute seule. */
-    const kill = mk("button","kill","×"); kill.title = "Supprimer la page";
+    /* Ranger sans ouvrir la page ; une page déjà rangée garde son dossier
+       visible — c'est là qu'on la reclasse. */
+    const tidy = mk("button","ntcatb" + (pgCat(p) ? " on" : ""));
+    tidy.innerHTML = ICON.ranger;
+    tidy.title = pgCat(p) ? `Rangée sous « ${pgCat(p)} » — reclasser` : "Ranger cette page";
+    tidy.addEventListener("click", ev => catPop(c, p.id, ev.currentTarget));
+    /* Une page pleine ne part pas d'un seul clic : le premier arme, le second
+       l'envoie — à la corbeille, pas au néant : trente jours pour se raviser. */
+    const kill = mk("button","kill","×"); kill.title = "Supprimer la page — trente jours de corbeille";
     kill.addEventListener("click", () => {
       if (pgFull(p) && !kill.classList.contains("arm")) {
         kill.classList.add("arm"); kill.textContent = "sûr ?";
         setTimeout(() => { kill.classList.remove("arm"); kill.textContent = "×"; }, 2600);
         return;
       }
-      docPurge(p);       // ses feuilles dans IndexedDB partent avec elle
-      trDel(p.id);       // son transcript brut aussi
-      idbDel(`pg/${p.id}`).catch(() => {});   // et son corps
-      pgSafe.delete(p.id); pgDirty.delete(p.id); cloudDirty.delete(p.id);
-      /* Une tombe, puis l'effacement là-bas : sans la tombe, la copie du
-         nuage — ou celle d'un autre appareil — ressusciterait la page à la
-         prochaine fusion. */
-      state.gone[`pg:${p.id}`] = { k: "page", t: p.t || "", at: Date.now() };
-      sbPushGone();
-      sbApi(`agenda_pages_perso?id=eq.${encodeURIComponent(p.id)}`, { method: "DELETE" }).catch(() => {});
-      const ps = mPages(c).filter(x => x.id !== p.id);
-      mWrite(c, { pages: ps, pg: ps[0]?.id || "" }); save();
+      corbeilleEntre(c, p);
+      renderTrashBtn();
       renderCourses();   // remet les compteurs à jour, et la vue avec eux
     });
-    /* Ranger sans ouvrir la page : un arriéré se classe d'ici, rangée par
-       rangée, au lieu d'entrer dans chaque fiche pour en sortir aussitôt.
-       Le dossier se montre au survol comme le ×, et reste allumé sur une
-       page déjà rangée — c'est là qu'on la reclasse. */
-    const tidy = mk("button","ntcatb" + (pgCat(p) ? " on" : ""));
-    tidy.innerHTML = ICON.ranger;
-    tidy.title = pgCat(p) ? `Rangée sous « ${pgCat(p)} » — reclasser` : "Ranger cette page";
-    tidy.addEventListener("click", () => catPop(c, p.id, true));
     li.append(btn, tidy, kill);
     return li;
   }
+  function ntSeed(c) {
+    const b = mk("button","ntseed");
+    const pip = mk("i","mpip"); pip.style.background = `hsl(${hueOf(c)} 62% 52%)`;
+    b.append(pip, mk("span", null, c));
+    b.title = `Ouvrir une première page sous ${c}`;
+    b.addEventListener("click", () => { addPage(c); openMatiere(c);
+      el("m-page").focus({ preventScroll:true }); });
+    return b;
+  }
   el("nav-notes").addEventListener("click", openNotes);
   el("nt-back").addEventListener("click", () => enterBoard());
+
+  /* ── Le panneau de la corbeille ──────────────────────────────────
+     Les pages supprimées, trente jours durant : chacune se restaure d'un
+     clic, ou part pour de bon — avec la même hésitation armée que partout. */
+  function renderTrashBtn() {
+    const b = el("nt-trash"); if (!b) return;
+    const n = (state.corbeille || []).length;
+    b.hidden = !n;
+    b.querySelector("span").textContent = n ? `Corbeille (${n})` : "Corbeille";
+  }
+  function corbeillePop(anchor) {
+    pop?.remove(); pop = null; popAnchor = null;
+    const box = mk("div","pop fx");
+    box.append(mk("h4", null, "Corbeille"));
+    const liste = (state.corbeille || []).slice().sort((a, b) => (b.at || 0) - (a.at || 0));
+    if (!liste.length) box.append(mk("p","when","Rien ici — les pages supprimées y attendent trente jours."));
+    else box.append(mk("p","when","Trente jours pour se raviser, puis chaque page part d'elle-même."));
+    const lignes = mk("div","trlist");
+    for (const e of liste) {
+      const row = mk("div","trrow");
+      const tx = mk("div","tx");
+      tx.append(mk("b", null, e.p.t || "Page"));
+      const jours = Math.max(0, Math.round((Date.now() - (e.at || 0)) / 864e5));
+      tx.append(mk("span", null,
+        `${e.c} · ${jours ? `il y a ${jours} jour${jours > 1 ? "s" : ""}` : "aujourd'hui"} · part dans ${Math.max(1, 30 - jours)} j`));
+      const back = mk("button","btn quiet","Restaurer");
+      back.addEventListener("click", async () => {
+        await corbeilleRestaure(e);
+        renderTrashBtn(); corbeillePop(anchor);
+      });
+      const kill = mk("button","kill","×"); kill.title = "Supprimer pour de bon";
+      kill.addEventListener("click", () => {
+        if (!kill.classList.contains("arm")) {
+          kill.classList.add("arm"); kill.textContent = "sûr ?";
+          setTimeout(() => { kill.classList.remove("arm"); kill.textContent = "×"; }, 2600);
+          return;
+        }
+        corbeilleDetruit(e);
+        renderTrashBtn(); corbeillePop(anchor);
+      });
+      row.append(tx, back, kill);
+      lignes.append(row);
+    }
+    box.append(lignes);
+    const acts = mk("div","acts");
+    const fin = mk("button","btn quiet","Fermer");
+    fin.addEventListener("click", closePop);
+    acts.append(mk("span","grow"), fin); box.append(acts);
+    pop = box; place(box, anchor, false);
+  }
+  el("nt-trash").addEventListener("click", () => corbeillePop(el("nt-trash")));
+  el("nav-notes").addEventListener("click", renderTrashBtn);
 
   /* ── Thème + commandes ────────────────────────────────────────── */
   function applyTheme() {
@@ -7714,16 +8033,27 @@ a,button{touch-action:manipulation}
      avance d'une semaine quand on les fait défiler. */
   const weekPill = () => state.wview === "pile" ? addWeek() : (stepWeek(1), goto("horaire"));
   /* Toute navigation vers une section referme d'abord la vue profil. */
-  const goto = id => { showProfile(false); el(id)?.scrollIntoView({ behavior:lisse, block:"start" }); };
+  /* Les anciennes ancres du tableau deviennent des destinations. Ce qui n'en
+     est pas une — la carte « À faire », les cartes d'examens — ouvre la vue
+     qui la CONTIENT, puis fait défiler jusqu'à elle : un niveau de zoom de
+     plus, pas un écran de plus. */
+  const DEST = { top:"board", horaire:"horaire", echeances:"echeances",
+                 mios:"mio", mio:"mio", cours:"cours", notes:"notes",
+                 todocard:"board", "w-exam":"echeances", "w-biz":"echeances" };
+  const ANCRE_INTERNE = new Set(["todocard","w-exam","w-biz"]);
+  function goto(id) {
+    /* L'ancre se dépose AVANT la navigation : showView est le seul qui sache
+       quand la vue est posée, et c'est lui qui arbitre entre « remonter en
+       haut » et « descendre à la carte demandée ». Les deux défilements
+       lancés côte à côte se battaient, et le haut gagnait. */
+    ancreEnAttente = ANCRE_INTERNE.has(id) ? id : "";
+    va(DEST[id] || "board");
+  }
 
-  document.querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => {
-    const t = b.dataset.go;
-    if (b.classList.contains("navi")) {
-      document.querySelectorAll(".navi[data-go]").forEach(x => x.classList.remove("on"));
-      b.classList.add("on");
-    }
-    t === "top" ? (showProfile(false), scrollTo({ top:0, behavior:lisse })) : goto(t);
-  }));
+  /* Le clic n'allume plus rien lui-même : il navigue, et showView déduit
+     l'état de la barre de la vue obtenue. */
+  document.querySelectorAll("[data-go]").forEach(b =>
+    b.addEventListener("click", () => goto(b.dataset.go)));
   el("add-week").addEventListener("click", weekPill);
   el("add-week2").addEventListener("click", addWeek);
   el("w-prev").addEventListener("click", () => stepWeek(-1));
@@ -7743,8 +8073,7 @@ a,button{touch-action:manipulation}
     if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
     const t = ev.target;
     if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
-    const r = el("horaire").getBoundingClientRect();
-    if (r.bottom < 90 || r.top > innerHeight - 90) return;
+    if (el("vhoraire").hidden) return;
     ev.preventDefault(); stepWeek(ev.key === "ArrowRight" ? 1 : -1);
   });
 
@@ -8023,6 +8352,80 @@ a,button{touch-action:manipulation}
      avant d'écrire. Sans compte, tout reste local — la liste vit quand même
      dans localStorage et protège déjà la prochaine ingestion. */
   let goneTimer = null;
+  /* ── La collection : agenda_vue_items ─────────────────────────────
+     Le blob `agenda_snapshots` reste le transport de la collecte locale.
+     À côté, et sans rien casser, l'app lit maintenant la COLLECTION —
+     faits ⋈ calque personnel, jointure faite par la base.
+
+     C'est ce chemin, et lui seul, qui rend un iPad utilisable : il n'y a ni
+     Mac, ni data.json, ni extension derrière. Moodle collecte côté serveur,
+     l'appareil lit la vue, et c'est tout.
+
+     La vue exclut déjà ce qui est supprimé et applique déjà les reports :
+     rien à filtrer ici, contrairement à ingest() qui doit se défendre du
+     scraper. C'est exactement ce que la séparation faits / calque achète. */
+  const GENRE_KIND = { examen:"examen", devoir:"remise", autre:"autre" };
+  /* L'identifiant d'un item est « source:id ». Localement on garde l'id nu,
+     pour que les états déjà posés (fait, supprimé, reporté) continuent de
+     coller à la même échéance quelle que soit la voie d'arrivée. */
+  const idNu = iid => iid.slice(iid.indexOf(":") + 1);
+  const iidDe = d => `${d.src}:${d.id}`;
+
+  async function sbFetchItems(retry = true) {
+    const at = await sbJeton();
+    if (!at) return null;
+    const champs = "id,source,genre,cours,code_cours,titre,url,echeance_le,jour_seul,statut";
+    const r = await fetch(`${SB_URL}/rest/v1/agenda_vue_items?select=${champs}&echeance_le=not.is.null`, {
+      headers: { apikey: SB_KEY, authorization: `Bearer ${at}` },
+    });
+    if (r.status === 401 && retry && sbSession()?.rt) {
+      try { await sbRenew(); } catch { return null; }
+      return sbFetchItems(false);
+    }
+    return r.ok ? r.json().catch(() => null) : null;
+  }
+
+  function ingestItems(rows) {
+    if (!Array.isArray(rows) || !rows.length) return;
+    const frais = [];
+    for (const it of rows) {
+      const kind = GENRE_KIND[it.genre];
+      if (!kind || !it.echeance_le) continue;          // messages et documents : pas des échéances
+      const t = new Date(it.echeance_le);
+      if (Number.isNaN(t.getTime())) continue;
+      const id = idNu(it.id);
+      if (estSupprime(id)) continue;                   // pierre tombale encore locale
+      frais.push({ id, t: it.titre, course: it.cours || "", code: it.code_cours || "",
+        date: iso(t), time: it.jour_seul ? "" : `${pad(t.getHours())}:${pad(t.getMinutes())}`,
+        kind, src: it.source, done: it.statut === "fait", ...(it.url ? { url: it.url } : {}) });
+    }
+    if (!frais.length) return;
+    /* Même règle que le blob : chaque source ne remplace que ce qu'elle
+       apporte. Une collecte Moodle serveur n'efface pas le Léa d'un Mac. */
+    const arrivees = new Set(frais.map(x => x.src));
+    const anciennes = new Map(state.deadlines.map(d => [d.id, d]));
+    state.deadlines = [
+      ...state.deadlines.filter(d => !arrivees.has(d.src)),
+      ...frais.map(f => ({ ...f, done: f.done || !!anciennes.get(f.id)?.done })),
+    ];
+    applyMods();
+    refreshAll();
+  }
+
+  /* Le calque personnel, dans l'autre sens. Une seule table à écrire, et la
+     collecte n'a rien à en savoir : c'est ce qui remplace, à terme, le
+     va-et-vient de `gone` et de `mods` par instantanés entiers. */
+  async function marqueEtat(d, patch) {
+    if (!sbSession()) return;
+    try {
+      await sbApi("agenda_item_etat?on_conflict=user_id,item_id", {
+        method: "POST",
+        headers: { prefer: "resolution=merge-duplicates" },
+        body: JSON.stringify([{ item_id: iidDe(d), ...patch }]),
+      });
+    } catch { /* hors ligne : le local fait foi, la prochaine visite rattrapera */ }
+  }
+
   function sbPushGone() {
     if (!sbSession()) return;
     clearTimeout(goneTimer);
@@ -8069,6 +8472,9 @@ a,button{touch-action:manipulation}
     const h = of("horaire");
     if (h?.tt) setTimetable(h.tt, "nuage");
     ingest(of("export"));
+    /* Après le blob, jamais avant : la collection a le dernier mot sur les
+       échéances qu'elle porte, et elle porte celles du serveur. */
+    sbFetchItems().then(ingestItems).catch(() => {});
   }
   /* Une suppression ne s'annule que par un ré-ajout explicite : les deux
      listes s'unissent, jamais ne se soustraient. Si le nuage ignore des
@@ -8098,7 +8504,7 @@ a,button{touch-action:manipulation}
       box.append(mk("p","when","Tes échéances et MIO se synchronisent depuis l'agent local à chaque collecte."));
       const acts = mk("div","acts");
       const out = mk("button","btn danger","Se déconnecter");
-      out.addEventListener("click", () => { sbSignOut(); renderAccount(); closePop(); showJoin("signin"); });
+      out.addEventListener("click", () => { sbSignOut(); oublieIdentite(); renderAccount(); closePop(); showJoin("signin"); });
       acts.append(out, mk("span","grow"));
       const close = mk("button","btn quiet","Fermer"); close.addEventListener("click", closePop);
       const sync = mk("button","btn solid","Rafraîchir");
@@ -8113,44 +8519,42 @@ a,button{touch-action:manipulation}
       const msg = mk("p","when"); msg.style.marginTop = ".55rem";
       box.append(em, pw, msg);
       const acts = mk("div","acts");
-      const mkBtn = (cls, label, path) => {
-        const b = mk("button", cls, label);
-        b.addEventListener("click", async () => {
-          msg.textContent = "…";
-          try {
-            if (path === "signup") {
-              if (pw.value.length < 8) { msg.textContent = "Au moins 8 caractères."; return; }
-              const n = await pwnedCount(pw.value);
-              if (n) { msg.textContent = pwnedMsg(n); return; }
-            }
-            const courriel = em.value.trim();
-            const d = await sbAuth(path, { email: courriel, password: pw.value });
-            if (d.access_token) { sbKeep(d); renderAccount(); closePop(); applyCloud(await sbFetchSnapshot()); }
-            else {
-              /* Compte créé mais endormi : la fenêtre ne sait pas saisir un
-                 code, l'écran d'accueil si. On y renvoie plutôt que d'énoncer
-                 une consigne que rien ici ne permet de suivre. */
-              joEmail = courriel; closePop(); showJoin("confirm");
-            }
-          } catch (e2) {
-            if (/email not confirmed/i.test(String(e2?.message || ""))) {
-              joEmail = em.value.trim();
-              try { await sbAuth("resend", { type: "signup", email: joEmail }); } catch {}
-              closePop(); showJoin("confirm");
-            } else msg.textContent = frErr(e2);
+      /* Ouvrir un compte demande aussi un nom : cette fenêtre ne le porte pas,
+         l'écran d'inscription si. On y renvoie plutôt que de créer par la
+         bande un profil sans nom. */
+      const neuf = mk("button","btn quiet","Créer un compte");
+      neuf.addEventListener("click", () => { closePop(); showJoin("signup"); });
+      const entrer = mk("button","btn solid","Se connecter");
+      entrer.addEventListener("click", async () => {
+        msg.textContent = "…";
+        const courriel = em.value.trim();
+        try {
+          const d = await sbAuth("token?grant_type=password", { email: courriel, password: pw.value });
+          if (d.access_token) {
+            sbKeep(d); adopteNom(d); avatarSync(); renderAccount(); closePop();
+            applyCloud(await sbFetchSnapshot());
+          } else {
+            /* Compte créé mais endormi : la fenêtre ne sait pas saisir un
+               code, l'écran d'accueil si. On y renvoie plutôt que d'énoncer
+               une consigne que rien ici ne permet de suivre. */
+            joEmail = courriel; closePop(); showJoin("confirm");
           }
-        });
-        return b;
-      };
-      acts.append(mkBtn("btn quiet","Créer un compte","signup"), mk("span","grow"),
-                  mkBtn("btn solid","Se connecter","token?grant_type=password"));
+        } catch (e2) {
+          if (/email not confirmed/i.test(String(e2?.message || ""))) {
+            joEmail = courriel;
+            try { await sbAuth("resend", { type: "signup", email: courriel }); } catch {}
+            closePop(); showJoin("confirm");
+          } else msg.textContent = frErr(e2);
+        }
+      });
+      acts.append(neuf, mk("span","grow"), entrer);
       box.append(acts);
     }
     pop = box; place(box, anchorEl); (box.querySelector("input") || box).focus?.();
   }
   el("sb-account").addEventListener("click", ev => openAccount(ev.currentTarget));
   renderAccount();
-  if (sbSession()) sbFetchSnapshot().then(applyCloud).catch(() => {});
+  if (sbSession()) { avatarSync(); sbFetchSnapshot().then(applyCloud).catch(() => {}); }
 
   /* ── Profil ──────────────────────────────────────────────────────
      L'avatar ouvre la vue profil (infos, mot de passe du compte
@@ -8158,6 +8562,71 @@ a,button{touch-action:manipulation}
   /* Trois vues exclusives : le tableau de bord (l'app), le profil, et la
      page d'accueil qui explique le fonctionnement. L'en-tête « Salut » ne
      vaut que dans l'app : la landing se présente seule. */
+  /* ── Le routeur ───────────────────────────────────────────────────
+     Chaque destination a une ADRESSE. Avant, `goto()` faisait défiler jusqu'à
+     une ancre : la barre latérale s'allumait sans que rien ne change de
+     place, le bouton retour du navigateur quittait l'app, et aucun écran ne
+     pouvait être mis en signet ni partagé. Maintenant le hash décide de ce
+     qui s'affiche — #/echeances, #/cours/Philosophie — et le clic ne fait
+     que l'écrire.
+
+     Deux vues restent hors du routeur, exprès : « landing » et « onboard »
+     sont la porte d'entrée, pas des endroits où l'on revient. */
+  const HOTES = { board:"board", horaire:"vhoraire", echeances:"vecheances",
+                  mio:"vmio", cours:"vcours", matiere:"matiere", notes:"notes",
+                  profil:"profil", landing:"landing", onboard:"onboard" };
+  /* Les vues qu'une adresse peut nommer. « matiere » n'y est pas : elle
+     s'écrit #/cours/<matière>, parce qu'une fiche EST un endroit dans les
+     cours, pas une septième section. */
+  const VUES = ["board","horaire","echeances","mio","cours","notes","profil"];
+  /* Ce que la barre latérale allume, par vue. Une fiche de matière éclaire
+     « Mes cours » : on est bien quelque part DANS les cours. */
+  const ANCRES = { board:"top", horaire:"horaire", echeances:"echeances",
+                   mio:"mios", cours:"cours", matiere:"cours" };
+
+  /* Anciennes adresses, et les deux noms qui ne collent pas : la section
+     s'appelait « mios », l'entrée du tableau « top ». */
+  const ALIAS = { top:"board", mios:"mio", matiere:"cours" };
+  const lisRoute = () => {
+    const brut = (location.hash || "").replace(/^#\/?/, "");
+    if (!brut) return { v:"board", a:"" };
+    const [tete, ...reste] = brut.split("/");
+    const v = ALIAS[tete] || tete;
+    let a = "";
+    try { a = decodeURIComponent(reste.join("/")); } catch { a = ""; }
+    return VUES.includes(v) ? { v, a } : { v:"board", a:"" };
+  };
+  const adresseDe = name =>
+    name === "matiere" ? (mCur ? `#/cours/${encodeURIComponent(mCur)}` : "#/cours")
+    : name === "board" ? "#/" : `#/${name}`;
+  /* La toute première vue REMPLACE l'entrée d'historique — arriver dans
+     l'app ne doit pas mettre un cran de « retour » entre soi et la page
+     d'où l'on vient. Toutes les suivantes en poussent un : sans ça, le
+     retour sauterait par-dessus l'écran qu'on vient de quitter. */
+  let routePosee = false;
+  /* La carte à rejoindre une fois la vue affichée — « À faire », « Examens »,
+     « Business » : elles vivent DANS une vue, elles n'en sont pas une. */
+  let ancreEnAttente = "";
+  function majAdresse(name) {
+    if (name === "landing" || name === "onboard") return;
+    const h = adresseDe(name);
+    if (location.hash === h || (h === "#/" && !location.hash)) return;
+    /* pushState / replaceState ne déclenchent JAMAIS hashchange : c'est ce
+       qui empêche showView de se rappeler lui-même en boucle. */
+    history[routePosee ? "pushState" : "replaceState"](null, "", h);
+    routePosee = true;
+  }
+  /* La barre latérale et les onglets ne s'allument plus au clic : ils se
+     DÉDUISENT de la vue affichée. C'est ce qui règle le vieux mensonge —
+     cliquer « Mes cours » puis remonter à la main laissait « Mes cours »
+     allumé alors qu'on regardait le tableau. */
+  function majAncres(name) {
+    const cible = ANCRES[name] || "";
+    document.querySelectorAll(".navi[data-go]").forEach(x =>
+      x.classList.toggle("on", x.dataset.go === cible));
+    el("nav-notes").classList.toggle("on", name === "notes");
+  }
+
   function showView(name) {
     /* Quitter la fiche d'une matière la referme : les cartes de « Mes cours »
        reprennent alors les notes et les dates qu'on vient d'y écrire. Et la
@@ -8167,41 +8636,178 @@ a,button{touch-action:manipulation}
       mFlush();
       const c = mCur, p = mPage(c);
       mCur = null; renderSubjects(); renderCourses();
-      if (name === "board" || name === "notes") catNudge(c, p);
+      if (name === "board" || name === "notes" || name === "cours") catNudge(c, p);
     }
     /* Quitter la fiche replie d'abord le plein écran des notes : sans ça,
        body garderait overflow:hidden devant une carte devenue invisible. */
     if (name !== "matiere") setZen(false);
-    for (const v of ["board","profil","matiere","landing","onboard","notes"]) el(v).hidden = v !== name;
+    for (const [v, id] of Object.entries(HOTES)) el(id).hidden = v !== name;
     /* Une vue est choisie : le voile de départ n'a plus rien à cacher. */
     document.querySelector(".shell").classList.remove("avant");
-    /* L'entrée « Toutes les notes » n'est pas une ancre du tableau : elle
-       s'allume avec sa vue, et éteint les ancres qui croiraient l'être encore. */
-    el("nav-notes").classList.toggle("on", name === "notes");
-    if (name === "notes") document.querySelectorAll(".navi[data-go]").forEach(x => x.classList.remove("on"));
+    majAncres(name);
     const hors = name === "landing" || name === "onboard";
     el("apphead").hidden = hors;
     /* La salutation et la date n'appartiennent qu'au tableau de bord. Ailleurs,
-       la vue annonce déjà ce qu'elle est — « Conférences », « Mon profil » — et
+       la vue annonce déjà ce qu'elle est — « Échéances », « Mon profil » — et
        un « Salut, Maverick ! » au-dessus ne ferait que repousser le contenu.
        L'en-tête garde ses commandes, il perd son titre. */
     el("greet").hidden = name !== "board";
     el("apphead").classList.toggle("bare", name !== "board");
     document.body.classList.toggle("lp", hors);
     document.body.classList.toggle("mv", name === "matiere");
-    if (name !== "board") scrollTo({ top:0, behavior:lisse });
+    majAdresse(name);
+    if (ancreEnAttente) {
+      const cible = el(ancreEnAttente); ancreEnAttente = "";
+      /* Sans transition, exprès : la vue vient de changer d'un bloc, faire
+         glisser ensuite ferait croire à un défilement qu'on n'a pas demandé.
+         Et un glissement lancé sur une vue qui finit de se poser se fait
+         interrompre par la mise en page — il n'arrivait jamais au bout. */
+      requestAnimationFrame(() => cible?.scrollIntoView({ block:"start" }));
+    } else if (name !== "board") scrollTo({ top:0, behavior:lisse });
   }
+
+  /* Naviguer depuis un clic : on ouvre la vue, l'adresse suit dans showView. */
+  function va(v, a = "") {
+    if (v === "cours" && a) return openMatiere(a);
+    if (v === "notes") return openNotes();
+    if (v === "profil") return showProfile(true);
+    showView(v);
+  }
+  /* Le hash a changé sans passer par nous : bouton retour, signet, lien
+     collé. La porte d'entrée garde la main — on ne saute pas par-dessus la
+     connexion parce qu'une vieille adresse traîne dans la barre. */
+  function appliqueRoute() {
+    if (!el("landing").hidden || !el("onboard").hidden) return;
+    const { v, a } = lisRoute();
+    va(v, a);
+  }
+  addEventListener("hashchange", appliqueRoute);
+
   function showProfile(on) {
     if (on) { showView("profil"); refreshProfile(); }
-    else if (el("board").hidden) showView("board");
+    else if (!el("profil").hidden) showView("board");
   }
   const initials = n => (n || "").trim().split(/\s+/).map(w => w[0]).slice(0,2).join("").toUpperCase() || "?";
+
+  /* ── La photo de profil ──────────────────────────────────────────
+     Recadrée au carré et réduite à 256 px : quelques dizaines de kilo-octets,
+     assez pour un rond de 44 px sur écran Retina, assez léger pour tenir dans
+     localStorage à côté de la photo d'horaire. L'original ne sert à rien
+     ensuite — on ne le garde pas.
+     Elle vit à deux endroits, et c'est voulu : ici pour s'afficher tout de
+     suite, même hors ligne ; dans le seau privé « agenda-docs » sous
+     {uid}/profil/avatar.jpg pour SUIVRE LE COMPTE. Elle ne passe pas par les
+     métadonnées du compte : celles-là voyagent dans le jeton, à chaque
+     requête — une image y pèserait sur tout le reste. */
+  const AV_KEY = "agenda.avatar", AV_MONTEE = "agenda.avatar.montee";
+  const avatarLu = () => { try { return localStorage.getItem(AV_KEY) || ""; } catch { return ""; } };
+  const avatarChemin = () => {
+    const s0 = sbSession();
+    return s0?.uid ? `object/agenda-docs/${s0.uid}/profil/avatar.jpg` : "";
+  };
+  const peintAvatar = (e, av, ini) => {
+    if (!e) return;
+    (e.querySelector(".ini") || e).textContent = av ? "" : ini;
+    e.style.backgroundImage = av ? `url("${av}")` : "";
+    e.classList.toggle("pic", !!av);
+  };
+  /* Le fichier choisi est recadré au centre : un carré, quelle que soit la
+     photo déposée — un rond ne sait pas quoi faire d'un panorama. */
+  function avatarDeFichier(f, dire) {
+    dire?.("…");
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(img.src);
+      const c = Math.min(img.width, img.height), T = 256;
+      const cv = document.createElement("canvas"); cv.width = cv.height = T;
+      cv.getContext("2d").drawImage(img, (img.width - c) / 2, (img.height - c) / 2, c, c, 0, 0, T, T);
+      avatarEcrire(cv.toDataURL("image/jpeg", .82), dire);
+    };
+    img.onerror = () => { URL.revokeObjectURL(img.src); dire?.("Impossible de lire cette image.", true); };
+    img.src = URL.createObjectURL(f);
+  }
+  function avatarEcrire(url, dire) {
+    try {
+      if (url) localStorage.setItem(AV_KEY, url); else localStorage.removeItem(AV_KEY);
+      localStorage.removeItem(AV_MONTEE);
+    } catch { dire?.("Image trop lourde pour cet appareil — réessaie avec une plus petite.", true); return; }
+    dire?.(""); renderIdentity();
+    avatarPousse().catch(() => {});
+  }
+  /* Sans compte encore ouvert, il n'y a rien à pousser : la photo attend dans
+     localStorage et montera à la première session (voir avatarSync). */
+  async function avatarPousse() {
+    const chemin = avatarChemin(); if (!chemin) return;
+    const url = avatarLu();
+    if (!url) { localStorage.removeItem(AV_MONTEE);
+      try { await sbStore(chemin, { method: "DELETE" }); } catch {} return; }
+    const b = await (await fetch(url)).blob();
+    await sbStore(chemin, { method: "POST", headers: { "content-type": "image/jpeg", "x-upsert": "true" }, body: b });
+    try { localStorage.setItem(AV_MONTEE, "1"); } catch {}
+  }
+  async function avatarTire() {
+    const chemin = avatarChemin(); if (!chemin || avatarLu()) return;
+    try {
+      const b = await (await sbStore(chemin)).blob();
+      const url = await new Promise((res, rej) => {
+        const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = () => rej(fr.error);
+        fr.readAsDataURL(b);
+      });
+      localStorage.setItem(AV_KEY, url); localStorage.setItem(AV_MONTEE, "1"); renderIdentity();
+    } catch { /* aucune photo au compte, ou pas de réseau : les initiales font foi */ }
+  }
+  /* À chaque session retrouvée : ce qui n'est pas encore monté monte, sinon
+     on va chercher ce que le compte garde — l'appareil neuf hérite du rond. */
+  function avatarSync() {
+    if (!sbSession()?.uid) return;
+    const dejaLa = avatarLu();
+    if (dejaLa && localStorage.getItem(AV_MONTEE)) return;
+    (dejaLa ? avatarPousse() : avatarTire()).catch(() => {});
+  }
+
+  /* Se déconnecter, c'est rendre l'appareil : le nom et la photo repartent
+     avec la session. Le compte, lui, les garde — la prochaine connexion les
+     ramène. Le contenu de l'agenda ne bouge pas : ce n'est pas une identité,
+     et il redescend du compte de toute façon. */
+  function oublieIdentite() {
+    state.name = ""; save();
+    try { localStorage.removeItem(AV_KEY); localStorage.removeItem(AV_MONTEE); } catch {}
+    joNom = ""; el("jo-name").value = "";
+    renderIdentity();
+  }
+
   function renderIdentity() {
     const n = (state.name || "").trim() || "Moi";
+    const av = avatarLu();
     el("hi-name").textContent = n.split(/\s+/)[0];
-    el("go-profile").textContent = initials(n);
+    peintAvatar(el("go-profile"), av, initials(n));
     el("go-profile").title = `Mon profil — ${n}`;
-    el("p-avatar").textContent = initials(n);
+    peintAvatar(el("p-avatar"), av, initials(n));
+    peintAvatar(el("jo-av"), av, initials(el("jo-name").value || (state.name || "").trim()));
+    el("p-av-del").hidden = !av;
+    el("jo-av-del").hidden = !av;
+    el("p-av-pick").textContent = av ? "Changer ma photo" : "Ajouter une photo";
+  }
+  /* Le nom appartient au compte, pas à l'appareil : donné à l'inscription,
+     il repart dans les métadonnées Supabase et revient avec chaque session.
+     Un deuxième appareil retrouve donc son en-tête sans qu'on le réécrive.
+     `secours` couvre le seul moment où le serveur ne le rend pas encore :
+     la réponse de l'inscription elle-même. */
+  const nomDuCompte = d => {
+    const m = d?.user?.user_metadata || {};
+    return String(m.nom || m.full_name || m.name || "").trim();
+  };
+  function adopteNom(d, secours) {
+    const compte = nomDuCompte(d);
+    const n = compte || String(secours || "").trim();
+    if (n && n !== (state.name || "").trim()) {
+      state.name = n; save(); renderIdentity();
+      if (!el("profil").hidden) refreshProfile();
+    }
+    /* Compte ouvert avant que le nom soit demandé : il n'en porte pas encore.
+       On lui donne celui d'ici plutôt que de laisser le prochain appareil
+       arriver sans en-tête. */
+    if (!compte && (state.name || "").trim()) sbEnvoieNom(state.name.trim()).catch(() => {});
   }
   function refreshProfile() {
     el("p-name").value = state.name || "";
@@ -8230,9 +8836,11 @@ a,button{touch-action:manipulation}
   const markVu = () => cookieEcrire(VU, "1", 400);
   const firstVisit = () => !cookieLire(VU);
 
+  /* Entrer dans l'app, c'est appliquer l'adresse demandée — un signet vers
+     #/echeances doit y mener, pas au tableau. Sans hash, c'est le tableau. */
   const enterBoard = () => {
-    showView("board");
-    document.querySelectorAll(".navi[data-go]").forEach(x => x.classList.toggle("on", x.dataset.go === "top"));
+    const { v, a } = lisRoute();
+    va(v, a);
     scrollTo({ top:0, behavior:lisse });
   };
   /* Le compte n'est pas facultatif : sans session, l'accueil ne mène qu'à
@@ -8244,42 +8852,81 @@ a,button{touch-action:manipulation}
   for (const id of ["cta-open","cta-open2","cta-open3"]) el(id).addEventListener("click", openApp);
   el("lp-signin").addEventListener("click", () => showJoin(sbSession() ? "signup" : "signin"));
 
-  /* Trois états : « signup », « signin », et « confirm » — le compte existe
-     mais dort tant que le courriel n'est pas confirmé. joEmail retient
-     l'adresse entre l'inscription et la saisie du code. */
-  let joMode = "signup", joEmail = "";
+  /* ── Ouvrir un compte, en trois temps ────────────────────────────
+     « nom »     : qui tu es — le nom qui accueille le tableau, et la photo
+                   qui l'accompagne (facultative) ;
+     « compte »  : le courriel et le mot de passe, rien d'autre ;
+     « confirm » : le code reçu, parce que le compte existe mais dort tant
+                   que le courriel n'est pas confirmé.
+     « signin » n'a pas d'étapes : un seul écran, deux champs.
+     Ce qui est saisi attend dans joNom / joEmail d'une étape à l'autre ; la
+     photo, elle, est déjà écrite sur l'appareil et montera au compte dès
+     qu'il y aura une session. */
+  const JO_PAS = { nom: 1, compte: 2, confirm: 3 };
+  const joUp = m => m === "nom" || m === "compte";
+  let joMode = "nom", joEmail = "", joNom = "";
   function showJoin(mode) {
     /* Franchir l'accueil, c'est l'avoir vu : au prochain passage sur cet
        appareil, on ouvre directement le formulaire. */
     markVu();
-    joMode = mode;
-    const up = joMode === "signup", conf = joMode === "confirm";
-    el("jo-title").textContent = conf ? "Confirme ton courriel"
-      : up ? "Crée ton compte d'agenda" : "Connecte-toi";
+    /* « signup » reste une adresse valable — c'est la première étape. */
+    joMode = mode === "signup" ? "nom" : mode;
+    const m = joMode, up = joUp(m), pas = JO_PAS[m] || 0;
     /* Le courriel porte un code, pas un lien — le gabarit du projet Supabase
        n'en met pas. On ne nomme pas l'expéditeur ici : ce nom se règle dans le
        tableau de bord et cette phrase deviendrait fausse au prochain
        changement. Le rappel des indésirables, lui, sert toujours : un premier
        courriel d'un expéditeur inconnu y tombe souvent. */
-    el("jo-sub").textContent = conf
-      ? `Un code à 6 chiffres vient de partir vers ${joEmail}. Il arrive en moins d'une minute — pense à regarder tes indésirables. Entre-le ici pour activer ton compte.`
-      : up
-      ? "Un courriel et un mot de passe, rien de plus : ils servent à retrouver tes échéances et tes résumés sur tes autres appareils. Tes identifiants Omnivox n'y transitent jamais."
-      : "Le compte d'agenda, pas Omnivox. Tes échéances et tes résumés reviennent tels que l'agent les a laissés.";
-    el("jo-go").textContent = conf ? "Confirmer mon compte" : up ? "Créer mon compte" : "Se connecter";
-    el("jo-swap").textContent = conf ? "Revenir à la connexion"
+    const [titre, sous, cta] = {
+      nom: ["Comment on t'appelle ?",
+            "Ce nom accueille ton tableau de bord et te désigne dans tes classes. La photo est facultative — sans elle, ce sont tes initiales.",
+            "Continuer"],
+      compte: ["Ton compte d'agenda",
+            "Un courriel et un mot de passe, rien de plus : ils servent à retrouver tes échéances et tes résumés sur tes autres appareils. Tes identifiants Omnivox n'y transitent jamais.",
+            "Créer mon compte"],
+      confirm: ["Confirme ton courriel",
+            `Un code à 6 chiffres vient de partir vers ${joEmail}. Il arrive en moins d'une minute — pense à regarder tes indésirables. Entre-le ici pour activer ton compte.`,
+            "Confirmer mon compte"],
+      signin: ["Connecte-toi",
+            "Le compte d'agenda, pas Omnivox. Tes échéances et tes résumés reviennent tels que l'agent les a laissés.",
+            "Se connecter"],
+    }[m];
+    el("jo-title").textContent = titre;
+    el("jo-sub").textContent = sous;
+    el("jo-go").textContent = cta;
+    el("jo-swap").textContent = m === "confirm" ? "Revenir à la connexion"
       : up ? "J'ai déjà un compte" : "Créer un compte plutôt";
     el("jo-pw").autocomplete = up ? "new-password" : "current-password";
-    /* En confirmation, courriel et mot de passe ont déjà servi : seul le code
-       reste à saisir. */
-    el("jo-email").hidden = conf;
-    el("jo-pw").hidden = conf;
-    el("jo-code").hidden = !conf;
-    el("jo-resend").hidden = !conf;
-    if (conf) el("jo-code").value = "";
+    /* Le rail dit où l'on en est sans faire de phrase. La connexion n'en a
+       pas : il n'y a rien à parcourir. */
+    el("jo-rail").hidden = !pas;
+    [...el("jo-rail").children].forEach((seg, i) => seg.classList.toggle("on", i < pas));
+    /* Chaque étape ne montre que ce qu'elle demande — le reste a déjà servi
+       ou ne servira qu'après. */
+    const montre = { nom: ["jo-name"], compte: ["jo-email", "jo-pw"],
+                     confirm: ["jo-code"], signin: ["jo-email", "jo-pw"] }[m];
+    for (const id of ["jo-name", "jo-email", "jo-pw", "jo-code"]) el(id).hidden = !montre.includes(id);
+    el("jo-avbloc").hidden = m !== "nom";
+    /* Les autres chemins que la carte porte : l'entrée par Google ou Microsoft
+       se propose à la PORTE — première étape, ou connexion — pas au milieu
+       d'une inscription déjà commencée ; la jauge du mot de passe ne vaut que
+       là où un mot de passe se saisit. */
+    const sso = el("jo-sso"); if (sso) sso.hidden = m === "compte" || m === "confirm";
+    const jauge = el("jo-pw-j"); if (jauge && !montre.includes("jo-pw")) jauge.hidden = true;
+    /* À la première étape, le rond-photo EST l'image de la carte : la pastille
+       du haut ferait un second rond pour rien. */
+    el("jo-ic").hidden = m === "nom";
+    el("jo-resend").hidden = m !== "confirm";
+    /* Le retour, en haut à gauche, change de destination avec l'étape : la
+       seconde revient à la première, les autres sortent vers l'accueil. */
+    el("jo-home-t").textContent = m === "compte" ? "Retour" : "Retour à l'accueil";
+    if (m === "confirm") el("jo-code").value = "";
+    /* Une inscription reprise garde ce qu'elle avait déjà donné. */
+    if (m === "nom" && !el("jo-name").value) el("jo-name").value = (state.name || "").trim();
     joSay("");
+    renderIdentity();
     showView("onboard");
-    (conf ? el("jo-code") : el("jo-email")).focus();
+    el(montre[0]).focus();
   }
   /* Le filtre « mot de passe compromis » de Supabase est réservé au plan
      Pro ; même protection ici, gratuite et k-anonyme (HaveIBeenPwned) :
@@ -8310,32 +8957,49 @@ a,button{touch-action:manipulation}
     try {
       const d = await sbAuth("verify", { type: "signup", email: joEmail, token: code });
       if (!d.access_token) throw new Error("Confirmation refusée — demande un nouveau code.");
-      sbKeep(d); renderAccount(); markVu(); enterBoard();
+      sbKeep(d); adopteNom(d, joNom); avatarSync(); renderAccount(); markVu(); enterBoard();
       applyCloud(await sbFetchSnapshot());
     } catch (e2) { joSay(frErr(e2), true); }
     finally { el("jo-go").disabled = false; }
   }
   async function joSubmit() {
     if (joMode === "confirm") return joConfirm();
+    /* Première étape : rien ne part vers le serveur, on avance simplement.
+       Le nom vaut dès maintenant sur cet appareil — le tableau qui s'ouvrira
+       derrière portera le bon en-tête, même si la confirmation prend un
+       détour par la boîte de courriels. */
+    if (joMode === "nom") {
+      const nom = el("jo-name").value.trim();
+      if (!nom) { joSay("Il manque ton nom.", true); return; }
+      joNom = nom;
+      if (nom !== (state.name || "").trim()) { state.name = nom; save(); renderIdentity(); }
+      showJoin("compte");
+      return;
+    }
+    const up = joMode === "compte";
+    const nom = joNom || (state.name || "").trim();
     const email = el("jo-email").value.trim(), pw = el("jo-pw").value;
     if (!email) { joSay("Il manque le courriel.", true); return; }
     if (pw.length < 8) { joSay("Mot de passe : au moins 8 caractères.", true); return; }
     el("jo-go").disabled = true; joSay("…");
     try {
-      if (joMode === "signup") {
+      if (up) {
         const n = await pwnedCount(pw);
         if (n) { joSay(pwnedMsg(n), true); return; }
       }
-      const path = joMode === "signup" ? "signup" : "token?grant_type=password";
-      const d = await sbAuth(path, { email, password: pw });
+      const path = up ? "signup" : "token?grant_type=password";
+      /* Le nom voyage dans les métadonnées du compte : c'est là qu'il survit
+         au changement d'appareil, là où localStorage ne suit pas. */
+      const d = await sbAuth(path, up ? { email, password: pw, data: { nom } }
+                                     : { email, password: pw });
       if (d.access_token) {
-        sbKeep(d); renderAccount(); markVu(); enterBoard();
+        sbKeep(d); adopteNom(d, nom); avatarSync(); renderAccount(); markVu(); enterBoard();
         applyCloud(await sbFetchSnapshot());
       } else {
         /* Pas de session au retour : le compte est créé mais dort. On enchaîne
            sur le code plutôt que de renvoyer vers une connexion qui refuserait
            tant que le courriel n'est pas confirmé. */
-        joEmail = email;
+        joEmail = email; joNom = nom;
         showJoin("confirm");
       }
     } catch (e2) {
@@ -8358,7 +9022,42 @@ a,button{touch-action:manipulation}
     try { await sbAuth("resend", { type: "signup", email: joEmail }); joSay("Nouveau code envoyé."); }
     catch (e2) { joSay(frErr(e2), true); }
   });
-  el("jo-home").addEventListener("click", () => showView("landing"));
+  /* Le retour de la seconde étape revient à la première ; ailleurs, il sort. */
+  el("jo-home").addEventListener("click", () => {
+    if (joMode === "compte") showJoin("nom"); else showView("landing");
+  });
+  /* Le rond suit ce qu'on tape : les initiales changent sous les doigts,
+     tant qu'aucune photo n'a été choisie. */
+  el("jo-name").addEventListener("input", () => {
+    if (!avatarLu()) peintAvatar(el("jo-av"), "", initials(el("jo-name").value));
+  });
+  /* Les deux endroits où l'on choisit sa photo — l'inscription et le profil —
+     partagent le même geste : cliquer le rond, cliquer le lien, ou déposer une
+     image sur le bloc. */
+  const monteChoixPhoto = (rond, lien, retire, fichier, zone, dire) => {
+    const ouvre = () => el(fichier).click();
+    el(rond).addEventListener("click", ouvre);
+    el(lien).addEventListener("click", ouvre);
+    el(retire).addEventListener("click", () => avatarEcrire("", dire));
+    el(fichier).addEventListener("change", () => {
+      const f = el(fichier).files[0]; el(fichier).value = "";
+      if (f) avatarDeFichier(f, dire);
+    });
+    const z = el(zone);
+    for (const t of ["dragover","dragenter"])
+      z.addEventListener(t, e => { e.preventDefault(); z.classList.add("over"); });
+    for (const t of ["dragleave","dragend","drop"])
+      z.addEventListener(t, () => z.classList.remove("over"));
+    z.addEventListener("drop", e => {
+      e.preventDefault();
+      const f = [...(e.dataTransfer?.files || [])].find(x => x.type.startsWith("image/"));
+      if (f) avatarDeFichier(f, dire);
+      else dire?.("Dépose une image (PNG, JPG, capture d'écran…).", true);
+    });
+  };
+  monteChoixPhoto("jo-av", "jo-av-pick", "jo-av-del", "jo-av-file", "jo-avbloc", joSay);
+  monteChoixPhoto("p-avatar", "p-av-pick", "p-av-del", "p-av-file", "p-avatar-zone",
+    (t, bad) => { const m = el("p-av-msg"); m.textContent = t || ""; m.style.color = bad ? "var(--p3)" : ""; });
   el("onboard").addEventListener("keydown", ev => {
     if (ev.key === "Enter" && ev.target.tagName === "INPUT") joSubmit();
   });
@@ -8373,12 +9072,27 @@ a,button{touch-action:manipulation}
     else showJoin("signin");
   }
   route();
-  el("p-name").addEventListener("input", () => { state.name = el("p-name").value; renderIdentity(); save(); });
+
+  /* Les pages sœurs (classes.html) et les anciens signets pointent parfois
+     vers une ancre nue — « #horaire », « #top ». Le routeur les traduit
+     (voir ALIAS) : un lien déjà donné continue de mener quelque part. Le
+     saut différé d'autrefois n'a plus lieu d'être — une vue s'affiche, elle
+     ne se cherche pas au fil du remplissage des listes. */
+
+  /* Réécrire son nom ici, c'est le réécrire pour le compte : sans cet envoi,
+     l'autre appareil garderait celui de l'inscription. On attend une seconde
+     de silence — une frappe ne vaut pas un appel réseau. */
+  let nomTimer = 0;
+  el("p-name").addEventListener("input", () => {
+    state.name = el("p-name").value; renderIdentity(); save();
+    clearTimeout(nomTimer);
+    nomTimer = setTimeout(() => { sbEnvoieNom(state.name.trim()).catch(() => {}); }, 900);
+  });
   el("p-account").addEventListener("click", ev => openAccount(ev.currentTarget));
   /* Se déconnecter sans passer par la fenêtre du compte : l'appareil oublie
      la session — cookie compris — et revient à la porte d'entrée. */
   el("p-signout").addEventListener("click", () => {
-    sbSignOut(); renderAccount(); showJoin("signin");
+    sbSignOut(); oublieIdentite(); renderAccount(); showJoin("signin");
   });
 
   async function sbRefreshToken() {
@@ -8397,6 +9111,19 @@ a,button{touch-action:manipulation}
     if (r.status === 401 && retry && await sbRefreshToken()) return sbUpdatePassword(pw, false);
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(d.msg || d.error_description || d.message || `erreur ${r.status}`);
+  }
+  /* Même porte que le mot de passe, autre champ : les métadonnées du compte.
+     Hors ligne, on laisse tomber sans rien dire — le nom est déjà écrit ici,
+     et la prochaine retouche repartira. */
+  async function sbEnvoieNom(nom, retry = true) {
+    const at = await sbJeton();
+    if (!at || !nom) return;
+    const r = await fetch(`${SB_URL}/auth/v1/user`, {
+      method: "PUT",
+      headers: { apikey: SB_KEY, authorization: `Bearer ${at}`, "content-type": "application/json" },
+      body: JSON.stringify({ data: { nom } }),
+    });
+    if (r.status === 401 && retry && await sbRefreshToken()) return sbEnvoieNom(nom, false);
   }
   el("p-pw-btn").addEventListener("click", async () => {
     const a = el("p-pw1").value, b = el("p-pw2").value, msg = el("p-pw-msg");

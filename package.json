@@ -13,7 +13,8 @@
     "moodle-login": "tsx src/moodle/token.ts",
     "moodle": "tsx src/moodle/run.ts",
     "push": "tsx src/push/envoyer.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "moodle-apparier": "tsx src/moodle/apparier.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

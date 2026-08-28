@@ -16,6 +16,8 @@ import { fetchBodies } from "./scrape/lire.js";
 import { fileStore, type Deadline } from "./store.js";
 import { analyzeNew } from "./scrape/agent.js";
 import { pushSnapshot, fetchSuppressions } from "./sync/supabase.js";
+import { itemDEcheance, itemDeMio, fusionne as fusionneItems } from "./items/modele.js";
+import { pousserItems } from "./items/pousser.js";
 import { extractHoraire } from "./scrape/horaire.js";
 import { collectEvenements } from "./scrape/evenements.js";
 import { lireJeton } from "./moodle/api.js";
@@ -157,6 +159,14 @@ async function cmdScrape(): Promise<void> {
     persist(mios, echeances, supprimees);
     const { readFileSync: rf } = await import("node:fs");
     await pushSnapshot(JSON.parse(rf(join(config.dataDir, "export.json"), "utf8")));
+    /* Le modèle unifié, en parallèle du blob. La fusion se fait ICI, à
+       l'ingestion : quand Léa et Moodle annoncent la même remise, c'est
+       Moodle qui la porte — il a l'URL exacte. Une seule ligne, décidée une
+       fois, plutôt qu'un rapprochement de titres à chaque affichage. */
+    await pousserItems(fusionneItems([
+      ...echeances.map(itemDEcheance),
+      ...mios.map(itemDeMio),
+    ]));
     await s.saveState();
     await reportSuccess();
     // Moodle embarque dans le même passage dès qu'un jeton existe (l'unique

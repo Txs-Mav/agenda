@@ -24,6 +24,11 @@
   --shadow-hi:0 2px 4px rgba(16,18,20,.08), 0 26px 48px -20px rgba(16,18,20,.5);
   --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  /* Le pli de la barre latérale : une seule durée, une seule courbe, pour
+     que largeur, rembourrages et libellés glissent d'un seul mouvement.
+     Mêmes valeurs que dans l'agenda — la barre est la même, elle doit se
+     replier au même rythme d'une page à l'autre. */
+  --fold:.34s; --fold-e:cubic-bezier(.32,.72,0,1);
   color-scheme:light;
 }
 :root[data-theme="dark"]{
@@ -64,6 +69,128 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 .grow{flex:1 1 auto}
 .dim{color:var(--dim)}
 .mono{font-family:var(--mono)}
+
+/* ── Barre latérale ───────────────────────────────────────────────
+   Celle de l'agenda, portée ici : la navigation ne doit pas s'interrompre
+   au passage d'une page à l'autre. Ses entrées renvoient à l'agenda par son
+   routeur (« /#/horaire », « /#/profil »…), qui ouvre la bonne vue dès le
+   chargement — voir lisRoute() et enterBoard() là-bas.
+
+   Ce qu'elle ne porte pas, et pourquoi : les compteurs et la liste des
+   matières demandent l'horaire complet et ses retouches, qu'on ne
+   reconstruit pas d'ici — un chiffre faux vaut moins que pas de chiffre ;
+   « Fins de semaine » et « Imprimer » règlent la grille de l'agenda et
+   n'auraient, sur cette page, aucun effet à montrer.
+
+   L'intertitre s'appelle .sgrp et non .grp : .grp sert déjà ici aux
+   groupes de champs des formulaires. */
+.shell{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.85rem;align-items:start}
+.main{min-width:0}
+.side{
+  position:sticky;top:calc(.6rem + env(safe-area-inset-top, 0px));background:var(--surface);border-radius:30px;
+  padding:1.3rem 1rem 1.1rem;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;gap:.15rem;max-height:calc(100vh - 1.6rem);max-height:calc(100dvh - 1.6rem);
+  /* Le débord horizontal est coupé : pendant le pli, les libellés qui
+     rétrécissent ne doivent pas faire naître une barre de défilement. */
+  overflow:hidden auto;overscroll-behavior:contain;
+  width:15.5rem;transition:width var(--fold) var(--fold-e),padding var(--fold) var(--fold-e);
+}
+/* Le haut de la barre ne part pas avec le défilement : la marque et le pli
+   restent en tête pendant que les matières glissent dessous. Le bandeau
+   reprend à son compte la gouttière de la barre — marges négatives, puis son
+   propre rembourrage — sinon son fond s'arrêterait au ras du texte et une
+   entrée se verrait passer au-dessus, dans le coin arrondi. Le `top` négatif
+   annule la marge du haut : le collage se mesure sur la boîte de marge, et
+   sans lui le bandeau se figerait 1,3 rem trop bas. Le fond s'éteint sur son
+   dernier centimètre : ce qui file dessous se dissout au lieu de buter sur
+   une arête. */
+.sidetop{position:sticky;top:-1.3rem;z-index:3;
+  margin:-1.3rem -1rem 0;padding:1.3rem 1rem 1.4rem;
+  background:linear-gradient(180deg,var(--surface) calc(100% - 1.1rem),transparent);
+  display:flex;align-items:center;gap:.35rem;
+  transition:gap var(--fold) var(--fold-e),padding var(--fold) var(--fold-e)}
+.sidetop .brand{width:auto;flex:1 1 auto;min-width:0;padding:0 .55rem;
+  transition:gap var(--fold) var(--fold-e),padding var(--fold) var(--fold-e)}
+.sfold{width:2.1rem;height:2.1rem;border-radius:10px;color:var(--faint);display:grid;place-items:center;flex:0 0 auto;
+  transition:background .15s,color .15s,transform var(--fold) var(--fold-e)}
+.sfold:hover{background:var(--surface-2);color:var(--ink)}
+.navi{display:flex;align-items:center;gap:.7rem;padding:.62rem .7rem;border-radius:14px;
+  color:var(--dim);font-size:.9rem;text-decoration:none;width:100%;text-align:left;
+  transition:background .15s,color .15s,gap var(--fold) var(--fold-e),padding var(--fold) var(--fold-e)}
+.navi:hover{background:var(--surface-2);color:var(--ink)}
+.navi.on{background:var(--invert);color:var(--on-invert)}
+.navi.on:hover{background:var(--invert);color:var(--on-invert)}
+.sgrp{padding:1.2rem .75rem .4rem;font-size:.66rem;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);
+  border-top:1px solid transparent;
+  transition:color .16s ease .16s,font-size var(--fold) var(--fold-e),
+             padding var(--fold) var(--fold-e),border-color .2s ease .14s}
+.lb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.navi .lb{flex:1 1 auto;min-width:0}
+.side .grow{flex:1 1 auto;min-height:1rem}
+.side .brand b,.side .lb{transition:opacity .16s ease .16s}
+/* Déconnecté, l'agenda cache sa barre : la porte d'entrée passe avant. La
+   page Classes fait pareil, sinon on offrirait une navigation d'app à
+   quelqu'un qui n'a encore rien à y voir. */
+body.lp .side,body.lp .tabbar{display:none}
+body.lp .shell{grid-template-columns:minmax(0,1fr)}
+
+/* ── Barre latérale pliée ──────────────────────────────────────────
+   Pliée, la barre ne disparaît pas : elle se réduit à ses icônes. Les
+   libellés s'effacent AVANT que la largeur ne bouge et ne reviennent
+   qu'une fois la place reprise — sans ce décalage, le texte se ferait
+   pincer pendant le glissement. Sous 761 px la barre est une rangée
+   d'icônes en travers de l'écran : le pli n'y a plus rien à gagner. */
+@media (min-width:761px){
+  .side.mini{width:4.5rem;padding-left:.6rem;padding-right:.6rem}
+  .side.mini .sidetop{flex-direction:column;gap:.5rem;
+    margin-left:-.6rem;margin-right:-.6rem;padding:1.3rem .6rem 1.1rem}
+  .side.mini .sfold{transform:rotate(180deg)}
+  .side.mini .navi,.side.mini .brand{gap:0;justify-content:center;padding-left:0;padding-right:0}
+  .side.mini .brand b,.side.mini .lb{
+    opacity:0;flex:0 0 0;width:0;min-width:0;margin-left:0;
+    transition-delay:0s;transition-duration:.1s}
+  /* L'intertitre perd son mot mais garde son office : il devient le filet
+     qui sépare les familles d'icônes. */
+  .side.mini .sgrp{color:transparent;font-size:0;white-space:nowrap;
+    padding:.8rem .3rem .35rem;border-top-color:var(--line);
+    transition-delay:0s;transition-duration:.12s}
+}
+
+/* ── Téléphone ────────────────────────────────────────────────────
+   Même partage que dans l'agenda : les cinq ancres du tableau passent
+   dans la barre d'onglets du bas, sous le pouce ; la barre du haut ne
+   garde que les entrées rares et défile avec la page. */
+@media (max-width:760px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;flex-direction:row;flex-wrap:wrap;gap:.35rem;max-height:none;
+    border-radius:22px;padding:.8rem;width:auto}
+  .sidetop{position:static;width:100%;margin:0;padding:0;background:none}
+  .sfold{display:none}
+  .sidetop .brand{padding:0 .5rem}
+  .sgrp,.side .grow{display:none}
+  .navi{width:auto}
+  .side .navi[data-go]{display:none}
+  body{padding-bottom:calc(4.4rem + env(safe-area-inset-bottom, 0px))}
+  body.lp{padding-bottom:clamp(.6rem,1.4vw,1.3rem)}
+}
+
+/* ── Barre d'onglets (téléphone) ──────────────────────────────────
+   Fixée au bas, givrée. z-index 40 comme dans l'agenda : rien ici ne
+   flotte au-dessus, mais les deux pages doivent rester interchangeables
+   le jour où quelque chose s'y ajoute. */
+.tabbar{display:none}
+@media (max-width:760px){
+  .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;
+    display:flex;gap:.15rem;
+    padding:.4rem .5rem calc(.4rem + env(safe-area-inset-bottom, 0px));
+    background:color-mix(in srgb,var(--surface) 88%,transparent);
+    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    border-top:1px solid var(--line)}
+  .tabbar .navi{flex:1 1 0;min-width:0;flex-direction:column;align-items:center;gap:.18rem;
+    padding:.32rem 0 .26rem;font-size:.58rem;letter-spacing:.02em;border-radius:12px;text-align:center}
+  .tabbar .navi .i{width:20px;height:20px;flex:0 0 auto}
+  .tabbar .tbl{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+}
 
 /* ── En-tête ── */
 .head{display:flex;align-items:center;gap:.8rem;padding:.4rem .2rem 0;flex-wrap:wrap}
@@ -388,19 +515,63 @@ a,button{touch-action:manipulation}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="head">
-    <a class="brand" href="/" title="Retour à l'agenda">
-      <span class="mk"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4"/></svg></span>
-      <b>Classes</b>
-    </a>
+<div class="shell">
+  <!-- La barre de l'agenda, mot pour mot : c'est ce qui fait qu'on ne se
+       sent pas parti ailleurs. Ses entrées sont de vrais liens vers les
+       adresses du routeur de l'agenda — « Classes » s'y allume, puisqu'on
+       y est. -->
+  <aside class="side">
+    <div class="sidetop">
+      <a class="brand" href="/" title="Retour au tableau de bord">
+        <span class="mk"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h7M4 12h16M4 18h11"/></svg></span>
+        <b>Agenda</b>
+      </a>
+      <button class="sfold" id="side-fold" title="Replier la barre" aria-label="Replier la barre latérale" aria-expanded="true">
+        <svg class="i" viewBox="0 0 24 24"><path d="M14.5 6.5 9 12l5.5 5.5"/><path d="M19.5 5v14"/></svg>
+      </button>
+    </div>
+    <a class="navi" data-go="top" href="/#/"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg> <span class="lb">Tableau de bord</span></a>
+    <a class="navi" data-go="horaire" href="/#/horaire"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4"/></svg> <span class="lb">Horaire</span></a>
+    <a class="navi" data-go="echeances" href="/#/echeances"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg> <span class="lb">Échéances</span></a>
+    <a class="navi" data-go="mios" href="/#/mio"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 8.2 6 8.2-6"/></svg> <span class="lb">MIO</span></a>
+    <a class="navi" data-go="cours" href="/#/cours"><svg class="i" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 18.5V21h16"/></svg> <span class="lb">Mes cours</span></a>
+    <a class="navi" href="/#/notes"><svg class="i" viewBox="0 0 24 24"><path d="M3.5 7A2.5 2.5 0 0 1 6 4.5h3.6l2 2.5H18a2.5 2.5 0 0 1 2.5 2.5v7.5A2.5 2.5 0 0 1 18 19.5H6A2.5 2.5 0 0 1 3.5 17z"/></svg> <span class="lb">Toutes les notes</span></a>
+    <a class="navi on" href="classes.html" aria-current="page"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M15.5 5.8a3 3 0 0 1 0 5.4M17.5 13.6a5.5 5.5 0 0 1 3 4.9"/></svg> <span class="lb">Classes</span></a>
+
     <span class="grow"></span>
-    <span class="who mono" id="who"></span>
-    <button class="btn quiet sortir" id="sortir" hidden>Se déconnecter</button>
-  </header>
-  <nav class="crumbs" id="crumbs"></nav>
-  <p class="flash" id="flash" hidden></p>
-  <main class="wrap" id="vue" style="padding:0"></main>
+    <p class="sgrp">Compte</p>
+    <a class="navi" id="sb-account" href="/#/profil"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg> <span class="lb" id="sb-label">Connexion</span></a>
+    <p class="sgrp">Affichage</p>
+    <button class="navi" id="t-theme"><span id="t-icon"></span> <span class="lb" id="t-label">Thème sombre</span></button>
+    <a class="navi" href="guide.html"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 7.5h.01"/></svg> <span class="lb">Guide d'installation</span></a>
+  </aside>
+
+  <!-- Téléphone : les cinq ancres du tableau passent sous le pouce, comme
+       dans l'agenda. D'ici elles quittent la page — c'est leur rôle. -->
+  <nav class="tabbar" aria-label="Sections">
+    <a class="navi" data-go="top" href="/#/"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg><span class="tbl">Tableau</span></a>
+    <a class="navi" data-go="horaire" href="/#/horaire"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4"/></svg><span class="tbl">Horaire</span></a>
+    <a class="navi" data-go="echeances" href="/#/echeances"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg><span class="tbl">Échéances</span></a>
+    <a class="navi" data-go="mios" href="/#/mio"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 8.2 6 8.2-6"/></svg><span class="tbl">MIO</span></a>
+    <a class="navi" data-go="cours" href="/#/cours"><svg class="i" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 18.5V21h16"/></svg><span class="tbl">Cours</span></a>
+  </nav>
+
+  <div class="wrap main">
+    <header class="head">
+      <!-- Plus un lien : le retour à l'agenda vit dans la barre, deux fois
+           aurait fait doublon. Il ne reste que le titre de la page. -->
+      <span class="brand">
+        <span class="mk"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4"/></svg></span>
+        <b>Classes</b>
+      </span>
+      <span class="grow"></span>
+      <span class="who mono" id="who"></span>
+      <button class="btn quiet sortir" id="sortir" hidden>Se déconnecter</button>
+    </header>
+    <nav class="crumbs" id="crumbs"></nav>
+    <p class="flash" id="flash" hidden></p>
+    <main class="wrap" id="vue" style="padding:0"></main>
+  </div>
 </div>
 
 <script>
@@ -472,11 +643,75 @@ a,button{touch-action:manipulation}
     catch { flash("Le navigateur a refusé la copie — sélectionne le code à la main."); return false; }
   }
 
-  /* Même thème que l'agenda : on le lit, on n'y touche pas. */
-  try {
-    const th = JSON.parse(localStorage.getItem("agenda.v5"))?.theme;
-    if (th === "dark") document.documentElement.setAttribute("data-theme", "dark");
-  } catch {}
+  /* ── Réglages d'affichage, partagés avec l'agenda ────────────────
+     La barre latérale vit maintenant sur les deux pages : son pli et le
+     thème doivent donc se souvenir d'un côté comme de l'autre, sinon
+     replier ici et repartir là-bas donnerait deux barres différentes.
+     Ces deux réglages dorment dans le même sac que l'état de l'agenda
+     (« agenda.v5 »), dont l'agenda est le propriétaire : on relit le sac
+     juste avant d'écrire et on n'y change qu'une clé, pour ne pas écraser
+     ce qu'il vient d'y déposer. La collision reste possible : un onglet
+     d'agenda ouvert en même temps réécrira tout son état à son prochain
+     enregistrement et pourrait reprendre le dessus. On y perdrait une
+     préférence, jamais une donnée — c'est le prix de la barre commune,
+     et c'est déjà ce qui arrive entre deux onglets d'agenda. */
+  const PREF = "agenda.v5";
+  const prefLire = () => { try { return JSON.parse(localStorage.getItem(PREF)) || {}; } catch { return {}; } };
+  const prefEcrire = (cle, val) => {
+    try { localStorage.setItem(PREF, JSON.stringify({ ...prefLire(), [cle]: val })); } catch {}
+  };
+
+  const ICONE_SOLEIL = '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg>';
+  const ICONE_LUNE = '<svg class="i" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5z"/></svg>';
+  let theme = prefLire().theme === "dark" ? "dark" : "light";
+  function appliqueTheme() {
+    document.documentElement.setAttribute("data-theme", theme);
+    el("t-icon").innerHTML = theme === "dark" ? ICONE_SOLEIL : ICONE_LUNE;
+    el("t-label").textContent = theme === "dark" ? "Thème clair" : "Thème sombre";
+  }
+  appliqueTheme();
+  el("t-theme").addEventListener("click", () => {
+    theme = theme === "dark" ? "light" : "dark";
+    appliqueTheme(); prefEcrire("theme", theme);
+  });
+
+  /* Le pli. Le CSS fait tout le mouvement ; d'ici on ne pose que la classe.
+     Repliée, la barre n'a plus de mots : chaque bouton reprend le sien en
+     infobulle, sinon une rangée d'icônes devient une devinette. Entre 761 et
+     1080 px le pli est imposé — comme dans l'agenda, où le rail garde la
+     semaine entière à l'écran — et le bouton se retire : un réglage qu'on ne
+     peut pas changer n'a pas à se montrer. Le choix de l'utilisateur, lui,
+     reste intact pour les écrans larges. */
+  const mqRail = matchMedia("(min-width:761px) and (max-width:1080px)");
+  let sideMini = !!prefLire().sideMini;
+  function appliqueSide() {
+    const side = document.querySelector(".side"), b = el("side-fold");
+    const mini = mqRail.matches || sideMini;
+    side.classList.toggle("mini", mini);
+    b.hidden = mqRail.matches;
+    b.setAttribute("aria-expanded", mini ? "false" : "true");
+    b.title = mini ? "Déplier la barre" : "Replier la barre";
+    side.querySelectorAll(".navi").forEach(n => {
+      const lb = n.querySelector(".lb");
+      if (!lb) return;
+      if (mini) n.title = lb.textContent.trim();
+      else n.removeAttribute("title");
+    });
+  }
+  mqRail.addEventListener("change", appliqueSide);
+  /* Le « change » de matchMedia ne part pas dans tous les environnements
+     (émulations, certains pivots) : on double d'un filet sur resize, qui ne
+     rejoue le pli que si le seuil a réellement basculé. Même précaution que
+     dans l'agenda. */
+  let etaitRail = mqRail.matches;
+  addEventListener("resize", () => {
+    if (mqRail.matches === etaitRail) return;
+    etaitRail = mqRail.matches; appliqueSide();
+  });
+  appliqueSide();
+  el("side-fold").addEventListener("click", () => {
+    sideMini = !sideMini; appliqueSide(); prefEcrire("sideMini", sideMini);
+  });
 
   let flashTimer = null;
   function flash(msg, err = true) {
@@ -1649,6 +1884,11 @@ a,button{touch-action:manipulation}
     const s0 = sbSession();
     el("who").textContent = s0?.email ? s0.email.split("@")[0] : "";
     el("sortir").hidden = !s0;
+    /* Déconnecté, l'agenda cache sa barre et ne montre que sa porte
+       d'entrée : ici aussi. Offrir « Horaire » et « MIO » à quelqu'un qui
+       n'a pas de compte, c'est promettre des pages vides. */
+    document.body.classList.toggle("lp", !s0);
+    el("sb-label").textContent = s0?.email ? s0.email.split("@")[0] : "Connexion";
     const [k, id] = location.hash.slice(1).split("/");
     /* Une invitation doit survivre au détour par la connexion : on la met
        de côté, et on la reprend dès qu'une session existe. */
@@ -1682,6 +1922,7 @@ a,button{touch-action:manipulation}
     const s0 = sbSession();
     sbClear();
     el("sortir").hidden = true; el("who").textContent = "";
+    document.body.classList.add("lp");
     localStorage.removeItem(INVITE);
     history.replaceState(null, "", location.pathname);
     vueLogin();
