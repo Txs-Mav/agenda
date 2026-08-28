@@ -5809,15 +5809,18 @@ a,button{touch-action:manipulation}
   /* Assez de matière pour qu'un résumé ait du sens, assez souvent pour que
      les notes s'écrivent PENDANT le cours et non après. */
   const SC_MIN = 700, SC_MAX = 2600, SC_DELAI = 150000;
-  /* La découpe de l'enregistrement. Quatre-vingt-dix secondes : assez long
-     pour que Whisper ait du contexte, assez court pour que le texte arrive
-     pendant qu'on suit encore le cours. */
-  const SC_MORCEAU = 90000;
+  /* La découpe de l'enregistrement. Vingt secondes : c'est le compromis entre
+     le contexte dont Whisper a besoin pour bien entendre et le retard qu'un
+     étudiant accepte de voir à l'écran. Groq facture dix secondes au minimum
+     par requête, donc rien ne se perd à ce rythme ; et à trois heures de cours
+     cela fait cinq cent quarante requêtes, loin des deux mille offertes. */
+  const SC_MORCEAU = 20000;
   const SC_FILE_MAX = 8;                // au-delà, le réseau est mort : on lâche le plus vieux
   const IDB_TR = "agenda-tr";
 
   let scOn = false, scRec = null, scArret = false, scForce = false;
   let scVoie = "", scFlux = null, scEnr = null, scEnrFini = null, scCycle = 0;
+  let scEcoute = null, scLiveF = "", scLiveP = "";   // le direct, affichage seul
   let scFile = [], scEnvoiAudio = false;
   let scCours = "", scPage = "";
   let scBrut = "", scAttente = "", scProv = "";
@@ -5891,8 +5894,11 @@ a,button{touch-action:manipulation}
 
     el("m-scia").textContent = ia;
     el("m-scia").hidden = !ia;
-    el("m-scprov").textContent = (scOn && ici) ? scProv : "";
-    el("m-scprov").hidden = !(scOn && ici && scProv);
+    /* Ce qui s'entend à l'instant : la dictée du navigateur en mode audio,
+       le provisoire de la reconnaissance quand c'est elle qui transcrit. */
+    const direct = scVoie === "audio" ? `${scLiveF} ${scLiveP}`.trim() : scProv;
+    el("m-scprov").textContent = (scOn && ici) ? direct : "";
+    el("m-scprov").hidden = !(scOn && ici && direct);
     el("m-scverse").hidden = !ia;
     el("m-scpropre").hidden = !ia || scVol || (scOn && !ici);
     el("m-sctrv").hidden = !(p && p.tr);
@@ -5971,6 +5977,9 @@ a,button{touch-action:manipulation}
           scEcrire({ tr: 1 });
           trPut(scPage, scBrut);
           scNote = "";
+          /* Whisper vient de dire vrai sur ce passage : l'aperçu du direct
+             n'a plus lieu d'être, il repart de zéro pour la suite. */
+          scLiveF = ""; scLiveP = "";
         }
         if (d.appels != null) scQuota = `${d.appels}/${d.plafond} morceaux`;
         scPeindre();
@@ -5999,6 +6008,41 @@ a,button{touch-action:manipulation}
     scEnr = enr;
     try { enr.start(); } catch { scDire("L'enregistrement n'a pas pu démarrer."); return; }
     scCycle = setTimeout(() => { try { enr.stop(); } catch {} }, SC_MORCEAU);
+  }
+
+  /* ── Le direct ───────────────────────────────────────────────────
+     Whisper dit juste, mais par paquets de vingt secondes. Un étudiant qui
+     regarde son écran veut voir les mots arriver pendant qu'ils sont
+     prononcés, sinon il croit que rien n'écoute.
+
+     Alors les deux tournent ensemble : la dictée du navigateur écrit au fil
+     des mots, et Whisper repasse derrière avec le texte qui restera. RIEN de
+     ce qui sort d'ici n'est conservé — ni dans le transcript, ni dans les
+     notes. C'est une fenêtre, pas une source. Elle s'efface dès que Whisper
+     a parlé du même passage.
+
+     Si ce doublage échoue, tant pis : le texte vrai arrive quand même. */
+  function scDoubler() {
+    if (!SR) return;
+    try {
+      const r = new SR();
+      r.lang = "fr-CA"; r.continuous = true; r.interimResults = true;
+      r.onresult = ev => {
+        for (let i = ev.resultIndex; i < ev.results.length; i++) {
+          const t = (ev.results[i][0]?.transcript || "").trim();
+          if (!t) continue;
+          /* Borné : l'aperçu ne doit pas grandir sans fin entre deux
+             morceaux, c'est une ligne qui défile. */
+          if (ev.results[i].isFinal) { scLiveF = `${scLiveF} ${t}`.trim().slice(-300); scLiveP = ""; }
+          else scLiveP = t;
+        }
+        scPeindre();
+      };
+      r.onerror = () => {};                 // le direct qui tombe n'est pas une panne
+      r.onend = () => { if (scOn && !scArret) { try { r.start(); } catch {} } };
+      scEcoute = r;
+      r.start();
+    } catch {}
   }
 
   /* Le filet : la reconnaissance du navigateur, quand on ne peut pas
@@ -6118,7 +6162,7 @@ a,button{touch-action:manipulation}
     if (!voie) { scDire("Ce navigateur ne sait ni enregistrer ni transcrire."); return; }
 
     scVoie = voie; scOn = true; scArret = false;
-    if (voie === "audio") scMorceau();
+    if (voie === "audio") { scMorceau(); scDoubler(); }
     else if (!scVoixDemarrer()) { scOn = false; scDire("La transcription n'a pas pu démarrer."); return; }
 
     /* Sans ça, l'écran s'endort au bout d'une minute et emporte l'écoute. */
@@ -6143,6 +6187,8 @@ a,button{touch-action:manipulation}
       scEnr = null;
       scFlux?.getTracks().forEach(t => { try { t.stop(); } catch {} });
       scFlux = null;
+      try { scEcoute?.stop(); } catch {}
+      scEcoute = null; scLiveF = ""; scLiveP = "";
       await scVider();
     } else {
       try { scRec?.stop(); } catch {}
