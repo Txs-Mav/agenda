@@ -17,6 +17,9 @@
   --shadow:0 1px 2px rgba(16,18,20,.05), 0 14px 34px -22px rgba(16,18,20,.45);
   --gutter:3.4rem; --row-h:3.5rem; --pad:clamp(.5rem,1.2vw,1.1rem);
   --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  /* Le pli de la barre latérale : une seule durée, une seule courbe, pour que
+     largeur, rembourrages et libellés glissent d'un seul mouvement. */
+  --fold:.34s; --fold-e:cubic-bezier(.32,.72,0,1);
   --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
   color-scheme:light;
 }
@@ -52,7 +55,11 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
 :focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
 
-.shell{display:grid;grid-template-columns:15.5rem minmax(0,1fr);gap:.85rem;align-items:start}
+/* La première colonne se règle sur la largeur de la barre plutôt que sur une
+   valeur écrite ici : c'est la barre qu'on anime au pliage, et la grille suit
+   toute seule — animer une piste de grille reste capricieux selon les
+   navigateurs, animer une largeur ne l'est nulle part. */
+.shell{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.85rem;align-items:start}
 .main{min-width:0}
 .board>div{min-width:0}
 
@@ -60,21 +67,67 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 .side{
   position:sticky;top:calc(.6rem + env(safe-area-inset-top, 0px));background:var(--surface);border-radius:30px;
   padding:1.3rem 1rem 1.1rem;box-shadow:var(--shadow);
-  display:flex;flex-direction:column;gap:.15rem;max-height:calc(100vh - 1.6rem);max-height:calc(100dvh - 1.6rem);overflow:auto;
+  display:flex;flex-direction:column;gap:.15rem;max-height:calc(100vh - 1.6rem);max-height:calc(100dvh - 1.6rem);
+  /* Le débord horizontal est coupé : pendant le pli, les libellés qui rétré-
+     cissent ne doivent pas faire naître une barre de défilement. */
+  overflow:hidden auto;
+  width:15.5rem;transition:width var(--fold) var(--fold-e),padding var(--fold) var(--fold-e);
 }
 .brand{display:flex;align-items:center;gap:.6rem;padding:0 .55rem 1.4rem}
 .brand .mk{width:2.1rem;height:2.1rem;border-radius:9px;background:var(--invert);color:var(--on-invert);display:grid;place-items:center;flex:0 0 auto}
 .brand b{font-size:1.18rem;font-weight:650;letter-spacing:-.03em}
-.navi{display:flex;align-items:center;gap:.7rem;padding:.62rem .7rem;border-radius:14px;color:var(--dim);font-size:.9rem;transition:background .15s,color .15s;width:100%;text-align:left}
+.navi{display:flex;align-items:center;gap:.7rem;padding:.62rem .7rem;border-radius:14px;color:var(--dim);font-size:.9rem;transition:background .15s,color .15s,gap var(--fold) var(--fold-e),padding var(--fold) var(--fold-e);width:100%;text-align:left}
 @media (hover:hover){.navi:hover{background:var(--surface-2);color:var(--ink)}}
 .navi.on{background:var(--invert);color:var(--on-invert)}
 .navi .cnt{margin-left:auto;font-family:var(--mono);font-size:.68rem;opacity:.7}
-.grp{padding:1.2rem .75rem .4rem;font-size:.66rem;letter-spacing:.13em;text-transform:uppercase;color:var(--faint)}
-.subj{display:flex;align-items:center;gap:.7rem;padding:.4rem .7rem;border-radius:12px;font-size:.83rem;color:var(--dim);width:100%;text-align:left;transition:background .15s,color .15s}
+.grp{padding:1.2rem .75rem .4rem;font-size:.66rem;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);
+  border-top:1px solid transparent;
+  transition:color .16s ease .16s,font-size var(--fold) var(--fold-e),
+             padding var(--fold) var(--fold-e),border-color .2s ease .14s}
+.subj{display:flex;align-items:center;gap:.7rem;padding:.4rem .7rem;border-radius:12px;font-size:.83rem;color:var(--dim);width:100%;text-align:left;transition:background .15s,color .15s,gap var(--fold) var(--fold-e),padding var(--fold) var(--fold-e)}
 @media (hover:hover){.subj:hover{background:var(--surface-2);color:var(--ink)}}
-.pip{width:.6rem;height:.6rem;border-radius:50%;flex:0 0 auto}
+.pip{width:.6rem;height:.6rem;border-radius:50%;flex:0 0 auto;transition:width var(--fold) var(--fold-e),height var(--fold) var(--fold-e)}
 .subj .cnt{margin-left:auto;font-family:var(--mono);font-size:.68rem;color:var(--faint)}
 .side .grow{flex:1 1 auto;min-height:1rem}
+
+/* ── Barre latérale pliée ──────────────────────────────────────────
+   Pliée, la barre ne disparaît pas : elle se réduit à ses icônes et rend
+   onze rems au plateau, dont les blocs se déploient d'autant. Dépliée, elle
+   les resserre. Les libellés s'effacent AVANT que la largeur ne bouge et ne
+   reviennent qu'une fois la place reprise — sans ce décalage, le texte se
+   ferait pincer pendant le glissement. Entre 761 et 1080 px (iPad portrait),
+   le pli est imposé par applySide() : le rail garde la semaine entière à
+   l'écran. Sous 761 px la barre est une rangée d'icônes en travers de
+   l'écran : le pli n'y a plus rien à gagner, d'où le seuil. */
+.sidetop{display:flex;align-items:center;gap:.35rem;padding:0 0 1.4rem;transition:gap var(--fold) var(--fold-e)}
+.sidetop .brand{width:auto;flex:1 1 auto;min-width:0;padding:0 .55rem;
+  transition:gap var(--fold) var(--fold-e),padding var(--fold) var(--fold-e)}
+.sfold{width:2.1rem;height:2.1rem;border-radius:10px;color:var(--faint);display:grid;place-items:center;flex:0 0 auto;
+  transition:background .15s,color .15s,transform var(--fold) var(--fold-e)}
+@media (hover:hover){.sfold:hover{background:var(--surface-2);color:var(--ink)}}
+.lb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.navi .lb,.subj .lb{flex:1 1 auto;min-width:0}
+.brand b,.side .lb,.side .cnt{transition:opacity .16s ease .16s}
+
+@media (min-width:761px){
+  .side.mini{width:4.5rem;padding-left:.6rem;padding-right:.6rem}
+  .side.mini .sidetop{flex-direction:column;gap:.5rem;padding-bottom:1.1rem}
+  .side.mini .sfold{transform:rotate(180deg)}
+  .side.mini .navi,.side.mini .subj,.side.mini .brand{gap:0;justify-content:center;padding-left:0;padding-right:0}
+  .side.mini .brand b,.side.mini .lb,.side.mini .cnt{
+    opacity:0;flex:0 0 0;width:0;min-width:0;margin-left:0;
+    transition-delay:0s;transition-duration:.1s}
+  /* L'intertitre perd son mot mais garde son office : il devient le filet
+     qui sépare les familles d'icônes. Sa lettre fond à zéro plutôt que de
+     s'effacer sur place — sinon il resterait quarante pixels de vide là où
+     on lisait « Matières ». */
+  .side.mini .grp{color:transparent;font-size:0;white-space:nowrap;
+    padding:.8rem .3rem .35rem;border-top-color:var(--line);
+    transition-delay:0s;transition-duration:.12s}
+  /* La pastille grossit un peu : réduite à elle seule, elle porte à elle
+     seule l'identité de la matière. */
+  .side.mini .pip{width:.78rem;height:.78rem}
+}
 
 /* ── En-tête ──────────────────────────────────────────────────── */
 .head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding:.6rem .3rem 1rem}
@@ -199,6 +252,12 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 li.done .box{background:var(--invert);border-color:var(--invert);color:var(--on-invert)}
 .tx{flex:1 1 auto;font-size:.86rem;line-height:1.32;min-width:0;overflow-wrap:anywhere}
 li.done .tx{color:var(--faint);text-decoration:line-through}
+/* Échéance venue avec son URL exacte (Moodle) : le titre ouvre la page du
+   devoir. Discret au repos, souligné au survol — les boutons fait/supprimer
+   gardent leurs zones à eux. */
+.tx a{color:inherit;text-decoration:none}
+.tx a:hover{text-decoration:underline}
+.tx a .lnk{font-size:.72em;opacity:.55;margin-left:.22em}
 .kill{flex:0 0 auto;color:var(--faint);font-size:1.05rem;line-height:1;padding:0 .15rem;opacity:0;transition:opacity .15s,color .15s}
 @media (hover:hover){li:hover .kill{opacity:1}}
 @media (hover:hover){.kill:hover{color:var(--p3)}}
@@ -362,20 +421,47 @@ li.done .tx{color:var(--faint);text-decoration:line-through}
 @media (max-width:1280px){ .r1{grid-template-columns:1fr 1fr} .r1 .third{grid-column:span 2} }
 @media (max-width:1080px){ .r2{grid-template-columns:1fr} }
 @media (max-width:900px){
+  .r1{grid-template-columns:1fr} .r1 .third{grid-column:auto}
+}
+/* Téléphone : la barre latérale devient une rangée en tête de page. */
+@media (max-width:760px){
   .shell{grid-template-columns:minmax(0,1fr)}
-  .side{position:static;flex-direction:row;flex-wrap:wrap;gap:.35rem;max-height:none;border-radius:22px;padding:.8rem}
+  .side{position:static;flex-direction:row;flex-wrap:wrap;gap:.35rem;max-height:none;border-radius:22px;padding:.8rem;width:auto}
+  .sidetop{width:100%;padding:0}
+  .sfold{display:none}
   .brand{padding:0 .5rem;width:100%}
   .grp,.side .grow{display:none}
   .navi{width:auto}
   .subj{width:auto}
-  .r1{grid-template-columns:1fr} .r1 .third{grid-column:auto}
 }
-@media (max-width:720px){
+@media (max-width:760px){
   :root{--gutter:2.6rem;--row-h:3rem}
-  .grid{min-width:44rem}
   .hi{font-size:1.4rem}
-  .pop{width:calc(100vw - 2rem)}
+  /* La grille n'a plus à déborder de côté : le téléphone est en vue jour. */
+  .grid{min-width:0}
+  /* Le composeur devient une feuille ancrée en bas — là où vit le pouce. */
+  .pop,.pop.wide,.pop.fx{left:0;right:0;top:auto;bottom:0;width:auto;max-width:none;
+    border-radius:22px 22px 0 0;
+    padding:1.05rem 1.15rem calc(.95rem + env(safe-area-inset-bottom, 0px));
+    max-height:calc(100dvh - 2.5rem);overflow:auto;
+    animation:sheetup .24s cubic-bezier(.2,.8,.25,1)}
 }
+@keyframes sheetup{from{transform:translateY(26px);opacity:0}}
+/* Le voile sous la feuille : il attrape le tap « à côté » qui referme. */
+.popveil{position:fixed;inset:0;z-index:59;background:rgba(10,12,14,.32)}
+
+/* Vue jour (téléphone) : la rangée des jours au-dessus de la grille. Le jour
+   affiché est inversé, aujourd'hui garde un anneau, une pastille signale une
+   échéance ce jour-là. */
+.dtabs{display:flex;gap:.3rem;padding:.1rem 1.05rem .55rem}
+.dt{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:.06rem;
+  padding:.42rem 0 .38rem;border-radius:12px;background:var(--surface-2);color:var(--dim);
+  font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;position:relative;
+  transition:background .15s,color .15s}
+.dt b{font-size:.98rem;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.dt.on{background:var(--invert);color:var(--on-invert)}
+.dt.td:not(.on){box-shadow:inset 0 0 0 1.5px var(--line-hi);color:var(--ink)}
+.dt .dd{position:absolute;top:.3rem;right:.35rem;width:.32rem;height:.32rem;border-radius:50%}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{
   body{background:#fff;padding:0}
@@ -702,6 +788,17 @@ button.me,.mk{background-image:linear-gradient(160deg,var(--invert-2),var(--inve
 }
 @media print{.card,.work,.course,.dl,.side,body{background-image:none}}
 
+/* ── Avant l'aiguillage ──────────────────────────────────────────
+   Le tableau de bord est la vue visible par défaut dans le balisage, et le
+   script qui décide où l'on va ne s'exécute qu'après 350 ko de page : le
+   navigateur a largement le temps de peindre entre les deux. Un visiteur
+   qui arrivait pour la première fois voyait donc passer le coin d'un compte
+   — barre latérale, en-tête, cartes — avant d'atterrir sur l'accueil.
+   On voile, on ne replie pas : `visibility` garde la mise en page, donc les
+   mesures que les graphiques prennent au démarrage restent justes. La
+   première vue affichée lève le voile. */
+.shell.avant{visibility:hidden}
+
 /* ── Page d'accueil ──────────────────────────────────────────────
    Une vraie page de présentation : pleine largeur, sans la barre latérale
    de l'app, sept sections dans l'ordre où on convainc quelqu'un — titre,
@@ -849,6 +946,12 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
   border-radius:13px;padding:.72rem .85rem;color:var(--ink);font:inherit;font-size:.9rem;
 }
 .joinbox input:focus{outline:none;border-color:var(--ac)}
+/* Le code de confirmation est court et se relit chiffre par chiffre : chasse
+   fixe, gros, espacé — on le compare à celui du courriel sans se tromper. */
+.joinbox input.jcode{
+  font-family:var(--mono);font-size:1.32rem;letter-spacing:.42em;
+  text-align:center;padding:.8rem .5rem .8rem .92rem;
+}
 .joinbox .jmsg{font-family:var(--mono);font-size:.7rem;line-height:1.45;color:var(--dim);margin-top:.55rem;min-height:1rem}
 .joinbox .jmsg.bad{color:var(--p3)}
 .join-cta{justify-content:center;margin-top:.6rem;background:var(--invert);color:var(--on-invert)}
@@ -1010,6 +1113,29 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
   color:#8a8f98;font-size:.8rem;padding:1rem}
 .pagewrap.hasdoc .page{display:none}
 
+/* ── L'invitation à déposer ──────────────────────────────────────
+   Sur une page encore vierge, l'import ne se cache pas dans l'en-tête : la
+   page elle-même offre l'endroit. Le bouton disparaît au premier mot, au
+   premier trait — la page pleine appartient à ce qu'elle porte. */
+.mdrop{display:flex;align-items:center;gap:.8rem;text-align:left;width:auto;
+  margin:.3rem 1.35rem 1.3rem;padding:.85rem 1rem;border:1.5px dashed var(--line-hi);
+  border-radius:16px;color:var(--faint);transition:border-color .15s,color .15s,background .15s}
+.mdrop[hidden]{display:none}
+.mdrop .i{width:20px;height:20px;flex:0 0 auto}
+.mdrop span{display:flex;flex-direction:column;gap:.15rem;min-width:0}
+.mdrop b{font-size:.8rem;font-weight:600;color:var(--dim)}
+.mdrop em{font-style:normal;font-size:.7rem;line-height:1.45}
+@media (hover:hover){.mdrop:hover{border-color:var(--ac);color:var(--dim);background:var(--surface-2)}
+.mdrop:hover b{color:var(--ink)}}
+/* Un fichier plane au-dessus de la carte : toute la carte le dit — le voile
+   couvre en-tête et outils compris, on ne vise pas un timbre-poste. */
+#m-notecard{position:relative}
+#m-notecard.dropping::after{content:"Dépose — le document devient une page de ce dossier";
+  position:absolute;inset:8px;z-index:9;display:flex;align-items:center;justify-content:center;
+  border:2px dashed var(--ac);border-radius:20px;padding:1rem;text-align:center;
+  background:color-mix(in srgb,var(--surface) 84%,transparent);backdrop-filter:blur(2px);
+  color:var(--dim);font-size:.88rem;font-weight:550;pointer-events:none}
+
 /* ── La page en plein écran ──────────────────────────────────────
    Le même papier, la même carte — elle vient couvrir l'écran, sans rien
    cloner : c'est le vrai DOM qui passe en fixed, donc l'encre, les
@@ -1083,6 +1209,28 @@ body.nzen #m-notecard .tools{position:sticky;top:0;z-index:6;background:var(--su
   box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 16%,transparent);transition:transform .12s}
 @media (hover:hover){.sw:hover{transform:scale(1.18)}}
 .sw.on{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px var(--c)}
+/* ── Transcrire le cours ─────────────────────────────────────────
+   L'encart vit sous la page : muet tant qu'il n'y a rien à montrer, et le
+   point rouge ne bat que pendant l'écoute. */
+.scribe{border-top:1px solid var(--line);margin:.3rem 1.2rem 0;padding:.7rem 0 .9rem}
+.scribe[hidden]{display:none}
+.scb{display:flex;align-items:center;gap:.45rem;font-size:.7rem;color:var(--dim)}
+.scdot{width:.42rem;height:.42rem;border-radius:50%;background:var(--line-hi);flex:0 0 auto}
+.scribe.live .scdot{background:#E5484D;animation:scpulse 1.7s ease-in-out infinite}
+@keyframes scpulse{0%,100%{opacity:1}50%{opacity:.2}}
+@media (prefers-reduced-motion:reduce){.scribe.live .scdot{animation:none}}
+.scavis{margin:.5rem 0 0;font-size:.72rem;line-height:1.5;color:var(--faint)}
+.scavis[hidden]{display:none}
+.scavis .btn{display:block;margin-top:.6rem}
+.scia{margin-top:.55rem;font-size:.8rem;line-height:1.6;white-space:pre-wrap;
+  max-height:16rem;overflow:auto}
+.scia[hidden],.scprov[hidden],.sctr[hidden]{display:none}
+.scprov{margin-top:.35rem;font-size:.75rem;line-height:1.5;color:var(--faint);
+  font-style:italic;white-space:pre-wrap}
+.scact{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.5rem}
+.scact .link[hidden]{display:none}
+.sctr{margin-top:.5rem;font-size:.7rem;line-height:1.5;color:var(--faint);
+  white-space:pre-wrap;max-height:9rem;overflow:auto}
 
 /* Une annotation se pose où on clique, se déplace par sa poignée et
    s'efface par sa croix. Elle flotte au-dessus de tout le reste. */
@@ -1153,28 +1301,6 @@ html,body{overflow-x:clip}
 .lp-orbs .o2{width:22rem;height:22rem;top:22rem;left:-10rem;background:radial-gradient(circle,#FFE2BC,transparent 65%);animation:lp-drift 20s ease-in-out infinite alternate-reverse}
 .lp-orbs .o3{width:18rem;height:18rem;top:60rem;right:-4rem;background:radial-gradient(circle,#C9E4FF,transparent 65%);animation:lp-drift 24s ease-in-out infinite alternate}
 @keyframes lp-drift{from{transform:translate(0,0)}to{transform:translate(2.4rem,1.6rem)}}
-/* ── Transcrire le cours ─────────────────────────────────────────
-   L'encart vit sous la page : muet tant qu'il n'y a rien à montrer, et le
-   point rouge ne bat que pendant l'écoute. */
-.scribe{border-top:1px solid var(--line);margin:.3rem 1.2rem 0;padding:.7rem 0 .9rem}
-.scribe[hidden]{display:none}
-.scb{display:flex;align-items:center;gap:.45rem;font-size:.7rem;color:var(--dim)}
-.scdot{width:.42rem;height:.42rem;border-radius:50%;background:var(--line-hi);flex:0 0 auto}
-.scribe.live .scdot{background:#E5484D;animation:scpulse 1.7s ease-in-out infinite}
-@keyframes scpulse{0%,100%{opacity:1}50%{opacity:.2}}
-@media (prefers-reduced-motion:reduce){.scribe.live .scdot{animation:none}}
-.scavis{margin:.5rem 0 0;font-size:.72rem;line-height:1.5;color:var(--faint)}
-.scavis[hidden]{display:none}
-.scavis .btn{display:block;margin-top:.6rem}
-.scia{margin-top:.55rem;font-size:.8rem;line-height:1.6;white-space:pre-wrap;
-  max-height:16rem;overflow:auto}
-.scia[hidden],.scprov[hidden],.sctr[hidden]{display:none}
-.scprov{margin-top:.35rem;font-size:.75rem;line-height:1.5;color:var(--faint);
-  font-style:italic;white-space:pre-wrap}
-.scact{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.5rem}
-.scact .link[hidden]{display:none}
-.sctr{margin-top:.5rem;font-size:.7rem;line-height:1.5;color:var(--faint);
-  white-space:pre-wrap;max-height:9rem;overflow:auto}
 :root[data-theme="dark"] .lp-orbs i{opacity:.16}
 
 [data-rev]{opacity:0;transform:translateY(20px);transition:opacity .6s cubic-bezier(.2,.7,.3,1) var(--d,0ms),transform .6s cubic-bezier(.2,.7,.3,1) var(--d,0ms)}
@@ -1575,31 +1701,36 @@ a,button{touch-action:manipulation}
 }
 </style>
 
-<div class="shell">
+<div class="shell avant">
   <aside class="side">
-    <button class="brand" id="go-home" title="Retour à l'accueil">
-      <span class="mk"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h7M4 12h16M4 18h11"/></svg></span>
-      <b>Agenda</b>
-    </button>
-    <button class="navi on" data-go="top"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg> Tableau de bord</button>
-    <button class="navi" data-go="horaire"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4"/></svg> Horaire <span class="cnt" id="n-h"></span></button>
-    <button class="navi" data-go="echeances"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg> Échéances <span class="cnt" id="n-e"></span></button>
-    <button class="navi" data-go="mios"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 8.2 6 8.2-6"/></svg> MIO <span class="cnt" id="n-m"></span></button>
-    <button class="navi" data-go="cours"><svg class="i" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 18.5V21h16"/></svg> Mes cours <span class="cnt" id="n-c"></span></button>
-    <button class="navi" id="nav-notes"><svg class="i" viewBox="0 0 24 24"><path d="M3.5 7A2.5 2.5 0 0 1 6 4.5h3.6l2 2.5H18a2.5 2.5 0 0 1 2.5 2.5v7.5A2.5 2.5 0 0 1 18 19.5H6A2.5 2.5 0 0 1 3.5 17z"/></svg> Toutes les notes <span class="cnt" id="n-n"></span></button>
-    <a class="navi" href="classes.html" style="text-decoration:none"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M15.5 5.8a3 3 0 0 1 0 5.4M17.5 13.6a5.5 5.5 0 0 1 3 4.9"/></svg> Classes</a>
+    <div class="sidetop">
+      <button class="brand" id="go-home" title="Retour à l'accueil">
+        <span class="mk"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h7M4 12h16M4 18h11"/></svg></span>
+        <b>Agenda</b>
+      </button>
+      <button class="sfold" id="side-fold" title="Replier la barre" aria-label="Replier la barre latérale" aria-expanded="true">
+        <svg class="i" viewBox="0 0 24 24"><path d="M14.5 6.5 9 12l5.5 5.5"/><path d="M19.5 5v14"/></svg>
+      </button>
+    </div>
+    <button class="navi on" data-go="top"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg> <span class="lb">Tableau de bord</span></button>
+    <button class="navi" data-go="horaire"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4"/></svg> <span class="lb">Horaire</span> <span class="cnt" id="n-h"></span></button>
+    <button class="navi" data-go="echeances"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg> <span class="lb">Échéances</span> <span class="cnt" id="n-e"></span></button>
+    <button class="navi" data-go="mios"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 8.2 6 8.2-6"/></svg> <span class="lb">MIO</span> <span class="cnt" id="n-m"></span></button>
+    <button class="navi" data-go="cours"><svg class="i" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 18.5V21h16"/></svg> <span class="lb">Mes cours</span> <span class="cnt" id="n-c"></span></button>
+    <button class="navi" id="nav-notes"><svg class="i" viewBox="0 0 24 24"><path d="M3.5 7A2.5 2.5 0 0 1 6 4.5h3.6l2 2.5H18a2.5 2.5 0 0 1 2.5 2.5v7.5A2.5 2.5 0 0 1 18 19.5H6A2.5 2.5 0 0 1 3.5 17z"/></svg> <span class="lb">Toutes les notes</span> <span class="cnt" id="n-n"></span></button>
+    <a class="navi" href="classes.html" style="text-decoration:none"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M15.5 5.8a3 3 0 0 1 0 5.4M17.5 13.6a5.5 5.5 0 0 1 3 4.9"/></svg> <span class="lb">Classes</span></a>
 
     <p class="grp">Matières</p>
     <div id="subjects"></div>
 
     <span class="grow"></span>
     <p class="grp">Compte</p>
-    <button class="navi" id="sb-account"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg> <span id="sb-label">Connexion</span></button>
+    <button class="navi" id="sb-account"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg> <span class="lb" id="sb-label">Connexion</span></button>
     <p class="grp">Affichage</p>
-    <button class="navi" id="t-theme"><span id="t-icon"></span> <span id="t-label">Thème sombre</span></button>
-    <button class="navi" id="t-weekend"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M16 9.5v11"/></svg> Fins de semaine</button>
-    <a class="navi" href="guide.html" style="text-decoration:none"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 7.5h.01"/></svg> Guide d'installation</a>
-    <button class="navi" id="t-print"><svg class="i" viewBox="0 0 24 24"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="7.5" rx="2"/><path d="M7 14h10v6.5H7z"/></svg> Imprimer</button>
+    <button class="navi" id="t-theme"><span id="t-icon"></span> <span class="lb" id="t-label">Thème sombre</span></button>
+    <button class="navi" id="t-weekend"><svg class="i" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M16 9.5v11"/></svg> <span class="lb">Fins de semaine</span></button>
+    <a class="navi" href="guide.html" style="text-decoration:none"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 7.5h.01"/></svg> <span class="lb">Guide d'installation</span></a>
+    <button class="navi" id="t-print"><svg class="i" viewBox="0 0 24 24"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="7.5" rx="2"/><path d="M7 14h10v6.5H7z"/></svg> <span class="lb">Imprimer</span></button>
   </aside>
 
   <div class="main">
@@ -1864,6 +1995,8 @@ a,button{touch-action:manipulation}
               <button class="tl" id="m-undo" title="Annuler le dernier trait"><svg class="i" viewBox="0 0 24 24"><path d="M8.5 7.5L4.5 11.5l4 4"/><path d="M4.5 11.5h9.8a4.7 4.7 0 1 1 0 9.4H10"/></svg></button>
               <button class="tl" id="m-redo" title="Rétablir"><svg class="i" viewBox="0 0 24 24"><path d="M15.5 7.5l4 4-4 4"/><path d="M19.5 11.5H9.7a4.7 4.7 0 1 0 0 9.4H14"/></svg></button>
               <span class="sep"></span>
+              <button class="tl" id="m-mic" title="Transcrire le cours"><svg class="i" viewBox="0 0 24 24"><path d="M12 3.5a2.5 2.5 0 0 1 2.5 2.5v5a2.5 2.5 0 0 1-5 0V6A2.5 2.5 0 0 1 12 3.5z"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5v3"/></svg></button>
+              <span class="sep"></span>
               <button class="tl" id="m-zen" title="Plein écran — la page prend tout l'écran (Échap pour revenir)"><svg class="i" viewBox="0 0 24 24"><path d="M9 4.5H4.5V9M15 4.5h4.5V9M9 19.5H4.5V15M15 19.5h4.5V15"/></svg></button>
             </div>
             <div class="pagewrap" id="m-wrap">
@@ -1872,8 +2005,30 @@ a,button{touch-action:manipulation}
               <textarea id="m-page" class="page" spellcheck="true"
                 placeholder="Page blanche. Écris, dessine, surligne, annote — tout reste sur cet appareil."></textarea>
               <svg class="inklayer pen" id="m-pen" aria-hidden="true"></svg>
+              <button class="mdrop" id="m-drop" hidden>
+                <svg class="i" viewBox="0 0 24 24"><path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9"/><path d="M4.5 15.5v3A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5v-3"/></svg>
+                <span><b>Dépose un document ici — ou clique pour choisir</b>
+                <em>Plan de cours, diapos Moodle, exercices (PDF ou image) — puis dessine, surligne, annote par-dessus.</em></span>
+              </button>
               <div class="annos" id="m-annos"></div>
               <div class="cap" id="m-cap"></div>
+            </div>
+            <div class="scribe" id="m-scribe" hidden>
+              <div class="scb"><span class="scdot"></span><span id="m-scb"></span></div>
+              <p class="scavis" id="m-scavis" hidden>
+                Avant d'enregistrer, demande l'accord de ton enseignant. Le son ne quitte
+                jamais cet appareil&nbsp;: seul le texte transcrit part se faire rédiger,
+                et rien n'en est conservé sur le serveur.
+                <button class="btn solid" id="m-scok">J'ai l'accord — commencer</button>
+              </p>
+              <div class="scia" id="m-scia" hidden></div>
+              <div class="scprov" id="m-scprov" hidden></div>
+              <div class="scact">
+                <button class="link" id="m-scverse" hidden>Verser dans la page</button>
+                <button class="link" id="m-scpropre" hidden>Mettre au propre</button>
+                <button class="link" id="m-sctrv" hidden>Voir la transcription</button>
+              </div>
+              <div class="sctr" id="m-sctr" hidden></div>
             </div>
           </section>
           <section class="card fx">
@@ -1939,8 +2094,6 @@ a,button{touch-action:manipulation}
                     <span class="t">Aperçu de la session</span>
                     <div class="figs"><b>31<i>h</i></b><b>8<i>cours</i></b></div>
                     <span class="meter"><i></i></span>
-              <button class="tl" id="m-mic" title="Transcrire le cours"><svg class="i" viewBox="0 0 24 24"><path d="M12 3.5a2.5 2.5 0 0 1 2.5 2.5v5a2.5 2.5 0 0 1-5 0V6A2.5 2.5 0 0 1 12 3.5z"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5v3"/></svg></button>
-              <span class="sep"></span>
                     <div class="tiles"><span class="on">18<i>Blocs</i></span><span>12<i>Échéances</i></span><span>13<i>MIO</i></span></div>
                   </div>
                   <div class="c">
@@ -1957,23 +2110,6 @@ a,button{touch-action:manipulation}
                     <div class="row"><i style="background:#E8912B"></i><div><b>Actualité géographique 1</b><span class="cd" style="color:#A2620F">Dans 8 jours</span></div></div>
                     <div class="row"><i style="background:#3FA457"></i><div><b>Examen 1 — Philo</b><span class="cd" style="color:#2E7D45">Dans 25 jours</span></div></div>
                     <div class="row"><i style="background:#3A6EA5"></i><div><b>Rapport de laboratoire</b><span class="cd" style="color:#1C3D5D">Dans 32 jours</span></div></div>
-            <div class="scribe" id="m-scribe" hidden>
-              <div class="scb"><span class="scdot"></span><span id="m-scb"></span></div>
-              <p class="scavis" id="m-scavis" hidden>
-                Avant d'enregistrer, demande l'accord de ton enseignant. Le son ne quitte
-                jamais cet appareil&nbsp;: seul le texte transcrit part se faire rédiger,
-                et rien n'en est conservé sur le serveur.
-                <button class="btn solid" id="m-scok">J'ai l'accord — commencer</button>
-              </p>
-              <div class="scia" id="m-scia" hidden></div>
-              <div class="scprov" id="m-scprov" hidden></div>
-              <div class="scact">
-                <button class="link" id="m-scverse" hidden>Verser dans la page</button>
-                <button class="link" id="m-scpropre" hidden>Mettre au propre</button>
-                <button class="link" id="m-sctrv" hidden>Voir la transcription</button>
-              </div>
-              <div class="sctr" id="m-sctr" hidden></div>
-            </div>
                   </div>
                 </div>
               </div>
@@ -2432,6 +2568,10 @@ a,button{touch-action:manipulation}
   /* ── État ─────────────────────────────────────────────────────── */
   const seed = () => ({
     wks: [0], theme:"light", weekend:true, chart:"jour", filter:null,
+    /* Barre latérale repliée : un réglage d'affichage comme le thème, retenu
+       d'une visite à l'autre parce qu'on ne choisit pas sa largeur d'écran
+       deux fois par jour. */
+    sideMini:false,
     /* wview : "une" = une semaine à la fois, qu'on fait défiler ; "pile" =
        les semaines empilées les unes sous les autres. wcur = le décalage
        affiché en mode « une ». */
@@ -2535,6 +2675,14 @@ a,button{touch-action:manipulation}
   const svgEl = (tag, a) => { const n = document.createElementNS("http://www.w3.org/2000/svg", tag);
     for (const k in a) n.setAttribute(k, a[k]); return n; };
   const cols = () => state.weekend ? 7 : 5;
+  /* ── Vue jour (téléphone) ─────────────────────────────────────────
+     Sous 761 px, une semaine de sept colonnes n'est qu'un défilement de
+     côté : on n'affiche qu'un jour à la fois, choisi par la rangée d'onglets
+     ou d'un balayage. `mday` est l'indice du jour (lundi = 0) — une simple
+     variable : revenir sur l'app un autre jour repart d'aujourd'hui. */
+  const mqPhone = matchMedia("(max-width:760px)");
+  let mday = Math.min((new Date().getDay()+6)%7, cols()-1);
+  mqPhone.addEventListener("change", () => renderWeeks());
   const ICON = {
     check:'<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"/></svg>',
     sun:'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg>',
@@ -2598,10 +2746,39 @@ a,button{touch-action:manipulation}
     });
     if (state.wview === "pile" && state.wks.length > 1) head.append(x);
 
+    /* Téléphone : une seule colonne — le jour choisi — et la rangée des
+       jours pour changer. Les heures de l'en-tête restent celles de la
+       semaine entière : c'est la semaine qu'elles décrivent. */
+    const phone = mqPhone.matches;
+    if (phone && mday >= n) mday = n - 1;
+    const shown = phone ? [days[mday]] : days;
+    let tabs = null;
+    if (phone) {
+      tabs = mk("div","dtabs");
+      days.forEach((d, i) => {
+        const dI = iso(d);
+        const b = mk("button","dt" + (i === mday ? " on" : "") + (dI === todayISO ? " td" : ""));
+        b.append(mk("b", null, String(d.getDate())), mk("span", null, DOW[(d.getDay()+6)%7]));
+        const marks = deadlinesOn(dI);
+        if (marks.length) {
+          const lvl = Math.max(...marks.map(x => countdown(x.date, x.time).lvl));
+          const dd = mk("i","dd");
+          dd.style.background = `var(--p${lvl})`;
+          b.append(dd);
+        }
+        b.addEventListener("click", () => {
+          if (i === mday) return;
+          const dir = Math.sign(i - mday);
+          mday = i; renderWeeks(dir);
+        });
+        tabs.append(b);
+      });
+    }
+
     const grid = mk("div","grid");
-    grid.style.setProperty("--cols", n);
+    grid.style.setProperty("--cols", shown.length);
     grid.append(mk("div","corner"));
-    for (const d of days) {
+    for (const d of shown) {
       const dI = iso(d);
       const h = mk("div","dh");
       if (d.getDay() === 0 || d.getDay() === 6) h.classList.add("we");
@@ -3418,6 +3595,19 @@ a,button{touch-action:manipulation}
   });
 
   /* ── Échéances ────────────────────────────────────────────────── */
+  /* Le titre d'une échéance : un lien quand la source fournit l'URL exacte
+     (Moodle) — l'agenda t'amène au devoir lui-même, pas à une page d'accueil. */
+  function titreDe(d) {
+    const p = mk("p","tx");
+    if (d.url) {
+      const a = mk("a", null, d.t);
+      a.href = d.url; a.target = "_blank"; a.rel = "noopener";
+      a.title = "Ouvrir la page du devoir";
+      a.append(mk("span","lnk","↗"));
+      p.append(a);
+    } else p.textContent = d.t;
+    return p;
+  }
   function renderDeadlines() {
     const box = el("deadlines"); box.textContent = "";
     const list = [...state.deadlines].sort((a,b) =>
@@ -3429,7 +3619,7 @@ a,button{touch-action:manipulation}
       li.style.setProperty("--h", hueOf(courseOf(d)));
       const bar = mk("span","bar4");
       const bd = mk("div","al");
-      bd.append(mk("p","tx", d.t));
+      bd.append(titreDe(d));
       const meta = mk("p","w");
       const cdn = mk("b","cd l" + cd.lvl, cd.txt);
       meta.append(cdn, document.createTextNode(` · ${frDate(d.date)}`));
@@ -3746,7 +3936,7 @@ a,button{touch-action:manipulation}
       const info = courseInfo(c);
       const b = mk("button","subj");
       const pip = mk("span","pip"); pip.style.background = `hsl(${hueOf(c)} 62% 52%)`;
-      b.append(pip, mk("span", null, c), mk("span","cnt", `${info.hours}h`));
+      b.append(pip, mk("span","lb", c), mk("span","cnt", `${info.hours}h`));
       if (state.filter === c || mCur === c) { b.style.background = "var(--surface-2)"; b.style.color = "var(--ink)"; }
       else if (state.filter) b.style.opacity = ".45";
       /* Le clic ouvre la fiche du cours plutôt que de filtrer : filtrer reste
@@ -4034,7 +4224,7 @@ a,button{touch-action:manipulation}
       const start = new Date(y, m - 1, da, t ? +t[1] : 23, t ? +t[2] : 59);
       if (start <= now) continue;
       const c = courseOf(d);
-      out.push({ key:`e:${d.id}`, t:d.t, hue:hueOf(c), sub:c, start, end:null, jour:!t,
+      out.push({ key:`e:${d.id}`, t:d.t, url:d.url, hue:hueOf(c), sub:c, start, end:null, jour:!t,
         kind:d.kind === "examen" ? "examen" : d.kind === "remise" ? "remise" : "echeance",
         at:t ? new Date(+start - LEAD_MIN * 6e4) : new Date(y, m - 1, da, 8) });
     }
@@ -4123,7 +4313,7 @@ a,button{touch-action:manipulation}
       li.style.setProperty("--h", x.hue);
       const ic = mk("span","kdi"); ic.innerHTML = ICON[KD_ICON[x.kind]];
       const al = mk("div","al");
-      al.append(mk("p","tx", x.t));
+      al.append(titreDe(x));
       const w = mk("p","w");
       w.append(mk("b","cd l" + lvl, untilTxt(x.start - now)),
         document.createTextNode(` · ${dayTxt(x.start, now)}${x.jour ? "" : " " + clock(x.start)}`));
@@ -4474,7 +4664,7 @@ a,button{touch-action:manipulation}
       const li = mk("li","nrow dline" + (d.done ? " done" : ""));
       li.style.setProperty("--p", `var(--p${cd.lvl})`);
       const bd = mk("div","al");
-      bd.append(mk("p","tx", d.t));
+      bd.append(titreDe(d));
       const meta = mk("p","w");
       const label = ACT_LBL[d.kind] || "date";
       meta.append(mk("b","cd l" + cd.lvl, cd.txt),
@@ -4768,6 +4958,9 @@ a,button{touch-action:manipulation}
     const ta = el("m-page");
     const blank = mCur && !pgFull(mPage(mCur));
     ta.placeholder = blank && mTool === "write" && document.activeElement !== ta ? M_HINT : "";
+    /* L'invitation à déposer suit la même règle que l'invite : une page
+       vierge, l'outil d'écriture — et elle s'efface au premier geste. */
+    el("m-drop").hidden = !(blank && mTool === "write");
   }
   /* Un geste vient de changer la page : on tamponne l'heure et on programme
      l'écriture sur disque. Un seul endroit, donc jamais de page modifiée
@@ -4818,6 +5011,7 @@ a,button{touch-action:manipulation}
     el("m-page").value = p.page || "";
     el("m-pat").textContent = pgFull(p) && p.at ? `modifiée ${p.at}` : "";
     drawDoc(); setTool("write"); drawSwatches(); drawAnnos(); histInit();
+    scPeindre();
     /* Tout de suite, pour que la page soit à sa taille dès le premier
        affichage ; puis au cadre suivant, une fois la police posée. Un onglet
        en arrière-plan ne rend jamais ce cadre — d'où les deux. */
@@ -4905,7 +5099,6 @@ a,button{touch-action:manipulation}
       }
       b.tabIndex = 0;
       const open = () => on ? seeAtSchedule(c) : openMatiere(e.t);
-    scPeindre();
       if (!on) b.title = `Ouvrir la fiche de ${e.t}\n` + b.title;
       b.addEventListener("click", open);
       b.addEventListener("keydown", ev => {
@@ -5033,93 +5226,6 @@ a,button{touch-action:manipulation}
     if (p.id) catPop(c, p.id, el("m-pgcat"));
   });
 
-  /* ── La page en plein écran ──────────────────────────────────────
-     Un seul booléen, une seule classe sur body : la carte des notes vient
-     couvrir l'écran, et tout le reste — outils, encre, historique — est
-     déjà là, puisque c'est la même carte. Toute navigation qui quitte la
-     fiche replie d'abord le plein écran, sinon body garderait son
-     overflow:hidden devant une carte devenue invisible. */
-  let mZen = false;
-  const ZEN_IN  = '<svg class="i" viewBox="0 0 24 24"><path d="M9 4.5H4.5V9M15 4.5h4.5V9M9 19.5H4.5V15M15 19.5h4.5V15"/></svg>';
-  const ZEN_OUT = '<svg class="i" viewBox="0 0 24 24"><path d="M4.5 9H9V4.5M19.5 9H15V4.5M4.5 15H9v4.5M19.5 15H15v4.5"/></svg>';
-  function setZen(on) {
-    if (mZen === !!on) return;
-    mZen = !!on;
-    document.body.classList.toggle("nzen", mZen);
-    const b = el("m-zen");
-    b.classList.toggle("on", mZen);
-    b.innerHTML = mZen ? ZEN_OUT : ZEN_IN;
-    b.title = mZen ? "Revenir à la fiche (Échap)" : "Plein écran — la page prend tout l'écran (Échap pour revenir)";
-    /* La colonne change de largeur : l'encre et les annotations se recalent
-       tout de suite, puis au cadre suivant une fois la mise en page posée. */
-    mGrow(); requestAnimationFrame(mGrow);
-    if (mZen) el("m-notecard").scrollTop = 0;
-  }
-  el("m-zen").addEventListener("click", () => setZen(!mZen));
-
-  /* ── Partager vers une classe ────────────────────────────────────
-     « Stocker cette note dans une classe, puis un cours » : la classe, le
-     cours qu'on y suit, la séance — et le TEXTE de la page part dans la
-     page de séance partagée (classes.html). L'encre, les dessins et les
-     documents restent sur cet appareil : la page de classe est du texte que
-     toute la classe édite, pas un calque à moi. On complète, on n'écrase
-     jamais : ce que la classe a déjà écrit reste au-dessus. */
-  async function sbApi(pathQ, init = {}, retry = true) {
-    const at = await sbJeton();
-    /* Pas de jeton, deux causes bien différentes : ou bien il n'y a plus de
-       session — sbRenew a déjà ramené à la connexion — ou bien le réseau
-       manque et la session, elle, est intacte. On ne dit pas la même chose. */
-    if (!at) throw new Error(sbSession() ? "Pas de réseau — réessaie dans un instant." : "pas de session");
-    const r = await fetch(`${SB_URL}/rest/v1/${pathQ}`, { ...init,
-      headers: { apikey: SB_KEY, authorization: `Bearer ${at}`,
-                 "content-type": "application/json", ...(init.headers || {}) } });
-    if (r.status === 401 && retry && sbSession()?.rt) {
-      try { await sbRenew(); }
-      catch { throw new Error("Session expirée — reconnecte-toi."); }
-      return sbApi(pathQ, init, false);
-    }
-    if (!r.ok) { const d = await r.json().catch(() => ({}));
-      throw new Error(d.message || d.hint || `erreur ${r.status}`); }
-    return r.status === 204 ? null : r.json();
-  }
-  /* Ce que la page a à dire : son texte, puis ses annotations — chacune est
-     une phrase posée quelque part, elle mérite de partir aussi. */
-  const pageTexte = p => [(p.page || "").trim(),
-    ...p.annos.map(a => (a.t || "").trim()).filter(Boolean).map(t => `• ${t}`)]
-    .filter(Boolean).join("\n\n");
-  const NEUF = "·neuf·";       // valeur d'option : créer plutôt que choisir
-  function sharePop(anchor) {
-    const c = mCur; if (!c) return;
-    mFlush();
-    const p = mPage(c);
-    pop?.remove(); pop = null; popAnchor = null;
-    const box = mk("div","pop fx");
-    box.append(mk("h4", null, "Vers ta classe"));
-    box.append(mk("p","when", [p.t || "Page", c].join(" · ")));
-    const acts = mk("div","acts");
-    const fin = mk("button","btn quiet","Annuler");
-    fin.addEventListener("click", closePop);
-    /* Sans compte, rien ne peut partir ; sans texte, rien n'a de sens à
-       partir — deux culs-de-sac dits tout de suite, sans formulaire. */
-    const texte = pageTexte(p);
-    if (!sbSession()) {
-      box.append(mk("p","hint dim","Connecte-toi pour envoyer une note vers une classe."));
-      const go = mk("button","btn solid","Se connecter");
-      go.addEventListener("click", () => { closePop(); showJoin("signin"); });
-      acts.append(mk("span","grow"), fin, go); box.append(acts);
-      pop = box; place(box, anchor, false); return;
-    }
-    if (!texte) {
-      box.append(mk("p","hint dim","Cette page n'a pas encore de texte. C'est lui qui part vers la classe — l'encre, les dessins et les documents restent sur cet appareil."));
-      acts.append(mk("span","grow"), fin); box.append(acts);
-      pop = box; place(box, anchor, false); return;
-    }
-    const fld = (lab) => { const l = mk("label","fld"); l.append(mk("span", null, lab));
-      const s = mk("select"); l.append(s); box.append(l); return s; };
-    const selC = fld("Classe"), selM = fld("Cours"), selK = fld("Séance");
-    const hint = mk("p","hint dim", "Le texte de la page part dans la page de séance — toute la classe le voit. Ce qui y est déjà écrit reste au-dessus.");
-    box.append(hint);
-    const err = mk("p","hint"); err.style.color = "var(--live)"; err.hidden = true; box.append(err);
 
   /* ── Transcrire le cours ─────────────────────────────────────────
      L'enseignant parle, l'appareil écoute, et toutes les quelques minutes ce
@@ -5420,6 +5526,93 @@ a,button{touch-action:manipulation}
   addEventListener("beforeunload", e => { if (scOn) { e.preventDefault(); e.returnValue = ""; } });
   scBouton();
 
+  /* ── La page en plein écran ──────────────────────────────────────
+     Un seul booléen, une seule classe sur body : la carte des notes vient
+     couvrir l'écran, et tout le reste — outils, encre, historique — est
+     déjà là, puisque c'est la même carte. Toute navigation qui quitte la
+     fiche replie d'abord le plein écran, sinon body garderait son
+     overflow:hidden devant une carte devenue invisible. */
+  let mZen = false;
+  const ZEN_IN  = '<svg class="i" viewBox="0 0 24 24"><path d="M9 4.5H4.5V9M15 4.5h4.5V9M9 19.5H4.5V15M15 19.5h4.5V15"/></svg>';
+  const ZEN_OUT = '<svg class="i" viewBox="0 0 24 24"><path d="M4.5 9H9V4.5M19.5 9H15V4.5M4.5 15H9v4.5M19.5 15H15v4.5"/></svg>';
+  function setZen(on) {
+    if (mZen === !!on) return;
+    mZen = !!on;
+    document.body.classList.toggle("nzen", mZen);
+    const b = el("m-zen");
+    b.classList.toggle("on", mZen);
+    b.innerHTML = mZen ? ZEN_OUT : ZEN_IN;
+    b.title = mZen ? "Revenir à la fiche (Échap)" : "Plein écran — la page prend tout l'écran (Échap pour revenir)";
+    /* La colonne change de largeur : l'encre et les annotations se recalent
+       tout de suite, puis au cadre suivant une fois la mise en page posée. */
+    mGrow(); requestAnimationFrame(mGrow);
+    if (mZen) el("m-notecard").scrollTop = 0;
+  }
+  el("m-zen").addEventListener("click", () => setZen(!mZen));
+
+  /* ── Partager vers une classe ────────────────────────────────────
+     « Stocker cette note dans une classe, puis un cours » : la classe, le
+     cours qu'on y suit, la séance — et le TEXTE de la page part dans la
+     page de séance partagée (classes.html). L'encre, les dessins et les
+     documents restent sur cet appareil : la page de classe est du texte que
+     toute la classe édite, pas un calque à moi. On complète, on n'écrase
+     jamais : ce que la classe a déjà écrit reste au-dessus. */
+  async function sbApi(pathQ, init = {}, retry = true) {
+    const at = await sbJeton();
+    /* Pas de jeton, deux causes bien différentes : ou bien il n'y a plus de
+       session — sbRenew a déjà ramené à la connexion — ou bien le réseau
+       manque et la session, elle, est intacte. On ne dit pas la même chose. */
+    if (!at) throw new Error(sbSession() ? "Pas de réseau — réessaie dans un instant." : "pas de session");
+    const r = await fetch(`${SB_URL}/rest/v1/${pathQ}`, { ...init,
+      headers: { apikey: SB_KEY, authorization: `Bearer ${at}`,
+                 "content-type": "application/json", ...(init.headers || {}) } });
+    if (r.status === 401 && retry && sbSession()?.rt) {
+      try { await sbRenew(); }
+      catch { throw new Error("Session expirée — reconnecte-toi."); }
+      return sbApi(pathQ, init, false);
+    }
+    if (!r.ok) { const d = await r.json().catch(() => ({}));
+      throw new Error(d.message || d.hint || `erreur ${r.status}`); }
+    return r.status === 204 ? null : r.json();
+  }
+  /* Ce que la page a à dire : son texte, puis ses annotations — chacune est
+     une phrase posée quelque part, elle mérite de partir aussi. */
+  const pageTexte = p => [(p.page || "").trim(),
+    ...p.annos.map(a => (a.t || "").trim()).filter(Boolean).map(t => `• ${t}`)]
+    .filter(Boolean).join("\n\n");
+  const NEUF = "·neuf·";       // valeur d'option : créer plutôt que choisir
+  function sharePop(anchor) {
+    const c = mCur; if (!c) return;
+    mFlush();
+    const p = mPage(c);
+    pop?.remove(); pop = null; popAnchor = null;
+    const box = mk("div","pop fx");
+    box.append(mk("h4", null, "Vers ta classe"));
+    box.append(mk("p","when", [p.t || "Page", c].join(" · ")));
+    const acts = mk("div","acts");
+    const fin = mk("button","btn quiet","Annuler");
+    fin.addEventListener("click", closePop);
+    /* Sans compte, rien ne peut partir ; sans texte, rien n'a de sens à
+       partir — deux culs-de-sac dits tout de suite, sans formulaire. */
+    const texte = pageTexte(p);
+    if (!sbSession()) {
+      box.append(mk("p","hint dim","Connecte-toi pour envoyer une note vers une classe."));
+      const go = mk("button","btn solid","Se connecter");
+      go.addEventListener("click", () => { closePop(); showJoin("signin"); });
+      acts.append(mk("span","grow"), fin, go); box.append(acts);
+      pop = box; place(box, anchor, false); return;
+    }
+    if (!texte) {
+      box.append(mk("p","hint dim","Cette page n'a pas encore de texte. C'est lui qui part vers la classe — l'encre, les dessins et les documents restent sur cet appareil."));
+      acts.append(mk("span","grow"), fin); box.append(acts);
+      pop = box; place(box, anchor, false); return;
+    }
+    const fld = (lab) => { const l = mk("label","fld"); l.append(mk("span", null, lab));
+      const s = mk("select"); l.append(s); box.append(l); return s; };
+    const selC = fld("Classe"), selM = fld("Cours"), selK = fld("Séance");
+    const hint = mk("p","hint dim", "Le texte de la page part dans la page de séance — toute la classe le voit. Ce qui y est déjà écrit reste au-dessus.");
+    box.append(hint);
+    const err = mk("p","hint"); err.style.color = "var(--live)"; err.hidden = true; box.append(err);
     const ok = mk("button","btn solid","Envoyer");
     acts.append(mk("span","grow"), fin, ok); box.append(acts);
     const opt = (sel, v, t) => { const o = mk("option", null, t); o.value = v; sel.append(o); };
@@ -5709,15 +5902,32 @@ a,button{touch-action:manipulation}
     el("m-file").value = "";      // réimporter le même fichier doit redéclencher change
     if (f) importDoc(f);
   });
-  /* Déposer le fichier sur la page vaut l'importer : le geste évident. Sans
-     le preventDefault, le navigateur quitterait l'agenda pour ouvrir le PDF. */
-  el("m-wrap").addEventListener("dragover", ev => { if (mCur) ev.preventDefault(); });
-  el("m-wrap").addEventListener("drop", ev => {
-    if (!mCur) return;
+  el("m-drop").addEventListener("click", () => { if (mCur) el("m-file").click(); });
+  /* Déposer le fichier vaut l'importer : le geste évident — et toute la
+     carte des notes l'accepte, on ne vise pas un timbre-poste. Le voile
+     s'allume dès que le fichier survole, et le compteur encaisse les
+     dragleave que chaque enfant traversé déclenche. Sans le preventDefault,
+     le navigateur quitterait l'agenda pour ouvrir le PDF. */
+  let mDragN = 0;
+  const mDropOff = () => { mDragN = 0; el("m-notecard").classList.remove("dropping"); };
+  el("m-notecard").addEventListener("dragenter", ev => {
+    if (!mCur || ![...(ev.dataTransfer?.types || [])].includes("Files")) return;
     ev.preventDefault();
+    mDragN++; el("m-notecard").classList.add("dropping");
+  });
+  el("m-notecard").addEventListener("dragleave", () => { if (--mDragN <= 0) mDropOff(); });
+  /* Seuls les FICHIERS sont happés : glisser du texte dans la page reste au
+     navigateur. */
+  const dragFiles = ev => [...(ev.dataTransfer?.types || [])].includes("Files");
+  el("m-notecard").addEventListener("dragover", ev => { if (mCur && dragFiles(ev)) ev.preventDefault(); });
+  el("m-notecard").addEventListener("drop", ev => {
+    if (!mCur || !dragFiles(ev)) return;
+    ev.preventDefault();
+    mDropOff();
     const f = [...(ev.dataTransfer?.files || [])].find(x =>
       x.type === "application/pdf" || /^image\//.test(x.type) || /\.pdf$/i.test(x.name));
     if (f) importDoc(f);
+    else el("m-pat").textContent = "⚠ Seuls les PDF et les images s'importent ici.";
   });
 
   /* ── Toutes les notes ────────────────────────────────────────────
@@ -5798,6 +6008,7 @@ a,button{touch-action:manipulation}
         return;
       }
       docPurge(p);       // ses feuilles dans IndexedDB partent avec elle
+      trDel(p.id);       // son transcript brut aussi
       const ps = mPages(c).filter(x => x.id !== p.id);
       mWrite(c, { pages: ps, pg: ps[0]?.id || "" }); save();
       renderCourses();   // remet les compteurs à jour, et la vue avec eux
@@ -5821,6 +6032,26 @@ a,button{touch-action:manipulation}
     save();
   }
   const flipTheme = () => { state.theme = state.theme === "dark" ? "light" : "dark"; applyTheme(); };
+
+  /* ── Pli de la barre latérale ─────────────────────────────────────
+     Le CSS fait tout le mouvement ; d'ici on ne pose que la classe et ce
+     qu'elle emporte. Repliée, la barre n'a plus de mots : chaque bouton
+     reprend le sien en infobulle, sinon une rangée d'icônes devient une
+     devinette. (Les matières, elles, gardent la leur en toute occasion —
+     voir renderSubjects.) */
+  function applySide() {
+    const side = document.querySelector(".side"), b = el("side-fold");
+    side.classList.toggle("mini", !!state.sideMini);
+    b.setAttribute("aria-expanded", state.sideMini ? "false" : "true");
+    b.title = state.sideMini ? "Déplier la barre" : "Replier la barre";
+    side.querySelectorAll(".navi").forEach(n => {
+      const lb = n.querySelector(".lb");
+      if (!lb) return;
+      if (state.sideMini) n.title = lb.textContent.trim();
+      else n.removeAttribute("title");
+    });
+  }
+  const flipSide = () => { state.sideMini = !state.sideMini; applySide(); save(); };
   const addWeek = () => { state.wks.push(Math.max(...state.wks) + 1); renderWeeks();
     host.lastElementChild?.scrollIntoView({ behavior:"smooth", block:"start" }); };
   /* Le bouton de l'en-tête suit le mode : il ajoute une semaine à la pile, ou
@@ -5882,6 +6113,7 @@ a,button{touch-action:manipulation}
   el("go-alerts").addEventListener("click", () => goto("echeances"));
   el("go-theme").addEventListener("click", flipTheme);
   el("t-theme").addEventListener("click", flipTheme);
+  el("side-fold").addEventListener("click", flipSide);
   el("t-print").addEventListener("click", () => window.print());
   el("go-print").addEventListener("click", () => window.print());
   el("t-weekend").addEventListener("click", () => { state.weekend = !state.weekend;
@@ -5902,7 +6134,6 @@ a,button{touch-action:manipulation}
           if (!e) continue;
           const [h1,m1] = e.time.split(" – ")[0].split(":").map(Number);
           const [h2,m2] = e.time.split(" – ")[1].split(":").map(Number);
-      trDel(p.id);       // son transcript brut aussi
           lines.push("BEGIN:VEVENT",
             `DTSTART:${st(new Date(day.getFullYear(),day.getMonth(),day.getDate(),h1,m1))}`,
             `DTEND:${st(new Date(day.getFullYear(),day.getMonth(),day.getDate(),h2,m2))}`,
@@ -5955,7 +6186,7 @@ a,button{touch-action:manipulation}
     if (!revealed.has(c)) io.observe(c);
   });
 
-  applyTheme(); renderWeeks(); renderSubjects(); renderOverview(); renderChart();
+  applyTheme(); applySide(); renderWeeks(); renderSubjects(); renderOverview(); renderChart();
   renderRings(); renderCourses(); renderTodos(); renderDeadlines(); renderMios();
   rapCheck();
   syncTTReset();
@@ -6260,6 +6491,8 @@ a,button{touch-action:manipulation}
        body garderait overflow:hidden devant une carte devenue invisible. */
     if (name !== "matiere") setZen(false);
     for (const v of ["board","profil","matiere","landing","onboard","notes"]) el(v).hidden = v !== name;
+    /* Une vue est choisie : le voile de départ n'a plus rien à cacher. */
+    document.querySelector(".shell").classList.remove("avant");
     /* L'entrée « Toutes les notes » n'est pas une ancre du tableau : elle
        s'allume avec sa vue, et éteint les ancres qui croiraient l'être encore. */
     el("nav-notes").classList.toggle("on", name === "notes");
