@@ -7406,12 +7406,13 @@ a,button{touch-action:manipulation}
     const up = joMode === "signup", conf = joMode === "confirm";
     el("jo-title").textContent = conf ? "Confirme ton courriel"
       : up ? "Crée ton compte d'agenda" : "Connecte-toi";
-    /* Le gabarit de courriel appartient au projet Supabase, partagé avec une
-       autre application : le message arrive au nom de « Shift » et porte un
-       code, pas un lien. On l'annonce — sinon l'étudiant croit à une erreur
-       d'adresse et n'ouvre jamais le courriel. */
+    /* Le courriel porte un code, pas un lien — le gabarit du projet Supabase
+       n'en met pas. On ne nomme pas l'expéditeur ici : ce nom se règle dans le
+       tableau de bord et cette phrase deviendrait fausse au prochain
+       changement. Le rappel des indésirables, lui, sert toujours : un premier
+       courriel d'un expéditeur inconnu y tombe souvent. */
     el("jo-sub").textContent = conf
-      ? `Un code à 6 chiffres vient de partir vers ${joEmail}. Le courriel arrive au nom de « Shift » — même serveur, c'est normal. Entre le code ici pour activer ton compte.`
+      ? `Un code à 6 chiffres vient de partir vers ${joEmail}. Il arrive en moins d'une minute — pense à regarder tes indésirables. Entre-le ici pour activer ton compte.`
       : up
       ? "Un courriel et un mot de passe, rien de plus : ils servent à retrouver tes échéances et tes résumés sur tes autres appareils. Tes identifiants Omnivox n'y transitent jamais."
       : "Le compte d'agenda, pas Omnivox. Tes échéances et tes résumés reviennent tels que l'agent les a laissés.";
