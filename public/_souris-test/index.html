@@ -1,3 +1,55 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+
+<script>
+(() => {
+  const vrai = window.fetch;
+  window.fetch = (u, o) => {
+    const url = String((u && u.url) || u);
+    if (/^https?:\/\//.test(url) && !/^https?:\/\/(localhost|127\.0\.0\.1)/.test(url)) {
+      console.warn("harnais : requête bloquée", url);
+      return Promise.reject(new TypeError("Failed to fetch"));   // hors ligne, pas déconnecté
+    }
+    return vrai(u, o);
+  };
+  localStorage.setItem("agenda.sb", JSON.stringify({ at:"", rt:"harnais", uid:"local", email:"test@local" }));
+  document.cookie = "agenda_vu=1;path=/";
+  const etat = {
+    theme:"light", name:"Test",
+    sheets:{ "340-113-RI": { pg:"pg-demo", pages:[
+      { id:"pg-demo", t:"Diapos du cours", at:"28 août · 09:00", page:"", ink:[], annos:[], cat:"",
+        doc:{ name:"diapos.jpg", k:"demo", n:1, r:[0.62] } },
+      { id:"pg-vide", t:"Page blanche", at:"", page:"", ink:[], annos:[], cat:"" } ] } },
+    deadlines:[], rappels:{ on:false }
+  };
+  const dej = JSON.parse(localStorage.getItem("agenda.v5") || "null") || {};
+  localStorage.setItem("agenda.v5", JSON.stringify({ ...dej, ...etat }));
+
+  // une fausse feuille : un damier lisible, pour voir où elle est posée
+  const cv = document.createElement("canvas");
+  cv.width = 1000; cv.height = 620;
+  const cx = cv.getContext("2d");
+  cx.fillStyle = "#fff"; cx.fillRect(0,0,1000,620);
+  for (let y=0;y<620;y+=62) for (let x=0;x<1000;x+=100) {
+    cx.fillStyle = ((x/100 + y/62) % 2) ? "#dbe6f2" : "#f3f7fb";
+    cx.fillRect(x,y,100,62);
+  }
+  cx.fillStyle = "#14243A"; cx.font = "bold 64px sans-serif"; cx.textAlign = "center";
+  cx.fillText("DOCUMENT", 500, 320);
+  cx.font = "28px sans-serif"; cx.fillText("feuille de test", 500, 380);
+  cv.toBlob(b => {
+    const q = indexedDB.open("agenda-docs", 1);
+    q.onupgradeneeded = () => q.result.createObjectStore("img");
+    q.onsuccess = () => { const db = q.result;
+      const t = db.transaction("img","readwrite");
+      t.objectStore("img").put(b, "demo/0");
+      t.oncomplete = () => { db.close(); window.__harnaisPret = true; };
+    };
+  }, "image/jpeg", .9);
+})();
+</script>
 <title>Agenda Cégep</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>
@@ -1798,7 +1850,8 @@ a,button{touch-action:manipulation}
   .dot::before,.sw::before,.sw-c::before{content:"";position:absolute;inset:-.35rem;border-radius:50%}
 }
 </style>
-
+</head>
+<body>
 <div class="shell avant">
   <aside class="side">
     <div class="sidetop">
@@ -7679,3 +7732,5 @@ a,button{touch-action:manipulation}
   })();
 })();
 </script>
+</body>
+</html>

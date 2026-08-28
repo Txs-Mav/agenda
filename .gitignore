@@ -43,3 +43,6 @@ apercu-agenda.png
 
 # Scratch de la CLI Supabase
 supabase/.temp/
+
+# Maquette UX de session — prototype, pas un livrable deploye
+maquette-ux.html

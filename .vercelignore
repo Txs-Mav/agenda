@@ -26,3 +26,6 @@ capture.ts
 horaire.scrape.plist
 apercu-agenda.png
 .gstack/
+
+# Prototype UX : jamais servi en production
+maquette-ux.html

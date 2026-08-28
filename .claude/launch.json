@@ -121,6 +121,28 @@
         "public"
       ],
       "port": 4247
+    },
+    {
+      "name": "maquette-ux-4251",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "4251",
+        "/private/tmp/claude-501/-Users-maverickmenard-Desktop-agenda/03abf036-2240-491f-8220-9790e5b33bea/scratchpad/maquette"
+      ],
+      "port": 4251
+    },
+    {
+      "name": "agenda-souris-4261",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "4261",
+        "/private/tmp/claude-501/-Users-maverickmenard-Desktop-agenda/5a41ecfb-d5d8-44b7-b9b3-1df0d4fa12c8/scratchpad/preview"
+      ],
+      "port": 4261
     }
   ]
 }
