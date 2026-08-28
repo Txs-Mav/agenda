@@ -536,7 +536,7 @@ li.done .tx{color:var(--faint);text-decoration:line-through}
 @media print{
   body{background:#fff;padding:0}
   .side,.head,.sect .link,.wnav,.fchip,.newrow,.kill,.ghostcard,.pop,.tools,
-  .ntadd,.ntseedh,.ntseeds{display:none}
+  .ntseedh,.ntseeds{display:none}
   /* Rien ne tient à une hauteur d'écran sur papier : la fiche d'une matière
      s'imprime en entier, listes déroulées. */
   .shell{display:block;height:auto}
@@ -1307,55 +1307,111 @@ body.nzen #m-notecard .tools{position:sticky;top:0;z-index:6;background:var(--su
 #m-notecard .ch{flex-wrap:wrap}
 
 /* ── Toutes les notes ────────────────────────────────────────────
-   Un dossier par matière, ses pages dedans. Trois règles tiennent la page :
-   une matière sans page n'a pas de carte (elle descend en puce, tout en bas),
-   toutes les cartes d'une rangée ont la même hauteur, et chaque carte a la
-   même anatomie — en-tête, liste, un seul geste au pied. */
-.ntgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(21rem,1fr));
-  gap:.85rem;align-items:stretch}
-.ntfold{display:flex;flex-direction:column;min-width:0}
+   Deux sections, comme un vrai classeur : les dossiers d'abord — une tuile
+   par matière, toutes de la même taille, donc pas d'escalier possible — puis
+   toutes les pages à plat, en colonnes, pour retrouver la bonne d'un coup
+   d'œil sans entrer dans neuf dossiers. */
+.ntsec{padding:1.6rem .35rem .7rem;font-size:.66rem;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--faint);font-weight:600}
+.ntsec:first-child{padding-top:.2rem}
+.ntsec[hidden]{display:none}
 
-/* En-tête : la pastille, le nom, son compte. Le compte se lisait à l'autre
-   bout de la carte, à douze rem du mot qu'il comptait ; il revient contre
-   lui. Le filet sépare franchement l'identité du contenu. */
-.ntch{display:flex;align-items:center;gap:.5rem;min-width:0;
-  padding:1rem 1.15rem .8rem;border-bottom:1px solid var(--line)}
-.ntch h3{font-size:.95rem;font-weight:600;letter-spacing:-.015em;min-width:0;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ntcount{flex:0 0 auto;margin-left:auto;font-size:.68rem;font-weight:650;
-  color:var(--faint);font-variant-numeric:tabular-nums;
-  background:var(--surface-2);border-radius:999px;padding:.14rem .5rem}
+/* La tuile : le dossier se voit avant de se lire. Taille fixe pour toutes,
+   nom et compte sous l'image — la grille ne dépend plus du contenu. */
+/* Le « min(...) » garde deux tuiles de front sur un téléphone : à 12 rem
+   ferme, la grille tombait à une colonne et le dossier prenait l'écran. */
+.ntgrid{display:grid;gap:.35rem;
+  grid-template-columns:repeat(auto-fill,minmax(min(12rem,45%),1fr))}
+.ntfold{display:flex;flex-direction:column;gap:.5rem;min-width:0;text-align:left;
+  padding:.75rem .75rem 1rem;border-radius:22px;transition:background .15s}
+@media (hover:hover){.ntfold:hover{background:var(--surface-2)}}
+.ntfold:focus-visible{background:var(--surface-2)}
+/* Le dossier lui-même : gris de rangement, languette à la couleur de la
+   matière — neuf teintes pleines feraient un arc-en-ciel, une languette
+   suffit à reconnaître le dossier de loin. */
+.ntfig{position:relative;width:100%}
+.ntfig svg{display:block;width:100%;height:auto}
+.ntfig .bk{fill:color-mix(in srgb, hsl(var(--h,214) 56% 52%) 42%, var(--ftab))}
+.ntfig .ft{fill:var(--fbody)}
+.ntfig .sh{fill:var(--fsheet);stroke:var(--fsheet-l);stroke-width:1}
+/* Le papier doit rester du papier sur fond sombre : à prendre la couleur de
+   la surface, les feuilles devenaient des trous noirs dans le dossier. */
+:root{--ftab:#9BA3AC;--fbody:#C3C9D0;--fsheet:#FFFFFF;--fsheet-l:#E2E6EA}
+:root[data-theme="dark"]{--ftab:#4A5159;--fbody:#5E6670;--fsheet:#D6DBE1;--fsheet-l:#AFB7C0}
+/* Ce que le dossier contient, dit par ses pictogrammes : du texte, un dessin,
+   un document, des annotations. Posés sur le dossier, comme des onglets. */
+.ntkinds{position:absolute;left:10%;bottom:22%;display:flex;gap:.22rem}
+.ntkind{width:1.55rem;height:1.55rem;border-radius:50%;background:var(--surface);
+  display:grid;place-items:center;color:var(--dim);
+  box-shadow:0 1px 3px rgba(0,0,0,.22)}
+.ntkind svg{width:14px;height:14px;stroke-width:2}
+.ntfoot{display:flex;flex-direction:column;gap:.1rem;min-width:0;padding:0 .2rem}
+.ntfoot b{display:flex;align-items:center;gap:.4rem;min-width:0;
+  font-size:.85rem;font-weight:600;letter-spacing:-.01em}
+.ntfoot b span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ntfoot .mpip{margin-right:0;flex:0 0 auto}
+.ntfoot em{font-style:normal;font-size:.73rem;color:var(--faint);
+  font-variant-numeric:tabular-nums}
+/* Sur téléphone il n'y a pas d'infobulle pour rattraper un nom coupé : deux
+   lignes lui sont réservées, les mêmes pour toutes, donc la grille reste
+   droite. Au-dessus, les noms tiennent sur une ligne et la réserve ne
+   laisserait qu'un trou. */
+@media (max-width:560px){
+  .ntfoot b span{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;
+    -webkit-line-clamp:2;line-height:1.25;min-height:2.5em}
+  .ntfoot b{align-items:flex-start}
+  .ntfoot .mpip{margin-top:.42em}
+}
 
+/* Les matières encore vides : une rangée de puces, pas des tuiles creuses.
+   Elles n'ont rien à montrer — seulement une porte à ouvrir. */
+.ntseedh{padding:1.3rem .35rem .6rem;font-size:.66rem;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--faint);font-weight:600}
+.ntseedh[hidden]{display:none}
+.ntseeds{display:flex;flex-wrap:wrap;gap:.45rem;padding:0 .35rem}
+.ntseed{display:inline-flex;align-items:center;gap:.5rem;min-width:0;
+  background:var(--surface);box-shadow:var(--shadow);border-radius:999px;
+  padding:.5rem .95rem .5rem .78rem;font-size:.8rem;color:var(--dim);
+  transition:color .15s,translate .15s}
+.ntseed .mpip{margin-right:0}
+.ntseed span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (hover:hover){.ntseed:hover{color:var(--ink);translate:0 -1px}}
+
+/* Toutes les pages, à plat et en colonnes : matière, titre, ce qu'elle porte,
+   sa date. Les quatre s'alignent d'une rangée à l'autre — c'est ce qui rend
+   une liste lisible en diagonale. */
+.ntlist[hidden]{display:none}
 .ntpages{list-style:none;padding:0;margin:0}
 .ntpages li{display:flex;align-items:center;gap:.2rem;padding-right:.6rem}
 .ntpages li+li{border-top:1px solid var(--line)}
 @media (hover:hover){.ntpages li:hover{background:var(--surface-2)}}
-/* L'étiquette d'une catégorie dans le dossier : un intertitre, pas une
-   rangée — rien ne s'y clique, rien ne s'y allume. */
-.ntpages li.ntcat{display:flex;align-items:baseline;gap:.45rem;
-  padding:.7rem 1.15rem .25rem;border-top:1px solid var(--line);
-  font-size:.62rem;letter-spacing:.11em;text-transform:uppercase;
-  color:var(--faint);font-weight:600}
-.ntpages li.ntcat:first-child{border-top:0}
-.ntpages li.ntcat+li{border-top:0}
-@media (hover:hover){.ntpages li.ntcat:hover{background:transparent}}
-
-/* Une rangée se lit comme un courriel : le nom et sa date sur la première
-   ligne, ce que la page porte sur la seconde. */
-.ntpage{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:.15rem;
+.ntpage{flex:1 1 auto;min-width:0;display:grid;align-items:baseline;gap:.15rem .9rem;
+  grid-template-columns:12rem minmax(0,1.5fr) minmax(0,1fr) 5.2rem;
   text-align:left;padding:.62rem 0 .62rem 1.15rem}
-.ntpt{display:flex;align-items:baseline;gap:.6rem;width:100%;min-width:0}
+.ntsubj{display:flex;align-items:center;gap:.4rem;min-width:0;
+  font-size:.74rem;color:var(--faint)}
+.ntsubj .mpip{margin-right:0;width:.5rem;height:.5rem}
+.ntsubj span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Le titre débordait sur deux lignes et faisait gonfler la carte pendant que
    la description, elle, était tronquée : l'inverse de ce qu'il faut. */
-.ntpt b{flex:1 1 auto;min-width:0;font-size:.83rem;font-weight:600;color:var(--ink);
+.ntpage b{min-width:0;font-size:.83rem;font-weight:600;color:var(--ink);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ntpt time{flex:0 0 auto;font-size:.68rem;color:var(--faint);
-  font-variant-numeric:tabular-nums;white-space:nowrap}
-.ntwhat{font-size:.73rem;color:var(--dim);white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.ntwhat{min-width:0;font-size:.75rem;color:var(--dim);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* Quand il n'y a rien à citer, la ligne dit la nature de la page — et le dit
    sur un autre ton, pour qu'on ne la prenne pas pour du contenu. */
 .ntwhat.void{color:var(--faint);font-style:italic}
+.ntpage time{font-size:.72rem;color:var(--faint);white-space:nowrap;
+  font-variant-numeric:tabular-nums;text-align:right}
+/* Sous 760 px les quatre colonnes ne tiennent plus : la matière et la date
+   remontent en tête de rangée, le titre et le contenu passent dessous. */
+@media (max-width:760px){
+  .ntpage{grid-template-columns:minmax(0,1fr) auto}
+  .ntsubj{grid-column:1}
+  .ntpage time{grid-column:2;grid-row:1}
+  .ntpage b{grid-column:1/-1}
+  .ntwhat{grid-column:1/-1}
+}
 /* Supprimer une page pleine se confirme sur place : le × devient un mot, et
    l'hésitation retombe seule. */
 .ntpages .kill.arm{opacity:1;color:var(--p3);font-size:.7rem;font-weight:600}
@@ -1368,30 +1424,6 @@ body.nzen #m-notecard .tools{position:sticky;top:0;z-index:6;background:var(--su
 @media (hover:hover){.ntpages li:hover .ntcatb{opacity:1}
   .ntcatb:hover{color:var(--ink)}}
 
-/* Le geste est au même endroit sur toutes les cartes : au pied, poussé par
-   la liste. Sans ça il remontait coller le titre sur les dossiers courts, et
-   le bas des rangées partait en escalier. */
-.ntadd{margin-top:auto;display:flex;align-items:center;gap:.45rem;
-  padding:.68rem 1.15rem;border-top:1px solid var(--line);
-  font-size:.78rem;font-weight:550;color:var(--faint);
-  transition:background .15s,color .15s}
-.ntadd svg{width:13px;height:13px;flex:0 0 auto}
-@media (hover:hover){.ntadd:hover{background:var(--surface-2);color:var(--ink)}}
-
-/* Les matières encore vides : une rangée de puces, pas cinq cartes creuses.
-   Elles n'ont rien à montrer — seulement une porte à ouvrir. */
-.ntseedh{display:flex;align-items:baseline;gap:.5rem;padding:1.5rem .35rem .6rem;
-  font-size:.66rem;letter-spacing:.11em;text-transform:uppercase;
-  color:var(--faint);font-weight:600}
-.ntseedh[hidden]{display:none}
-.ntseeds{display:flex;flex-wrap:wrap;gap:.45rem;padding:0 .35rem}
-.ntseed{display:inline-flex;align-items:center;gap:.5rem;min-width:0;
-  background:var(--surface);box-shadow:var(--shadow);border-radius:999px;
-  padding:.5rem .95rem .5rem .78rem;font-size:.8rem;color:var(--dim);
-  transition:color .15s,translate .15s}
-.ntseed .mpip{margin-right:0}
-.ntseed span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media (hover:hover){.ntseed:hover{color:var(--ink);translate:0 -1px}}
 
 /* Encres. Chaque teinte a sa version sombre : un bleu à 48 % de clarté
    disparaît sur une carte noire. */
@@ -2279,9 +2311,12 @@ a,button{touch-action:manipulation}
     <div id="notes" hidden>
       <div class="sect"><h2>Toutes les notes <span class="dim" id="nt-n"></span></h2><span class="grow"></span>
         <button class="link" id="nt-back"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg> Retour au tableau de bord</button></div>
+      <div class="ntsec">Dossiers</div>
       <div class="ntgrid" id="nt-grid"></div>
       <div class="ntseedh" id="nt-seedh" hidden>Pas encore de notes</div>
       <div class="ntseeds" id="nt-seeds"></div>
+      <div class="ntsec" id="nt-pagesh" hidden>Pages <span class="dim" id="nt-pn"></span></div>
+      <section class="card ntlist" id="nt-list" hidden><ul class="ntpages" id="nt-pages"></ul></section>
     </div>
 
     <div id="landing" hidden>
@@ -7154,51 +7189,81 @@ a,button{touch-action:manipulation}
   function renderNotes() {
     const box = el("nt-grid"); box.textContent = "";
     const seeds = el("nt-seeds"); seeds.textContent = "";
-    let total = 0, nseed = 0;
+    const list = el("nt-pages"); list.textContent = "";
+    const all = []; let nseed = 0;
     for (const c of COURSES) {
-      const ps = mPages(c); total += ps.length;
+      const ps = mPages(c);
+      for (const p of ps) all.push({ c, p });
       /* Une matière sans page n'a pas de dossier à montrer : lui donner une
-         carte pleine, c'est mettre du contenant là où il n'y a pas de
-         contenu. Elle descend en puce, tout en bas — un clic, une page. */
+         tuile, c'est mettre du contenant là où il n'y a pas de contenu.
+         Elle descend en puce sous la grille — un clic, une première page. */
       if (!ps.length) { seeds.append(ntSeed(c)); nseed++; continue; }
-      const card = mk("section","card fx ntfold");
-      const ch = mk("header","ntch");
-      const pip = mk("i","mpip"); pip.style.background = `hsl(${hueOf(c)} 62% 52%)`;
-      ch.append(pip, mk("h3", null, c), mk("span","ntcount", `${ps.length}`));
-      ch.querySelector(".ntcount").title = `${ps.length} page${ps.length > 1 ? "s" : ""}`;
-      card.append(ch);
-      /* Les pages rangées se regroupent sous leur catégorie — « Cours 5 »,
-         « Préparation examen » — dans l'ordre où les catégories sont
-         apparues ; les pages libres gardent la tête du dossier, sans
-         étiquette inventée. */
-      const grps = new Map();
-      for (const p of ps) { const k = pgCat(p).toLowerCase();
-        if (!grps.has(k)) grps.set(k, { cat: pgCat(p), pages: [] });
-        grps.get(k).pages.push(p); }
-      const order = [...grps.values()];
-      const free = grps.get("");
-      if (free) { order.splice(order.indexOf(free), 1); order.unshift(free); }
-      const ul = mk("ul","ntpages");
-      for (const g of order) {
-        if (g.cat) { const hd = mk("li","ntcat");
-          hd.append(mk("span", null, g.cat), mk("span","dim mono", `${g.pages.length}`));
-          ul.append(hd); }
-        for (const p of g.pages) ul.append(ntRow(c, p));
-      }
-      card.append(ul, ntAdd(c, "Nouvelle page"));
-      box.append(card);
+      box.append(ntTile(c, ps));
     }
+    /* La page touchée en dernier se lit en premier : c'est celle qu'on
+       cherche. Les pages antérieures à la synchronisation n'ont pas
+       d'horodatage — elles gardent l'ordre de leur dossier, en queue, plutôt
+       que de se voir inventer une date. */
+    all.sort((x, y) => String(y.p.up || "").localeCompare(String(x.p.up || "")));
+    for (const x of all) list.append(ntRow(x.c, x.p));
     el("nt-seedh").hidden = !nseed;
-    el("nt-n").textContent = total ? `(${total})` : "";
+    el("nt-pagesh").hidden = !all.length;
+    el("nt-list").hidden = !all.length;
+    el("nt-pn").textContent = all.length ? `(${all.length})` : "";
+    el("nt-n").textContent = all.length ? `(${all.length})` : "";
   }
-  /* Le même geste, au même endroit sur toutes les cartes. */
-  function ntAdd(c, label) {
-    const b = mk("button","ntadd");
-    b.innerHTML = ICON.plus;
-    b.append(mk("span", null, label));
-    b.title = `Ouvrir une page blanche sous ${c}`;
-    b.addEventListener("click", () => { addPage(c); openMatiere(c);
-      el("m-page").focus({ preventScroll:true }); });
+  /* Ce qu'un dossier contient, dit par pictogrammes : on sait s'il y a du
+     texte, un dessin, un document ou des annotations sans avoir à l'ouvrir. */
+  const NTKIND = [
+    ["texte",  "Du texte",        '<svg class="i" viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h9"/></svg>'],
+    ["dessin", "Des dessins",     '<svg class="i" viewBox="0 0 24 24"><path d="M4 19c3.4-.6 4.1-8.4 6.9-8.4s2.6 5.4 5.9 2.5"/><path d="m14.5 5.5 4 4"/></svg>'],
+    ["doc",    "Des documents",   '<svg class="i" viewBox="0 0 24 24"><path d="M7 3.5h7l4 4V20.5H7z"/><path d="M14 3.5V8h4"/></svg>'],
+    ["anno",   "Des annotations", '<svg class="i" viewBox="0 0 24 24"><path d="M4.5 5.5h15v10h-9l-6 4.5z"/></svg>'],
+  ];
+  function ntKinds(ps) {
+    const k = new Set();
+    for (const p of ps) {
+      if (p.page.trim() || (p.ia || "").trim()) k.add("texte");
+      if (p.ink.length || p.ni) k.add("dessin");
+      if (pgDoc(p)) k.add("doc");
+      if (p.annos.length || p.na) k.add("anno");
+    }
+    return NTKIND.filter(x => k.has(x[0]));
+  }
+  /* La tuile d'un dossier : le dessin d'abord, le nom ensuite. Toutes les
+     tuiles ont la même taille — c'est ce qui rend la grille droite, quel que
+     soit le nombre de pages dedans. La languette prend la couleur de la
+     matière ; le corps reste gris, sinon neuf dossiers font un arc-en-ciel. */
+  function ntTile(c, ps) {
+    const b = mk("button","ntfold fx");
+    b.style.setProperty("--h", hueOf(c));
+    const fig = mk("div","ntfig");
+    /* Une feuille de plus dépasse quand le dossier en contient plusieurs :
+       l'épaisseur se voit avant même de lire le compte. */
+    const extra = ps.length > 1
+      ? '<rect class="sh" x="26" y="22" width="52" height="32" rx="4" transform="rotate(-7 52 38)"/>' : "";
+    fig.innerHTML = `<svg viewBox="0 0 120 96" aria-hidden="true">
+        <path class="bk" d="M6 22a9 9 0 0 1 9-9h26a6 6 0 0 1 4.7 2.3L51 22h54a9 9 0 0 1 9 9v46a9 9 0 0 1-9 9H15a9 9 0 0 1-9-9Z"/>
+        ${extra}<rect class="sh" x="42" y="19" width="54" height="32" rx="4" transform="rotate(4 69 35)"/>
+        <path class="ft" d="M6 46a9 9 0 0 1 9-9h90a9 9 0 0 1 9 9v31a9 9 0 0 1-9 9H15a9 9 0 0 1-9-9Z"/>
+      </svg>`;
+    const kinds = ntKinds(ps);
+    if (kinds.length) {
+      const kb = mk("div","ntkinds");
+      for (const [, label, svg] of kinds) {
+        const chip = mk("i","ntkind"); chip.innerHTML = svg; chip.title = label;
+        kb.append(chip);
+      }
+      fig.append(kb);
+    }
+    const foot = mk("div","ntfoot");
+    const nm = mk("b");
+    const pip = mk("i","mpip"); pip.style.background = `hsl(${hueOf(c)} 62% 52%)`;
+    nm.append(pip, mk("span", null, c));
+    foot.append(nm, mk("em", null, `${ps.length} page${ps.length > 1 ? "s" : ""}`));
+    b.append(fig, foot);
+    b.title = `Ouvrir ${c}`;
+    b.addEventListener("click", () => openMatiere(c));
     return b;
   }
   function ntSeed(c) {
@@ -7223,10 +7288,12 @@ a,button{touch-action:manipulation}
     /* La date reste au bout du titre — le jour suffit ici, l'heure vit dans
        l'infobulle et sur la fiche ouverte. La seconde ligne est la citation,
        ou, à défaut, la nature de la page dite sur un autre ton. */
-    const top = mk("span","ntpt");
-    top.append(mk("b", null, p.t || "Page"));
-    if (p.at) top.append(mk("time", null, p.at.split(" · ")[0]));
-    btn.append(top, mk("span", `ntwhat${line ? "" : " void"}`, what));
+    const subj = mk("span","ntsubj");
+    const spip = mk("i","mpip"); spip.style.background = `hsl(${hueOf(c)} 62% 52%)`;
+    subj.append(spip, mk("span", null, c));
+    btn.append(subj, mk("b", null, p.t || "Page"),
+      mk("span", `ntwhat${line ? "" : " void"}`, what),
+      mk("time", null, p.at ? p.at.split(" · ")[0] : ""));
     btn.title = [`Ouvrir cette page — ${c}`, p.at && `modifiée ${p.at}`]
       .filter(Boolean).join("\n");
     btn.addEventListener("click", () => openNotePage(c, p.id));
