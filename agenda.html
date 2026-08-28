@@ -1127,9 +1127,27 @@ body.lp .shell{grid-template-columns:minmax(0,1fr)}
 
 /* Le dossier de la matière, déplié dans l'en-tête de la carte : une page par
    cours, on passe de l'une à l'autre sans quitter la fiche. */
-.pgsel{flex:0 1 auto;min-width:0;max-width:12rem;background:var(--surface-2);border:none;
-  border-radius:9px;padding:.34rem .5rem;color:var(--dim);font:inherit;font-size:.74rem;cursor:pointer}
+.pgsel{flex:0 1 auto;min-width:0;max-width:14rem;background:var(--surface-2);border:none;
+  border-radius:9px;padding:.34rem .38rem .34rem .55rem;color:var(--dim);font:inherit;font-size:.74rem;
+  cursor:pointer;display:flex;align-items:center;gap:.1rem}
+.pgsel>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pgsel .i{width:13px;height:13px;flex:0 0 auto;opacity:.65}
 @media (hover:hover){.pgsel:hover{color:var(--ink)}}
+
+/* Le dossier déplié. C'était un menu du système : gris, étranger au reste, et
+   incapable de dire ce qu'une page contient avant qu'on l'ouvre. */
+.pgpop{width:17rem;padding:.85rem .55rem .6rem}
+.pgpop h4{padding:0 .45rem .5rem}
+.pglist{max-height:19rem;overflow:auto;display:flex;flex-direction:column;gap:.05rem}
+.pgcat{font-size:.62rem;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);padding:.6rem .45rem .2rem}
+.pgitem{display:flex;flex-direction:column;align-items:flex-start;gap:.05rem;text-align:left;
+  border-radius:10px;padding:.4rem .45rem;width:100%;transition:background .12s}
+.pgitem .t{font-size:.8rem;color:var(--ink);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pgitem .s{font-size:.66rem;color:var(--faint)}
+@media (hover:hover){.pgitem:hover{background:var(--surface-2)}}
+.pgitem.on{background:var(--surface-2)}
+.pgitem.on .t{font-weight:650}
+.pgpop .vide{padding:.1rem .45rem .35rem;font-size:.73rem;line-height:1.45;color:var(--faint)}
 
 /* ── Ranger une page ─────────────────────────────────────────────
    Une page se range sous une catégorie — « Cours 5 », « Préparation
@@ -2079,7 +2097,7 @@ a,button{touch-action:manipulation}
         <div class="mcol">
           <section class="card fx fill" id="m-notecard">
             <div class="ch"><h3>Notes</h3>
-              <select class="pgsel" id="m-pgsel" title="Changer de page"></select>
+              <button class="pgsel" id="m-pgsel" title="Changer de page"><span id="m-pgsel-t"></span><svg class="i" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg></button>
               <button class="link" id="m-pgadd" title="Ouvrir une page blanche de plus"><svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M12 5v14M5 12h14"/></svg> Page</button>
               <button class="link" id="m-pgcat"><svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M3.5 7A2.5 2.5 0 0 1 6 4.5h3.6l2 2.5H18a2.5 2.5 0 0 1 2.5 2.5v7.5A2.5 2.5 0 0 1 18 19.5H6A2.5 2.5 0 0 1 3.5 17z"/></svg> <span id="m-pgcat-t">Ranger</span></button>
               <button class="link" id="m-imp" title="Importer un PDF ou une image — la page le porte, et on écrit dessus"><svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9"/><path d="M4.5 15.5v3A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5v-3"/></svg> Importer</button>
@@ -2110,11 +2128,6 @@ a,button{touch-action:manipulation}
               <textarea id="m-page" class="page" spellcheck="true"
                 placeholder="Page blanche. Écris, dessine, surligne, annote — tout reste sur cet appareil."></textarea>
               <svg class="inklayer pen" id="m-pen" aria-hidden="true"></svg>
-              <button class="mdrop" id="m-drop" hidden>
-                <svg class="i" viewBox="0 0 24 24"><path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9"/><path d="M4.5 15.5v3A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5v-3"/></svg>
-                <span><b>Dépose un document ici — ou clique pour choisir</b>
-                <em>Plan de cours, diapos Moodle, exercices (PDF ou image) — puis dessine, surligne, annote par-dessus.</em></span>
-              </button>
               <div class="annos" id="m-annos"></div>
               <div class="cap" id="m-cap"></div>
               <div class="dsel" id="m-dsel" hidden>
@@ -3361,7 +3374,7 @@ a,button{touch-action:manipulation}
     pop = box; place(box, cell, true); input.focus(); input.select();
   }
   document.addEventListener("pointerdown", ev => {
-    if (pop && !pop.contains(ev.target) && !ev.target.closest(".cell,.bar")) closePop();
+    if (pop && !pop.contains(ev.target) && !ev.target.closest(".cell,.bar,.pgsel")) closePop();
   });
 
   function openCourse(cell, e) {
@@ -5447,9 +5460,6 @@ a,button{touch-action:manipulation}
     const ta = el("m-page");
     const blank = mCur && !pgFull(mPage(mCur));
     ta.placeholder = blank && mTool === "write" && document.activeElement !== ta ? M_HINT : "";
-    /* L'invitation à déposer suit la même règle que l'invite : une page
-       vierge, l'outil d'écriture — et elle s'efface au premier geste. */
-    el("m-drop").hidden = !(blank && mTool === "write");
   }
   /* Un geste vient de changer la page : on tamponne l'heure et on programme
      l'écriture sur disque. Un seul endroit, donc jamais de page modifiée
@@ -5518,23 +5528,64 @@ a,button{touch-action:manipulation}
        en arrière-plan ne rend jamais ce cadre — d'où les deux. */
     mGrow(); requestAnimationFrame(mGrow);
   }
-  /* Le dossier, déplié dans l'en-tête de la carte : une option par page. Un
-     dossier encore vide montre le titre que prendra la page au premier trait. */
+  /* Le dossier, déplié depuis l'en-tête. Le bouton ne porte que le titre de
+     la page ouverte ; le reste attend qu'on le demande. */
   function renderPgSel() {
-    const c = mCur, sel = el("m-pgsel"); if (!c) return;
-    sel.textContent = "";
+    const c = mCur; if (!c) return;
+    const ps = mPages(c);
+    el("m-pgsel-t").textContent = ps.length ? (mPage(c).t || "Page") : pgTitle(c);
+    el("m-pgsel").title = ps.length > 1
+      ? `${ps.length} pages dans ce cours — en choisir une` : "Changer de page";
+  }
+  /* Changer de page écrit d'abord ce qui est en attente : le texte tapé sur
+     l'une ne doit jamais atterrir sur l'autre. */
+  function pgGoto(id) {
+    const c = mCur; if (!c) return;
+    mFlush();
+    const prev = mPage(c);   // la page qu'on quitte, relue après l'écriture
+    if (id) { mWrite(c, { pg: id }); save(); }
+    renderMPage();
+    if (prev.id && prev.id !== mRaw(c).pg) catNudge(c, prev);
+  }
+  /* Le menu des pages. Chaque ligne dit ce qu'elle porte — transcrite, rédigée,
+     un document — parce que « Cours du 28 août » et « Cours du 28 août · 2 »
+     ne se distinguent pas autrement. */
+  function pgPop() {
+    const c = mCur; if (!c) return;
+    closePop();
     const ps = mPages(c), cur = mPage(c);
-    if (!ps.length) sel.append(mk("option", null, pgTitle(c)));
-    /* Les pages rangées se regroupent sous leur catégorie, dans l'ordre où
-       les catégories sont apparues ; les pages libres gardent la tête. */
+    const box = mk("div","pop pgpop");
+    box.append(mk("h4", null, "Pages de ce cours"));
+    if (!ps.length) {
+      box.append(mk("p","vide", "Ce dossier est encore vide — la page naîtra au premier mot."));
+      pop = box; place(box, el("m-pgsel")); return;
+    }
+    /* Les pages rangées se regroupent sous leur catégorie, dans l'ordre où les
+       catégories sont apparues ; les pages libres gardent la tête. */
     const grps = new Map();
-    const under = cat => { if (!cat) return sel;
-      const k = cat.toLowerCase();
-      if (!grps.has(k)) { const g = mk("optgroup"); g.label = cat; grps.set(k, g); }
-      return grps.get(k); };
-    for (const p of ps) { const o = mk("option", null, p.t || "Page");
-      o.value = p.id; o.selected = p.id === cur.id; under(pgCat(p)).append(o); }
-    for (const g of grps.values()) sel.append(g);
+    for (const p of ps) {
+      const k = pgCat(p);
+      if (!grps.has(k)) grps.set(k, []);
+      grps.get(k).push(p);
+    }
+    const list = mk("div","pglist");
+    for (const cat of [...grps.keys()].sort((a, b) => (a ? 1 : 0) - (b ? 1 : 0))) {
+      if (cat) list.append(mk("div","pgcat", cat));
+      for (const p of grps.get(cat)) {
+        const b = mk("button","pgitem" + (p.id === cur.id ? " on" : ""));
+        b.append(mk("span","t", p.t || "Page"));
+        const quoi = [];
+        if ((p.ia || "").trim()) quoi.push("notes rédigées");
+        if (p.tr) quoi.push("transcrite");
+        if (pgDoc(p)) quoi.push("document");
+        if (p.page.trim() && !quoi.length) quoi.push("écrite");
+        if (quoi.length) b.append(mk("span","s", quoi.join(" · ")));
+        b.addEventListener("click", () => { closePop(); if (p.id !== cur.id) pgGoto(p.id); });
+        list.append(b);
+      }
+    }
+    box.append(list);
+    pop = box; place(box, el("m-pgsel"));
   }
   /* Le bouton « Ranger » de l'en-tête porte la catégorie de la page ouverte ;
      tant qu'elle n'en a pas, il propose le geste. */
@@ -5640,15 +5691,10 @@ a,button{touch-action:manipulation}
   });
   el("m-page").addEventListener("focus", mHint);
   el("m-page").addEventListener("blur", () => { mFlush(); renderCourses(); mHint(); });
-  /* Changer de page écrit d'abord ce qui est en attente : le texte tapé sur
-     l'une ne doit jamais atterrir sur l'autre. */
-  el("m-pgsel").addEventListener("change", () => {
-    const c = mCur; if (!c) return;
-    mFlush();
-    const prev = mPage(c);   // la page qu'on quitte, relue après l'écriture
-    if (el("m-pgsel").value) { mWrite(c, { pg: el("m-pgsel").value }); save(); }
-    renderMPage();
-    if (prev.id && prev.id !== mRaw(c).pg) catNudge(c, prev);
+  el("m-pgsel").addEventListener("click", () => {
+    /* Deuxième clic sur le même bouton : on referme, comme tout menu. */
+    if (pop && popAnchor === el("m-pgsel")) { closePop(); return; }
+    pgPop();
   });
   el("m-pgadd").addEventListener("click", () => {
     const c = mCur; if (!c) return;
@@ -6747,7 +6793,6 @@ a,button{touch-action:manipulation}
     el("m-file").value = "";      // réimporter le même fichier doit redéclencher change
     if (f) importDoc(f);
   });
-  el("m-drop").addEventListener("click", () => { if (mCur) el("m-file").click(); });
   /* Déposer le fichier vaut l'importer : le geste évident — et toute la
      carte des notes l'accepte, on ne vise pas un timbre-poste. Le voile
      s'allume dès que le fichier survole, et le compteur encaisse les
