@@ -1471,56 +1471,87 @@ body.nzen #m-notecard .tools{position:sticky;top:0;z-index:6;background:var(--su
 .ntseed span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (hover:hover){.ntseed:hover{color:var(--ink);translate:0 -1px}}
 
-/* Toutes les pages, à plat et en colonnes : matière, titre, ce qu'elle porte,
-   sa date. Les quatre s'alignent d'une rangée à l'autre — c'est ce qui rend
-   une liste lisible en diagonale. */
-.ntlist[hidden]{display:none}
-.ntpages{list-style:none;padding:0;margin:0}
-.ntpages li{display:flex;align-items:center;gap:.2rem;padding-right:.6rem}
-.ntpages li+li{border-top:1px solid var(--line)}
-@media (hover:hover){.ntpages li:hover{background:var(--surface-2)}}
-.ntpage{flex:1 1 auto;min-width:0;display:grid;align-items:baseline;gap:.15rem .9rem;
-  grid-template-columns:12rem minmax(0,1.5fr) minmax(0,1fr) 5.2rem;
-  text-align:left;padding:.62rem 0 .62rem 1.15rem}
-.ntsubj{display:flex;align-items:center;gap:.4rem;min-width:0;
-  font-size:.74rem;color:var(--faint)}
-/* Descendu dans un dossier, toutes les rangées portent la même matière : la
-   colonne ne dit plus rien et rend la place au titre. */
-.ntlist.solo .ntsubj{display:none}
-.ntlist.solo .ntpage{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) 5.2rem}
-.ntsubj .mpip{margin-right:0;width:.5rem;height:.5rem}
-.ntsubj span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* Le titre débordait sur deux lignes et faisait gonfler la carte pendant que
-   la description, elle, était tronquée : l'inverse de ce qu'il faut. */
-.ntpage b{min-width:0;font-size:.83rem;font-weight:600;color:var(--ink);
+/* Les pages d'un dossier : des cartes à vignette, pas des rangées de tableau.
+   Passé la vingtaine de notes, un titre ne suffit plus à reconnaître la
+   bonne — l'aperçu, lui, se lit d'un coup d'œil. */
+.ntnotes{display:grid;gap:.4rem;
+  grid-template-columns:repeat(auto-fill,minmax(min(12rem,45%),1fr))}
+.ntnote{position:relative;min-width:0}
+.ntopen{display:flex;flex-direction:column;gap:.3rem;width:100%;min-width:0;
+  text-align:left;padding:.5rem .5rem .65rem;border-radius:19px;
+  transition:background .15s}
+@media (hover:hover){.ntopen:hover{background:var(--surface-2)}}
+.ntopen:focus-visible{background:var(--surface-2)}
+/* La vignette est du papier : fond clair dans les deux thèmes, puisque
+   c'est une page qu'on regarde, pas un panneau de l'interface. */
+.ntvig{position:relative;display:block;width:100%;aspect-ratio:4/3;overflow:hidden;
+  border-radius:12px;background:var(--fsheet);border:1px solid var(--fsheet-l);
+  box-shadow:0 1px 3px rgba(0,0,0,.13)}
+.ntvig img{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:top center}
+/* Le texte est écrit à taille normale puis réduit : sous 6 px, plusieurs
+   navigateurs refusent de rétrécir davantage et l'aperçu ment sur la
+   quantité de texte. La mise à l'échelle, elle, est toujours obéie. */
+.ntvig .vtx{position:absolute;top:0;left:0;width:250%;height:250%;
+  padding:.75rem .85rem;font-size:10px;line-height:1.55;color:#23272C;
+  white-space:pre-wrap;overflow-wrap:anywhere;overflow:hidden;
+  transform:scale(.4);transform-origin:top left}
+.ntvig .vink{position:absolute;inset:0;width:100%;height:100%}
+/* La vignette est du papier clair dans les deux thèmes : l'encre doit donc
+   garder ses teintes de plein jour, sinon le trait noir d'un croquis devient
+   blanc sur blanc en thème sombre. */
+.ntvig{--hlo:.3; --ic-ink:#23272C; --ic-rouge:hsl(2 74% 47%); --ic-ambre:hsl(36 92% 42%);
+  --ic-vert:hsl(148 62% 33%); --ic-bleu:hsl(214 80% 47%); --ic-violet:hsl(272 60% 52%)}
+/* Les traits gardent leur épaisseur à l'écran, pas dans le repère : à cette
+   taille, la largeur de plume de la vraie page ferait des pâtés. */
+.ntvig .vink path{stroke-width:1.4px}
+.ntvig .vink path.hl{stroke-width:6px;stroke-opacity:var(--hlo)}
+/* Rien à montrer : trois traits de papier réglé, et le mot le dit dessous. */
+.ntvig.void::after{content:"";position:absolute;inset:18% 16% auto;height:1px;
+  background:var(--fsheet-l);box-shadow:0 9px 0 var(--fsheet-l),0 18px 0 var(--fsheet-l)}
+.ntnote b{display:block;min-width:0;font-size:.83rem;font-weight:600;color:var(--ink);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ntwhat{min-width:0;font-size:.75rem;color:var(--dim);
+.ntmeta{display:flex;align-items:baseline;gap:.4rem;min-width:0;font-size:.72rem}
+.ntwhat{min-width:0;color:var(--dim);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* Quand il n'y a rien à citer, la ligne dit la nature de la page — et le dit
    sur un autre ton, pour qu'on ne la prenne pas pour du contenu. */
 .ntwhat.void{color:var(--faint);font-style:italic}
-.ntpage time{font-size:.72rem;color:var(--faint);white-space:nowrap;
-  font-variant-numeric:tabular-nums;text-align:right}
-/* Sous 760 px les quatre colonnes ne tiennent plus : la matière et la date
-   remontent en tête de rangée, le titre et le contenu passent dessous. */
-@media (max-width:760px){
-  .ntpage{grid-template-columns:minmax(0,1fr) auto}
-  .ntsubj{grid-column:1}
-  .ntpage time{grid-column:2;grid-row:1}
-  .ntpage b{grid-column:1/-1}
-  .ntwhat{grid-column:1/-1}
-}
+.ntmeta time{flex:0 0 auto;margin-left:auto;color:var(--faint);
+  font-variant-numeric:tabular-nums}
+/* Ranger et supprimer restent à portée sans ouvrir la page : en haut de la
+   vignette, discrets au repos comme le × l'a toujours été ici. */
+.ntacts{position:absolute;top:.85rem;right:.85rem;display:flex;gap:.15rem;
+  padding:.1rem .2rem;border-radius:999px;background:var(--surface);
+  box-shadow:0 1px 4px rgba(0,0,0,.16);opacity:0;transition:opacity .15s}
+@media (hover:hover){.ntnote:hover .ntacts{opacity:1}}
+.ntnote:focus-within .ntacts{opacity:1}
+@media (hover:none){.ntacts{opacity:.9}}
+.ntacts .kill{opacity:1}
+
+/* Chercher : passé quelques dizaines de notes, c'est le chemin le plus court
+   — il traverse les dossiers au lieu de les descendre. */
+.ntfind{display:flex;align-items:center;gap:.5rem;margin:.2rem .35rem .1rem;
+  padding:.5rem .85rem;border-radius:14px;background:var(--surface);
+  box-shadow:var(--shadow);color:var(--faint)}
+.ntfind .i{width:16px;height:16px;flex:0 0 auto}
+.ntfind input{flex:1 1 auto;min-width:0;background:none;border:0;outline:none;
+  color:var(--ink);font:inherit;font-size:.84rem}
+.ntfind input::placeholder{color:var(--faint)}
+.ntfind input::-webkit-search-cancel-button{filter:grayscale(1);opacity:.5}
+
 /* Supprimer une page pleine se confirme sur place : le × devient un mot, et
    l'hésitation retombe seule. */
-.ntpages .kill.arm{opacity:1;color:var(--p3);font-size:.7rem;font-weight:600}
-/* Le dossier d'une rangée : même discrétion que le ×, mais une page déjà
-   rangée le garde visible — on reclasse plus souvent qu'on ne classe. */
+.ntacts .kill.arm{opacity:1;color:var(--p3);font-size:.7rem;font-weight:600}
+/* Le dossier d'une carte : le geste de rangement, à côté du ×. C'est la
+   pastille qui s'efface au repos maintenant, pas chaque bouton — mais une
+   page déjà rangée garde son dossier plus sombre, puisque c'est là qu'on la
+   reclasse. */
 .ntcatb{flex:0 0 auto;display:flex;align-items:center;padding:.25rem;color:var(--faint);
-  opacity:0;transition:opacity .15s,color .15s}
+  transition:color .15s}
 .ntcatb svg{width:14px;height:14px}
-.ntcatb.on{opacity:.55}
-@media (hover:hover){.ntpages li:hover .ntcatb{opacity:1}
-  .ntcatb:hover{color:var(--ink)}}
+.ntcatb.on{color:var(--dim)}
+@media (hover:hover){.ntcatb:hover{color:var(--ink)}}
 
 
 /* Encres. Chaque teinte a sa version sombre : un bleu à 48 % de clarté
@@ -2412,6 +2443,8 @@ a,button{touch-action:manipulation}
       <div class="ntwrap">
         <aside class="ntrail" id="nt-rail"></aside>
         <div class="ntmain">
+          <label class="ntfind"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+            <input id="nt-q" type="search" placeholder="Chercher dans les notes" autocomplete="off" spellcheck="false"></label>
           <div class="ntcrumb" id="nt-crumb" hidden></div>
           <div class="ntsec" id="nt-foldh">Dossiers</div>
           <div class="ntgrid" id="nt-grid"></div>
@@ -2419,7 +2452,7 @@ a,button{touch-action:manipulation}
           <div class="ntseedh" id="nt-seedh" hidden>Pas encore de notes</div>
           <div class="ntseeds" id="nt-seeds"></div>
           <div class="ntsec" id="nt-pagesh" hidden>Pages <span class="dim" id="nt-pn"></span></div>
-          <section class="card ntlist" id="nt-list" hidden><ul class="ntpages" id="nt-pages"></ul></section>
+          <div class="ntnotes" id="nt-notes"></div>
         </div>
       </div>
     </div>
@@ -7430,12 +7463,15 @@ a,button{touch-action:manipulation}
      replie. Un seul geste par rangée, donc rien à deviner. */
   function renderNtRail() {
     const rail = el("nt-rail"); rail.textContent = "";
+    /* Une recherche traverse les dossiers : aucune branche ne peut prétendre
+       être « celle où l'on est ». L'arbre se tait, le chemin parle. */
+    const q = ntQ();
     const total = COURSES.reduce((n, c) => n + mPages(c).length, 0);
-    rail.append(ntNode("Toutes les notes", total, { on: !ntSel, op: !ntSel,
-      go: () => { ntSel = null; renderNotes(); } }));
+    rail.append(ntNode("Toutes les notes", total, { on: !ntSel && !q, op: !ntSel && !q,
+      go: () => { el("nt-q").value = ""; ntSel = null; renderNotes(); } }));
     for (const c of COURSES) {
       const ps = mPages(c), cats = ntCats(c);
-      const here = ntSel && ntSel.c === c;
+      const here = !q && ntSel && ntSel.c === c;
       const open = ntOpen.has(c) && cats.size > 0;
       rail.append(ntNode(c, ps.length, {
         on: here && !ntSel.cat, op: open,
@@ -7443,14 +7479,14 @@ a,button{touch-action:manipulation}
           : `${c} — aucune page`,
         go: () => {
           if (here && !ntSel.cat && ntOpen.has(c)) ntOpen.delete(c); else ntOpen.add(c);
-          ntSel = { c }; renderNotes();
+          el("nt-q").value = ""; ntSel = { c }; renderNotes();
         } }));
       if (!open) continue;
       const kids = mk("div","ntkids");
       for (const [cat, pages] of cats) {
         kids.append(ntNode(cat, pages.length, {
           on: here && ntSel.cat === cat,
-          go: () => { ntSel = { c, cat }; renderNotes(); } }));
+          go: () => { el("nt-q").value = ""; ntSel = { c, cat }; renderNotes(); } }));
       }
       rail.append(kids);
     }
@@ -7462,17 +7498,26 @@ a,button{touch-action:manipulation}
     if (ntSel && !COURSES.includes(ntSel.c)) ntSel = null;
     if (ntSel && ntSel.cat && !ntCats(ntSel.c).has(ntSel.cat)) ntSel = { c: ntSel.c };
     renderNtRail();
+    ntVigLibere();
     const box = el("nt-grid"); box.textContent = "";
     const seeds = el("nt-seeds"); seeds.textContent = "";
-    const list = el("nt-pages"); list.textContent = "";
+    const notes = el("nt-notes"); notes.textContent = "";
     const crumb = el("nt-crumb"); crumb.textContent = "";
+    const q = ntQ();
     let pages = [], nseed = 0, nfold = 0;
 
-    if (!ntSel) {
-      /* Racine : un dossier par matière, et toutes les pages dessous. */
+    if (q) {
+      /* Chercher traverse les dossiers au lieu de les descendre : passé
+         quelques dizaines de notes, c'est le chemin le plus court. */
+      crumb.append(ntCrumb("Toutes les notes", () => { el("nt-q").value = ""; ntSel = null; renderNotes(); }),
+        mk("span", null, "›"), mk("b", null, `« ${q} »`));
+      for (const c of COURSES) for (const p of mPages(c)) if (ntMatch(c, p, q)) pages.push({ c, p });
+    } else if (!ntSel) {
+      /* Racine : les dossiers, rien d'autre. Étaler les pages ici en ferait
+         une liste sans fin dès la vingtième note — on entre dans un dossier
+         pour voir ce qu'il porte, comme dans n'importe quel classeur. */
       for (const c of COURSES) {
         const ps = mPages(c);
-        for (const p of ps) pages.push({ c, p });
         if (!ps.length) { seeds.append(ntSeed(c)); nseed++; continue; }
         box.append(ntTile(c, hueOf(c), ps, () => { ntSel = { c }; ntOpen.add(c); renderNotes(); }));
         nfold++;
@@ -7487,38 +7532,51 @@ a,button{touch-action:manipulation}
       } else {
         crumb.append(mk("span", null, "›"), mk("b", null, c));
         /* Descendre dans une matière montre ses catégories comme dossiers —
-           le même geste qu'à la racine, un cran plus bas. */
+           le même geste qu'à la racine, un cran plus bas. Et, comme dans
+           n'importe quel classeur, seules les pages de CE niveau suivent :
+           celles qui sont rangées vivent dans leur catégorie, pas deux fois. */
         for (const [cat, ps] of cats) {
           box.append(ntTile(cat, hueOf(c), ps, () => { ntSel = { c, cat }; renderNotes(); }));
           nfold++;
         }
-        pages = mPages(c).map(p => ({ c, p }));
+        pages = mPages(c).filter(p => !pgCat(p)).map(p => ({ c, p }));
       }
     }
-    crumb.hidden = !ntSel;
+    crumb.hidden = !(ntSel || q);
     el("nt-foldh").hidden = !nfold;
     /* La page touchée en dernier se lit en premier : c'est celle qu'on
        cherche. Les pages antérieures à la synchronisation n'ont pas
        d'horodatage — elles gardent l'ordre de leur dossier, en queue, plutôt
        que de se voir inventer une date. */
     pages.sort((x, y) => String(y.p.up || "").localeCompare(String(x.p.up || "")));
-    for (const x of pages) list.append(ntRow(x.c, x.p));
-    el("nt-seedh").hidden = !nseed;
+    for (const x of pages) notes.append(ntCard(x.c, x.p, !!q));
+    el("nt-seedh").hidden = !nseed || !!q;
     el("nt-pagesh").hidden = !pages.length;
-    el("nt-list").hidden = !pages.length;
-    el("nt-list").classList.toggle("solo", !!ntSel);
     el("nt-pn").textContent = pages.length ? `(${pages.length})` : "";
-    el("nt-n").textContent = ntSel ? "" : (pages.length ? `(${pages.length})` : "");
-    /* Un dossier vide le dit, et propose le seul geste qui vaille. */
+    const tout = COURSES.reduce((n, c) => n + mPages(c).length, 0);
+    el("nt-n").textContent = (ntSel || q) ? "" : (tout ? `(${tout})` : "");
+    /* Un dossier vide le dit, et propose le seul geste qui vaille. Une
+       recherche sans réponse le dit aussi, mais n'a rien à proposer. */
     const vide = el("nt-vide"); vide.textContent = "";
-    vide.hidden = !(ntSel && !nfold && !pages.length);
+    vide.hidden = !((ntSel || q) && !nfold && !pages.length);
     if (!vide.hidden) {
-      vide.append(document.createTextNode("Ce dossier est encore vide. "));
-      const go = mk("button","link", "Ouvrir une première page");
-      go.addEventListener("click", () => { addPage(ntSel.c); openMatiere(ntSel.c);
-        el("m-page").focus({ preventScroll:true }); });
-      vide.append(go);
+      if (q) vide.append(document.createTextNode(`Aucune note ne contient « ${q} ».`));
+      else {
+        vide.append(document.createTextNode("Ce dossier est encore vide. "));
+        const go = mk("button","link", "Ouvrir une première page");
+        go.addEventListener("click", () => { addPage(ntSel.c); openMatiere(ntSel.c);
+          el("m-page").focus({ preventScroll:true }); });
+        vide.append(go);
+      }
     }
+  }
+  const ntQ = () => (el("nt-q")?.value || "").trim().toLowerCase();
+  /* Une note répond à la recherche par son titre, sa matière, sa catégorie
+     ou son texte — le nom d'un document compte comme du texte. */
+  function ntMatch(c, p, q) {
+    const doc = pgDoc(p);
+    return [c, p.t, pgCat(p), p.page, p.ia, doc && doc.name]
+      .some(x => String(x || "").toLowerCase().includes(q));
   }
   function ntCrumb(label, go) {
     const b = mk("button", null, label);
@@ -7588,9 +7646,13 @@ a,button{touch-action:manipulation}
       el("m-page").focus({ preventScroll:true }); });
     return b;
   }
-  function ntRow(c, p) {
-    const li = mk("li");
-    const btn = mk("button","ntpage");
+  /* ── La carte d'une note ─────────────────────────────────────────
+     Une vignette, un titre, ce que la page porte, sa date. La vignette est
+     l'aperçu réel de la page : c'est elle qui rend une vingtaine de notes
+     navigables, là où vingt titres se ressemblent tous. */
+  function ntCard(c, p, avecMatiere) {
+    const card = mk("article","ntnote fx");
+    const btn = mk("button","ntopen");
     /* Ce que la page porte : sa première phrase s'il y a du texte, sinon la
        nature de ce qui s'y trouve. */
     const line = (p.page.split("\n").find(l => l.trim()) || p.ap || "").trim();
@@ -7598,18 +7660,30 @@ a,button{touch-action:manipulation}
     const what = line || (doc ? `Document · ${doc.n} feuille${doc.n > 1 ? "s" : ""}`
       : (p.ink.length || p.ni) ? "Page dessinée"
       : (p.annos.length || p.na) ? "Annotations posées" : "Page vide");
-    /* La date reste au bout du titre — le jour suffit ici, l'heure vit dans
-       l'infobulle et sur la fiche ouverte. La seconde ligne est la citation,
-       ou, à défaut, la nature de la page dite sur un autre ton. */
-    const subj = mk("span","ntsubj");
-    const spip = mk("i","mpip"); spip.style.background = `hsl(${hueOf(c)} 62% 52%)`;
-    subj.append(spip, mk("span", null, c));
-    btn.append(subj, mk("b", null, p.t || "Page"),
-      mk("span", `ntwhat${line ? "" : " void"}`, what),
-      mk("time", null, p.at ? p.at.split(" · ")[0] : ""));
+    const meta = mk("span","ntmeta");
+    /* Dans une recherche les résultats viennent de partout : la matière doit
+       se dire. Dans un dossier elle se répète à chaque carte — elle se tait. */
+    meta.append(mk("span", `ntwhat${line ? "" : " void"}`,
+      avecMatiere ? `${c} · ${what}` : what));
+    meta.append(mk("time", null, p.at ? p.at.split(" · ")[0] : ""));
+    btn.append(ntVig(p), mk("b", null, p.t || "Page"), meta);
     btn.title = [`Ouvrir cette page — ${c}`, p.at && `modifiée ${p.at}`]
       .filter(Boolean).join("\n");
     btn.addEventListener("click", () => openNotePage(c, p.id));
+    card.append(btn, ntActs(c, p));
+    return card;
+  }
+  /* Les deux gestes qui n'ont pas besoin d'ouvrir la page. */
+  function ntActs(c, p) {
+    const box = mk("span","ntacts");
+    /* Ranger sans ouvrir la page : un arriéré se classe d'ici, carte par
+       carte, au lieu d'entrer dans chaque fiche pour en sortir aussitôt.
+       Une page déjà rangée garde son dossier plus sombre — c'est là qu'on
+       la reclasse. */
+    const tidy = mk("button","ntcatb" + (pgCat(p) ? " on" : ""));
+    tidy.innerHTML = ICON.ranger;
+    tidy.title = pgCat(p) ? `Rangée sous « ${pgCat(p)} » — reclasser` : "Ranger cette page";
+    tidy.addEventListener("click", () => catPop(c, p.id, true));
     /* Une page pleine ne part pas d'un seul clic : le premier arme le bouton,
        le second seulement supprime — et l'hésitation désarme toute seule. */
     const kill = mk("button","kill","×"); kill.title = "Supprimer la page";
@@ -7633,17 +7707,73 @@ a,button{touch-action:manipulation}
       mWrite(c, { pages: ps, pg: ps[0]?.id || "" }); save();
       renderCourses();   // remet les compteurs à jour, et la vue avec eux
     });
-    /* Ranger sans ouvrir la page : un arriéré se classe d'ici, rangée par
-       rangée, au lieu d'entrer dans chaque fiche pour en sortir aussitôt.
-       Le dossier se montre au survol comme le ×, et reste allumé sur une
-       page déjà rangée — c'est là qu'on la reclasse. */
-    const tidy = mk("button","ntcatb" + (pgCat(p) ? " on" : ""));
-    tidy.innerHTML = ICON.ranger;
-    tidy.title = pgCat(p) ? `Rangée sous « ${pgCat(p)} » — reclasser` : "Ranger cette page";
-    tidy.addEventListener("click", () => catPop(c, p.id, true));
-    li.append(btn, tidy, kill);
-    return li;
+    box.append(tidy, kill);
+    return box;
   }
+  /* ── L'aperçu d'une page ─────────────────────────────────────────
+     Trois couches, dans l'ordre où on les voit sur la vraie page : la
+     première feuille du document s'il y en a un, le texte ensuite, l'encre
+     par-dessus. Rien à rendre hors écran : le texte est du vrai texte réduit,
+     l'encre du vrai SVG, la feuille la vraie image. */
+  const ntVigUrls = new Set();
+  function ntVigLibere() {
+    for (const u of ntVigUrls) URL.revokeObjectURL(u);
+    ntVigUrls.clear();
+  }
+  function ntVig(p) {
+    const v = mk("span","ntvig");
+    const doc = pgDoc(p);
+    const txt = (p.page || "").trim() || (p.ia || "").trim();
+    const ink = (p.ink || []).filter(st => Array.isArray(st.p) && st.p.length >= 2);
+    if (doc) {
+      const img = mk("img"); img.alt = "";
+      /* La feuille dort dans IndexedDB : elle arrive après coup, et son
+         adresse est rendue au prochain rendu pour ne pas fuir. */
+      idbGet(`${doc.k}/0`).then(b => {
+        if (!b || !img.isConnected) return;
+        const u = URL.createObjectURL(b); ntVigUrls.add(u); img.src = u;
+      }).catch(() => {});
+      v.append(img);
+    }
+    if (txt) {
+      /* Assez de lignes pour remplir la vignette, pas le roman entier. */
+      v.append(mk("span","vtx", txt.split("\n").slice(0, 24).join("\n").slice(0, 1200)));
+    }
+    if (ink.length) v.append(ntVigInk(ink));
+    if (!doc && !txt && !ink.length) v.classList.add("void");
+    return v;
+  }
+  /* L'encre, cadrée sur elle-même : la hauteur de la page n'est pas stockée,
+     et de toute façon un trait perdu au milieu d'une feuille blanche ne dit
+     rien. On montre le dessin, pas la feuille. */
+  function ntVigInk(ink) {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const st of ink) for (let i = 0; i < st.p.length; i += 2) {
+      if (st.p[i] < x0) x0 = st.p[i];
+      if (st.p[i] > x1) x1 = st.p[i];
+      if (st.p[i+1] < y0) y0 = st.p[i+1];
+      if (st.p[i+1] > y1) y1 = st.p[i+1];
+    }
+    const m = 40;
+    x0 -= m; y0 -= m; x1 += m; y1 += m;
+    const w = Math.max(x1 - x0, 1), h = Math.max(y1 - y0, 1);
+    const svg = svgEl("svg", { viewBox: `${x0} ${y0} ${w} ${h}`,
+      preserveAspectRatio: "xMidYMid meet" });
+    svg.setAttribute("class", "vink");
+    for (const st of ink) {
+      const d = inkPath(st);
+      if ((st.k || "pen") === "hl") d.setAttribute("class", "hl");
+      svg.append(d);
+    }
+    return svg;
+  }
+  /* La recherche redessine à la frappe : tout est déjà en mémoire, il n'y a
+     rien à attendre. Échap la vide et rend la vue à son dossier. */
+  el("nt-q").addEventListener("input", renderNotes);
+  el("nt-q").addEventListener("keydown", e => {
+    if (e.key !== "Escape") return;
+    e.stopPropagation(); el("nt-q").value = ""; renderNotes();
+  });
   el("nav-notes").addEventListener("click", openNotes);
   el("nt-back").addEventListener("click", () => enterBoard());
 
