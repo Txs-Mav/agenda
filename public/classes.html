@@ -71,6 +71,7 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
 .brand .mk{width:2.1rem;height:2.1rem;border-radius:9px;background:var(--invert);color:var(--on-invert);display:grid;place-items:center;flex:0 0 auto}
 .brand b{font-size:1.18rem;font-weight:650;letter-spacing:-.03em}
 .who{font-size:.72rem;color:var(--faint)}
+.sortir{font-size:.74rem;min-height:2rem;padding:.3rem .7rem;border-radius:999px}
 .crumbs{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;padding:0 .2rem;font-size:.85rem;color:var(--dim);min-height:1.3rem}
 .crumbs a{text-decoration:none;transition:color .15s;padding:.3rem 0}
 .crumbs a:hover{color:var(--ink)}
@@ -386,6 +387,7 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
     </a>
     <span class="grow"></span>
     <span class="who mono" id="who"></span>
+    <button class="btn quiet sortir" id="sortir" hidden>Se déconnecter</button>
   </header>
   <nav class="crumbs" id="crumbs"></nav>
   <p class="flash" id="flash" hidden></p>
@@ -479,9 +481,39 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
   const SB_URL = "https://olkbhrbyubejetqygdcy.supabase.co";
   const SB_KEY = "sb_publishable_3aYnT7wlRlEEzraSpmgbVA_WytRBC3X";
   const SB_STORE = "agenda.sb";
-  const sbSession = () => { try { return JSON.parse(localStorage.getItem(SB_STORE)) || null; } catch { return null; } };
-  const sbSave = s => localStorage.setItem(SB_STORE, JSON.stringify(s));
-  const sbClear = () => localStorage.removeItem(SB_STORE);
+  const SB_COOKIE = "agenda_sess";
+
+  const cookieLire = nom =>
+    document.cookie.split("; ").find(c => c.startsWith(nom + "="))?.slice(nom.length + 1) || "";
+  const cookieEcrire = (nom, val, jours) => {
+    document.cookie = `${nom}=${val};path=/;max-age=${Math.round(jours * 86400)};samesite=lax`
+      + (location.protocol === "https:" ? ";secure" : "");
+  };
+  const cookieEffacer = nom => { document.cookie = `${nom}=;path=/;max-age=0;samesite=lax`; };
+
+  /* Deux rangements, comme dans l'agenda : localStorage garde la session
+     entière, le cookie garde de quoi renaître (jeton de rafraîchissement,
+     identifiant, courriel) pour 400 jours. C'est LUI qui fait qu'arriver ici
+     par un lien d'invitation, sans avoir ouvert l'agenda depuis des
+     semaines, ne demande pas de se reconnecter. Un cookie posé sur / vaut
+     pour les deux pages. */
+  const sbCookie = () => {
+    try { const v = cookieLire(SB_COOKIE); return v ? JSON.parse(decodeURIComponent(v)) : null; }
+    catch { return null; }
+  };
+  const sbSession = () => {
+    let s = null;
+    try { s = JSON.parse(localStorage.getItem(SB_STORE)) || null; } catch {}
+    if (s?.rt) return s;
+    const c = sbCookie();
+    return c?.rt ? { at: "", ...c } : s;
+  };
+  const sbSave = s => {
+    try { localStorage.setItem(SB_STORE, JSON.stringify(s)); } catch {}
+    if (s?.rt) cookieEcrire(SB_COOKIE,
+      encodeURIComponent(JSON.stringify({ rt: s.rt, uid: s.uid, email: s.email })), 400);
+  };
+  const sbClear = () => { localStorage.removeItem(SB_STORE); cookieEffacer(SB_COOKIE); };
   const uid = () => sbSession()?.uid;
 
   const SB_FR = [
@@ -498,29 +530,65 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
     return m;
   };
 
-  async function sbRefresh() {
+  /* Un seul rafraîchissement à la fois : le jeton tourne à chaque échange,
+     et cette page en lance volontiers plusieurs de front — le sondage, une
+     vue qui charge, une sauvegarde qui part. Deux appels avec le même jeton,
+     et le second retombe sur un jeton déjà consommé : déconnexion surprise. */
+  let sbRenewing = null;
+  function sbRefresh() {
+    if (sbRenewing) return sbRenewing;
+    const rt = sbSession()?.rt;
+    if (!rt) return Promise.reject(new Error("pas de session"));
+    sbRenewing = (async () => {
+      const r = await fetch(`${SB_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method: "POST",
+        headers: { apikey: SB_KEY, "content-type": "application/json" },
+        body: JSON.stringify({ refresh_token: rt }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.access_token) throw new Error("refresh raté");
+      sbSave({ at: d.access_token, rt: d.refresh_token, uid: d.user?.id, email: d.user?.email });
+      return d.access_token;
+    })().catch(e => {
+      /* Hors ligne, on garde la session : c'est le réseau qui manque. Refus
+         net du serveur, et le jeton est mort — on repart de la connexion. */
+      if (!/failed to fetch|networkerror|load failed/i.test(String(e?.message || e))) {
+        sbClear(); el("sortir").hidden = true; el("who").textContent = ""; vueLogin();
+      }
+      throw e;
+    }).finally(() => { sbRenewing = null; });
+    return sbRenewing;
+  }
+
+  /* Le jeton du moment. Session revenue du cookie seul : il n'y en a pas
+     encore, on l'échange ici. Partir avec un jeton vide ne donnerait pas un
+     401 mais une réponse anonyme — donc des listes vides, ce qui ressemble à
+     « tu n'as aucune classe » plutôt qu'à « reconnecte-toi ». */
+  async function sbJeton() {
     const s0 = sbSession();
-    const r = await fetch(`${SB_URL}/auth/v1/token?grant_type=refresh_token`, {
-      method: "POST",
-      headers: { apikey: SB_KEY, "content-type": "application/json" },
-      body: JSON.stringify({ refresh_token: s0.rt }),
-    });
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok || !d.access_token) throw new Error("refresh raté");
-    sbSave({ at: d.access_token, rt: d.refresh_token, uid: d.user?.id, email: d.user?.email });
+    if (!s0) return null;
+    if (s0.at) return s0.at;
+    try { return await sbRefresh(); } catch { return null; }
   }
 
   /* Un seul chemin vers la base ; le 401 se soigne une fois par refresh,
      sinon on renvoie vers la connexion de l'agenda. */
   async function api(path, init = {}, retry = true) {
-    const s0 = sbSession();
-    if (!s0) { vueLogin(); throw new Error("pas de session"); }
+    const at = await sbJeton();
+    /* Pas de jeton, deux causes bien différentes : ou bien il n'y a plus de
+       session — sbRefresh a déjà ramené à la connexion — ou bien le réseau
+       manque et la session, elle, est intacte. Surtout ne rien effacer ici :
+       hors ligne, une session valide doit survivre. */
+    if (!at) {
+      if (!sbSession()) { vueLogin(); throw new Error("pas de session"); }
+      throw new Error("Pas de réseau — réessaie dans un instant.");
+    }
     const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
       ...init,
-      headers: { apikey: SB_KEY, authorization: `Bearer ${s0.at}`,
+      headers: { apikey: SB_KEY, authorization: `Bearer ${at}`,
                  "content-type": "application/json", ...(init.headers || {}) },
     });
-    if (r.status === 401 && retry && s0.rt) {
+    if (r.status === 401 && retry && sbSession()?.rt) {
       try { await sbRefresh(); }
       catch { sbClear(); vueLogin(); throw new Error("session expirée"); }
       return api(path, init, false);
@@ -1571,6 +1639,7 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
     clearInterval(poller); poller = null;
     const s0 = sbSession();
     el("who").textContent = s0?.email ? s0.email.split("@")[0] : "";
+    el("sortir").hidden = !s0;
     const [k, id] = location.hash.slice(1).split("/");
     /* Une invitation doit survivre au détour par la connexion : on la met
        de côté, et on la reprend dès qu'une session existe. */
@@ -1596,6 +1665,25 @@ svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.75;str
       if (!/pas de session|session expirée/.test(String(e?.message))) flash(frErr(e));
     }
   }
+  /* La porte de sortie. L'appareil oublie la session — cookie compris — et
+     le serveur révoque le jeton de rafraîchissement, sinon il resterait
+     valable des mois. On repose l'URL à nu plutôt que de la vider : pas de
+     hashchange, donc pas de double rendu par-dessus vueLogin(). */
+  el("sortir").addEventListener("click", async () => {
+    const s0 = sbSession();
+    sbClear();
+    el("sortir").hidden = true; el("who").textContent = "";
+    localStorage.removeItem(INVITE);
+    history.replaceState(null, "", location.pathname);
+    vueLogin();
+    if (s0?.at) {
+      try {
+        await fetch(`${SB_URL}/auth/v1/logout`, { method: "POST",
+          headers: { apikey: SB_KEY, authorization: `Bearer ${s0.at}` } });
+      } catch {}
+    }
+  });
+
   addEventListener("hashchange", route);
   route();
 })();

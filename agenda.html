@@ -1744,7 +1744,10 @@ a,button{touch-action:manipulation}
             </div>
             <span class="lab">Compte d'agenda</span>
             <p class="dim" id="p-email" style="font-size:.85rem"></p>
-            <button class="ghost" id="p-account" style="align-self:flex-start;flex:0 1 auto;padding:.6rem 1.1rem">Gérer le compte</button>
+            <div class="prow" style="gap:.5rem;flex-wrap:wrap">
+              <button class="ghost" id="p-account" style="flex:0 1 auto;padding:.6rem 1.1rem">Gérer le compte</button>
+              <button class="ghost" id="p-signout" style="flex:0 1 auto;padding:.6rem 1.1rem;color:var(--p3)" hidden>Se déconnecter</button>
+            </div>
           </div>
         </section>
         <section class="card fx">
@@ -5020,13 +5023,16 @@ a,button{touch-action:manipulation}
      toute la classe édite, pas un calque à moi. On complète, on n'écrase
      jamais : ce que la classe a déjà écrit reste au-dessus. */
   async function sbApi(pathQ, init = {}, retry = true) {
-    const s0 = sbSession();
-    if (!s0?.at) throw new Error("pas de session");
+    const at = await sbJeton();
+    /* Pas de jeton, deux causes bien différentes : ou bien il n'y a plus de
+       session — sbRenew a déjà ramené à la connexion — ou bien le réseau
+       manque et la session, elle, est intacte. On ne dit pas la même chose. */
+    if (!at) throw new Error(sbSession() ? "Pas de réseau — réessaie dans un instant." : "pas de session");
     const r = await fetch(`${SB_URL}/rest/v1/${pathQ}`, { ...init,
-      headers: { apikey: SB_KEY, authorization: `Bearer ${s0.at}`,
+      headers: { apikey: SB_KEY, authorization: `Bearer ${at}`,
                  "content-type": "application/json", ...(init.headers || {}) } });
-    if (r.status === 401 && retry && s0.rt) {
-      try { sbKeep(await sbAuth("token?grant_type=refresh_token", { refresh_token: s0.rt })); }
+    if (r.status === 401 && retry && sbSession()?.rt) {
+      try { await sbRenew(); }
       catch { throw new Error("Session expirée — reconnecte-toi."); }
       return sbApi(pathQ, init, false);
     }
@@ -5621,10 +5627,46 @@ a,button{touch-action:manipulation}
   const SB_URL = "https://olkbhrbyubejetqygdcy.supabase.co";
   const SB_KEY = "sb_publishable_3aYnT7wlRlEEzraSpmgbVA_WytRBC3X";
   const SB_STORE = "agenda.sb";
+  const SB_COOKIE = "agenda_sess";
 
-  const sbSession = () => { try { return JSON.parse(localStorage.getItem(SB_STORE)) || null; } catch { return null; } };
-  const sbSave = (sess) => localStorage.setItem(SB_STORE, JSON.stringify(sess));
-  const sbClear = () => localStorage.removeItem(SB_STORE);
+  /* Trois gestes sur les cookies, écrits une fois : le témoin de premier
+     passage et celui de session s'en servent tous les deux. */
+  const cookieLire = (nom) =>
+    document.cookie.split("; ").find(c => c.startsWith(nom + "="))?.slice(nom.length + 1) || "";
+  const cookieEcrire = (nom, val, jours) => {
+    document.cookie = `${nom}=${val};path=/;max-age=${Math.round(jours * 86400)};samesite=lax`
+      + (location.protocol === "https:" ? ";secure" : "");
+  };
+  const cookieEffacer = (nom) => { document.cookie = `${nom}=;path=/;max-age=0;samesite=lax`; };
+
+  /* ── Où vit la session ───────────────────────────────────────────
+     À deux endroits, et c'est voulu. localStorage garde la session entière,
+     jeton d'accès compris : c'est le chemin rapide, celui de la seconde
+     visite du même jour. Le cookie, lui, ne garde que de quoi RENAÎTRE — le
+     jeton de rafraîchissement, l'identifiant, le courriel — mais il se
+     déclare pour 400 jours, il vaut pour /classes.html autant que pour /, et
+     il survit là où Safari vide localStorage après une semaine sans visite.
+     Le jeton d'accès reste dehors : un cookie repart vers le serveur à
+     chaque requête, autant qu'il soit court.
+     Quand seul le cookie a survécu, la session revient sans jeton d'accès —
+     sbJeton() l'échange avant le premier appel. */
+  const sbCookie = () => {
+    try { const v = cookieLire(SB_COOKIE); return v ? JSON.parse(decodeURIComponent(v)) : null; }
+    catch { return null; }
+  };
+  const sbSession = () => {
+    let s = null;
+    try { s = JSON.parse(localStorage.getItem(SB_STORE)) || null; } catch {}
+    if (s?.rt) return s;
+    const c = sbCookie();
+    return c?.rt ? { at: "", ...c } : s;
+  };
+  const sbSave = (sess) => {
+    try { localStorage.setItem(SB_STORE, JSON.stringify(sess)); } catch {}
+    if (sess?.rt) cookieEcrire(SB_COOKIE,
+      encodeURIComponent(JSON.stringify({ rt: sess.rt, uid: sess.uid, email: sess.email })), 400);
+  };
+  const sbClear = () => { localStorage.removeItem(SB_STORE); cookieEffacer(SB_COOKIE); };
 
   async function sbAuth(pathQ, body) {
     const r = await fetch(`${SB_URL}/auth/v1/${pathQ}`, {
@@ -5655,14 +5697,62 @@ a,button{touch-action:manipulation}
 
   const sbKeep = (d) => { sbSave({ at: d.access_token, rt: d.refresh_token, uid: d.user?.id, email: d.user?.email }); };
 
-  async function sbFetchSnapshot(retry = true) {
+  /* Un seul rafraîchissement à la fois. Supabase fait tourner le jeton de
+     rafraîchissement à chaque échange : deux appels partis ensemble avec le
+     même jeton, et le second retombe sur un jeton déjà consommé —
+     déconnexion surprise. Tout le monde attend la même promesse. */
+  let sbRenewing = null;
+  function sbRenew() {
+    if (sbRenewing) return sbRenewing;
+    const rt = sbSession()?.rt;
+    if (!rt) return Promise.reject(new Error("pas de session"));
+    sbRenewing = sbAuth("token?grant_type=refresh_token", { refresh_token: rt })
+      .then(d => { sbKeep(d); return d; })
+      .catch(e => {
+        /* Hors ligne, on ne touche à rien : c'est le réseau qui manque, pas
+           le droit d'entrer. Refus net du serveur, en revanche, et le jeton
+           est mort — inutile de laisser un tableau de bord vide tourner en
+           rond : on oublie la session et on redemande le mot de passe. */
+        if (!/failed to fetch|networkerror|load failed/i.test(String(e?.message || e))) {
+          sbClear(); renderAccount(); showJoin("signin");
+        }
+        throw e;
+      })
+      .finally(() => { sbRenewing = null; });
+    return sbRenewing;
+  }
+
+  /* Le jeton d'accès du moment. Session revenue du cookie seul : il n'y en a
+     pas encore, on l'échange ici. Envoyer un jeton vide ne donnerait pas un
+     401 — PostgREST retomberait sur le rôle anonyme et rendrait une liste
+     vide, ce qui ressemble à « tu n'as rien » plutôt qu'à « reconnecte-toi ». */
+  async function sbJeton() {
     const s0 = sbSession();
     if (!s0) return null;
+    if (s0.at) return s0.at;
+    try { return (await sbRenew()).access_token; } catch { return null; }
+  }
+
+  /* Se déconnecter, c'est le dire aussi au serveur : sans ça, le jeton de
+     rafraîchissement resterait valable des mois, cookie effacé ou pas. */
+  async function sbSignOut() {
+    const s0 = sbSession();
+    sbClear();
+    if (!s0?.at) return;
+    try {
+      await fetch(`${SB_URL}/auth/v1/logout`, { method: "POST",
+        headers: { apikey: SB_KEY, authorization: `Bearer ${s0.at}` } });
+    } catch {}
+  }
+
+  async function sbFetchSnapshot(retry = true) {
+    const at = await sbJeton();
+    if (!at) return null;
     const r = await fetch(`${SB_URL}/rest/v1/agenda_snapshots?kind=in.(export,horaire,suppressions)&select=kind,payload,updated_at`, {
-      headers: { apikey: SB_KEY, authorization: `Bearer ${s0.at}` },
+      headers: { apikey: SB_KEY, authorization: `Bearer ${at}` },
     });
-    if (r.status === 401 && retry && s0.rt) {
-      try { sbKeep(await sbAuth("token?grant_type=refresh_token", { refresh_token: s0.rt })); }
+    if (r.status === 401 && retry && sbSession()?.rt) {
+      try { await sbRenew(); }
       catch { sbClear(); renderAccount(); showJoin("signin"); return null; }
       return sbFetchSnapshot(false);
     }
@@ -5674,16 +5764,16 @@ a,button{touch-action:manipulation}
      RLS que la lecture ; « merge-duplicates » remplace la ligne du même genre
      (clé primaire user_id + kind) au lieu d'en empiler une seconde. */
   async function sbPut(kind, payload, retry = true) {
-    const s0 = sbSession();
-    if (!s0?.at || !s0?.uid) return false;
+    const at = await sbJeton(), s0 = sbSession();
+    if (!at || !s0?.uid) return false;
     const r = await fetch(`${SB_URL}/rest/v1/agenda_snapshots`, {
       method: "POST",
-      headers: { apikey: SB_KEY, authorization: `Bearer ${s0.at}`,
+      headers: { apikey: SB_KEY, authorization: `Bearer ${at}`,
                  "content-type": "application/json", prefer: "resolution=merge-duplicates" },
       body: JSON.stringify([{ user_id: s0.uid, kind, payload }]),
     });
     if (r.status === 401 && retry && s0.rt) {
-      try { sbKeep(await sbAuth("token?grant_type=refresh_token", { refresh_token: s0.rt })); }
+      try { await sbRenew(); }
       catch { return false; }
       return sbPut(kind, payload, false);
     }
@@ -5764,7 +5854,7 @@ a,button{touch-action:manipulation}
       box.append(mk("p","when","Tes échéances et MIO se synchronisent depuis l'agent local à chaque collecte."));
       const acts = mk("div","acts");
       const out = mk("button","btn danger","Se déconnecter");
-      out.addEventListener("click", () => { sbClear(); renderAccount(); closePop(); showJoin("signin"); });
+      out.addEventListener("click", () => { sbSignOut(); renderAccount(); closePop(); showJoin("signin"); });
       acts.append(out, mk("span","grow"));
       const close = mk("button","btn quiet","Fermer"); close.addEventListener("click", closePop);
       const sync = mk("button","btn solid","Rafraîchir");
@@ -5860,6 +5950,7 @@ a,button{touch-action:manipulation}
     const s0 = sbSession();
     el("p-email").textContent = s0?.email || "Aucun compte connecté — tes données restent sur cet appareil.";
     el("p-account").textContent = s0 ? "Gérer le compte" : "Se connecter";
+    el("p-signout").hidden = !s0;
     ["p-pw1","p-pw2","p-pw-btn"].forEach(id => { el(id).disabled = !s0; });
     el("p-pw-msg").textContent = s0 ? "" : "Connecte-toi pour changer ton mot de passe.";
   }
@@ -5875,15 +5966,11 @@ a,button{touch-action:manipulation}
   /* ── Premier passage ─────────────────────────────────────────────
      Un témoin (cookie) retient que cet appareil a déjà franchi l'accueil.
      Absent : on atterrit sur la page d'accueil, puis sur la création de
-     compte. Présent : le tableau de bord s'ouvre directement. Le cookie
-     suffit — la session, elle, reste dans localStorage. */
+     compte. Présent : le tableau de bord s'ouvre directement. Deux cookies
+     distincts, exprès : oublier qui on est ne doit pas refaire le laïus. */
   const VU = "agenda_vu";
-  const cookie = n => document.cookie.split("; ").find(c => c.startsWith(n + "="))?.slice(n.length + 1) || "";
-  const markVu = () => {
-    document.cookie = `${VU}=1;path=/;max-age=${400 * 86400};samesite=lax`
-      + (location.protocol === "https:" ? ";secure" : "");
-  };
-  const firstVisit = () => !cookie(VU);
+  const markVu = () => cookieEcrire(VU, "1", 400);
+  const firstVisit = () => !cookieLire(VU);
 
   const enterBoard = () => {
     showView("board");
@@ -5981,19 +6068,23 @@ a,button{touch-action:manipulation}
   route();
   el("p-name").addEventListener("input", () => { state.name = el("p-name").value; renderIdentity(); save(); });
   el("p-account").addEventListener("click", ev => openAccount(ev.currentTarget));
+  /* Se déconnecter sans passer par la fenêtre du compte : l'appareil oublie
+     la session — cookie compris — et revient à la porte d'entrée. */
+  el("p-signout").addEventListener("click", () => {
+    sbSignOut(); renderAccount(); showJoin("signin");
+  });
 
   async function sbRefreshToken() {
-    const s0 = sbSession();
-    if (!s0?.rt) return false;
-    try { sbKeep(await sbAuth("token?grant_type=refresh_token", { refresh_token: s0.rt })); return true; }
+    if (!sbSession()?.rt) return false;
+    try { await sbRenew(); return true; }
     catch { sbClear(); renderAccount(); showJoin("signin"); return false; }
   }
   async function sbUpdatePassword(pw, retry = true) {
-    const s0 = sbSession();
-    if (!s0) throw new Error("Connecte-toi d'abord.");
+    const at = await sbJeton();
+    if (!at) throw new Error(sbSession() ? "Pas de réseau — réessaie dans un instant." : "Connecte-toi d'abord.");
     const r = await fetch(`${SB_URL}/auth/v1/user`, {
       method: "PUT",
-      headers: { apikey: SB_KEY, authorization: `Bearer ${s0.at}`, "content-type": "application/json" },
+      headers: { apikey: SB_KEY, authorization: `Bearer ${at}`, "content-type": "application/json" },
       body: JSON.stringify({ password: pw }),
     });
     if (r.status === 401 && retry && await sbRefreshToken()) return sbUpdatePassword(pw, false);
