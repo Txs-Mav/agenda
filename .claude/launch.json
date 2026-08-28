@@ -2,6 +2,17 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "agenda-harnais",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "4233",
+        "/private/tmp/claude-501/-Users-maverickmenard-Desktop-agenda/9c796a6d-9336-4961-adcd-182ec911b5ec/scratchpad/preview"
+      ],
+      "port": 4233
+    },
+    {
       "name": "agenda-4173",
       "runtimeExecutable": "npx",
       "runtimeArgs": [
@@ -88,6 +99,28 @@
         "public"
       ],
       "port": 4211
+    },
+    {
+      "name": "agenda-scribe-4229",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "4229",
+        "public"
+      ],
+      "port": 4229
+    },
+    {
+      "name": "agenda-ux-4247",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "4247",
+        "public"
+      ],
+      "port": 4247
     }
   ]
 }
