@@ -5194,6 +5194,9 @@ a,button{touch-action:manipulation}
   /* Pendant qu'on le traîne, la géométrie vit ici : l'état ne l'encaisse qu'au
      relâchement — un glissement n'a pas à écrire soixante fois par seconde. */
   let mDocLive = null;
+  /* La suppression du document s'arme en deux temps ; le minuteur vit ici pour
+     que le cadre puisse le désarmer en se refermant. */
+  let docArm = 0;
   const docNow = () => { const d = mDocOpen(); return d ? (mDocLive || docGeo(d)) : null; };
   /* La hauteur du papier, en millièmes de largeur : ce que le document couvre
      là où il est posé — et jamais moins que ce qu'on a écrit plus bas.
@@ -5224,6 +5227,10 @@ a,button{touch-action:manipulation}
     const f = el("m-dsel"); if (!f) return;
     const d = mDocOpen(), on = !!d && mTool === "sel";
     f.hidden = !on;
+    /* Le cadre se referme : la suppression à moitié armée se désarme avec lui,
+       sinon le premier clic d'après supprimerait sans prévenir. */
+    if (!on && docArm) { clearTimeout(docArm); docArm = 0;
+      el("m-dsdel").textContent = "Supprimer"; el("m-dsdel").classList.remove("arm"); }
     if (!on) return;
     const k = mBoxW() / 1000, g = docNow();
     f.style.left = `${g.x * k}px`;
@@ -5246,8 +5253,9 @@ a,button{touch-action:manipulation}
     const wrap = el("m-wrap");
     /* Mille unités en largeur, des pixels en hauteur : le repère du stockage
        tel quel. D'où « none » — l'aspect ne doit surtout PAS être préservé.
-       Sur un document, la hauteur vient des ratios et non de clientHeight :
-       le calque doit épouser le papier au millième, pas l'arrondi du DOM. */
+       Sur un document, la hauteur est celle que la page se donne (pageH1000)
+       et non clientHeight : le calque doit épouser le repère au millième, pas
+       l'arrondi du DOM. */
     const doc = mDocOpen();
     const vb = `0 0 1000 ${doc ? pageH1000() : (wrap.clientHeight || 1)}`;
     const ink = mCur ? mPage(mCur).ink : [];
@@ -6447,7 +6455,6 @@ a,button{touch-action:manipulation}
      les mêmes nombres voudraient dire autre chose — l'encre sauterait. On les
      traduit donc à la largeur du moment, et l'historique repart de là : un
      « annuler » ne doit pas ramener des coordonnées d'un autre repère. */
-  let docArm = 0;
   function docKill() {
     const c = mCur, p = mPage(c), b = el("m-dsdel");
     if (!c || !pgDoc(p)) return;
