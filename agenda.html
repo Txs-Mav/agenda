@@ -1706,16 +1706,23 @@ html,body{overflow-x:clip}
 .cta.lp-ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line-hi);transition:transform .2s,background .2s,border-color .2s,color .2s}
 @media (hover:hover){.cta.lp-ghost:hover{transform:translateY(-2px);border-color:var(--ac);color:var(--ac);background:var(--surface)}}
 
-/* La maquette produit, en HTML pur */
+/* La maquette produit, en HTML pur — et en perspective. Elle arrive couchée
+   (--bascule, posée par le défilement) et se redresse en montant vers le
+   centre de l'écran ; le pointeur ajoute quelques degrés de pivot (--tx/--ty).
+   Tout est piloté par variables : sans JS, la valeur par défaut fige la
+   maquette à 6°, exactement comme avant. */
 .lp-shot{position:relative;max-width:56rem;margin:2.8rem auto 0;perspective:1400px}
 .lp-frame{
   border-radius:16px;overflow:hidden;background:var(--surface);
   border:1px solid color-mix(in srgb,var(--ac) 16%,var(--line));
   box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 40px 90px -30px color-mix(in srgb,var(--ac) 38%,rgba(20,20,40,.45));
-  transform:rotateX(6deg) scale(.985);transform-origin:top center;
-  transition:transform .5s cubic-bezier(.2,.7,.3,1),box-shadow .5s;
+  transform:rotateX(calc(var(--bascule,6deg) + var(--tx,0deg))) rotateY(var(--ty,0deg)) scale(var(--pose,.985));
+  transform-origin:top center;
+  transition:transform .45s cubic-bezier(.2,.7,.3,1),box-shadow .5s;
 }
-@media (hover:hover){.lp-shot:hover .lp-frame{transform:rotateX(0deg) scale(1);box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 50px 110px -34px color-mix(in srgb,var(--ac) 50%,rgba(20,20,40,.55))}}
+/* Pointeur dessus : la transition raccourcit pour que le pivot suive la main. */
+.lp-shot.vif .lp-frame{transition:transform .16s ease-out,box-shadow .5s}
+@media (hover:hover){.lp-shot:hover .lp-frame{box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 50px 110px -34px color-mix(in srgb,var(--ac) 50%,rgba(20,20,40,.55))}}
 .lp-bar{display:flex;align-items:center;gap:.45rem;background:var(--surface-2);padding:.6rem .9rem;border-bottom:1px solid var(--line)}
 .lp-bar i{width:.62rem;height:.62rem;border-radius:50%;background:var(--line-hi)}
 .lp-bar span{margin-left:.5rem;font-family:var(--mono);font-size:.64rem;color:var(--faint);background:var(--surface);border-radius:6px;padding:.2rem .8rem;border:1px solid var(--line)}
@@ -1757,19 +1764,26 @@ html,body{overflow-x:clip}
 .lp-cards .row b{display:block;font-size:.64rem;font-weight:600;line-height:1.25}
 .lp-cards .cd{font-family:var(--mono);font-size:.56rem;font-weight:500}
 
+/* Les pastilles glissent avec le pointeur (--mx/--my, posés sur .lp-shot) :
+   l'une à contre-sens comme si elle était derrière, l'autre dans le sens et
+   plus vite, comme devant. La profondeur passe par `translate`, séparée du
+   `transform` que l'animation de flottement occupe déjà. */
 .lp-float{
   position:absolute;display:flex;align-items:center;gap:.6rem;text-align:left;
   background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(8px);
   border:1px solid var(--line);border-radius:14px;padding:.7rem .85rem;
   box-shadow:0 18px 44px -16px rgba(20,20,40,.35);
+  transition:translate .3s cubic-bezier(.2,.7,.3,1);
 }
 .lp-float b{display:block;font-size:.76rem;font-weight:650;letter-spacing:-.01em}
 .lp-float span{font-size:.66rem;color:var(--dim)}
 .lp-float .ic{width:2rem;height:2rem;border-radius:10px;display:grid;place-items:center;color:#fff;background:linear-gradient(120deg,var(--acd),var(--ac2));flex:0 0 auto}
-.lp-float .ic.v{background:linear-gradient(120deg,#2E9C58,#5BD68A)}
+.lp-float .ic.v{background:linear-gradient(120deg,var(--acd),var(--ac2))}
 .lp-float .spark{width:64px;height:22px;stroke:var(--ac);stroke-width:2.4;stroke-linecap:round;opacity:.85}
-.lp-float.a{top:30%;left:-7.5rem;animation:lp-float 6s ease-in-out infinite alternate}
-.lp-float.b{bottom:-1.4rem;right:-3.8rem;animation:lp-float 7s .8s ease-in-out infinite alternate-reverse}
+.lp-float.a{top:30%;left:-7.5rem;animation:lp-float 6s ease-in-out infinite alternate;
+  translate:calc(var(--mx,0)*-13px) calc(var(--my,0)*-9px)}
+.lp-float.b{bottom:-1.4rem;right:-3.8rem;animation:lp-float 7s .8s ease-in-out infinite alternate-reverse;
+  translate:calc(var(--mx,0)*20px) calc(var(--my,0)*14px)}
 @keyframes lp-float{from{transform:translateY(-7px)}to{transform:translateY(7px)}}
 
 .lp-marq{overflow:hidden;margin:2.6rem 0 .4rem;-webkit-mask:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);mask:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
@@ -1844,6 +1858,7 @@ html,body{overflow-x:clip}
 @media (max-width:860px){
   .lp-float.a{position:static;margin:1rem auto 0;animation:none;width:max-content}
   .lp-float.b{position:static;margin:.6rem auto 0;animation:none;width:max-content}
+  .lp-float{translate:none}
   .lp-shot{perspective:none}
   .lp-frame{transform:none}
   .lp-cards{grid-template-columns:1fr 1fr}
@@ -1855,6 +1870,8 @@ html,body{overflow-x:clip}
   .lp-orbs i,.lp-float,.lp-marq .in,.lp-final i{animation:none!important}
   [data-rev]{opacity:1;transform:none;transition:none}
   .lp-frame{transform:none}
+  .lp-float{translate:none}
+  .lp-pic,.lp-band-pic{transform:none}
 }
 
 /* Rangées produit : l'image porte la section, le texte respire. */
@@ -1862,6 +1879,7 @@ html,body{overflow-x:clip}
   display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);
   gap:clamp(2rem,5vw,4.5rem);align-items:center;
   padding:clamp(2.2rem,5vw,3.6rem) 0;
+  perspective:1200px;
 }
 .lp-row.flip{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)}
 .lp-row.flip .lp-pic{order:2}
@@ -1873,14 +1891,22 @@ html,body{overflow-x:clip}
   color:var(--k,#3A6EA5);display:inline-flex;align-items:center;gap:.5rem;
 }
 .lp-kick::before{content:"";width:1.4rem;height:2px;border-radius:99px;background:var(--k,#3A6EA5)}
+/* Chaque écran est posé dans une coque de tablette : lunette sombre, écran
+   en retrait, et un léger pivot 3D vers le texte — qui se redresse au survol.
+   Les rangées inversées pivotent en miroir. */
 .lp-pic{
-  margin:0;border-radius:16px;overflow:hidden;background:var(--surface);
-  border:1px solid var(--line);
-  box-shadow:0 30px 70px -26px color-mix(in srgb,var(--ac) 30%,rgba(20,20,40,.5));
-  transition:transform .35s cubic-bezier(.2,.7,.3,1),box-shadow .35s;
+  margin:0;border-radius:clamp(18px,2.2vw,26px);overflow:hidden;
+  background:linear-gradient(150deg,#263442,#0E1720 55%,#1B2836);
+  border:1px solid rgba(255,255,255,.16);
+  padding:clamp(.5rem,1vw,.75rem);
+  box-shadow:0 1px 0 rgba(255,255,255,.2) inset,0 30px 70px -26px color-mix(in srgb,var(--ac) 30%,rgba(20,20,40,.5));
+  transform:rotateY(var(--pivot,-5deg)) rotateX(1.5deg);
+  transition:transform .45s cubic-bezier(.2,.7,.3,1),box-shadow .35s;
 }
-@media (hover:hover){.lp-pic:hover{transform:translateY(-6px) scale(1.012);box-shadow:0 42px 90px -30px color-mix(in srgb,var(--ac) 45%,rgba(20,20,40,.6))}}
-.lp-pic img{display:block;width:100%;height:auto}
+.lp-row.flip .lp-pic{--pivot:5deg}
+@media (hover:hover){.lp-pic:hover{transform:rotateY(0deg) rotateX(0deg) translateY(-6px);box-shadow:0 1px 0 rgba(255,255,255,.2) inset,0 42px 90px -30px color-mix(in srgb,var(--ac) 45%,rgba(20,20,40,.6))}}
+.lp-pic img{display:block;width:100%;height:auto;border-radius:clamp(11px,1.4vw,16px)}
+.lp-pic>div{border-radius:clamp(11px,1.4vw,16px);overflow:hidden}
 /* Sans image (artefact) : le texte devient une carte pleine largeur, rien ne casse. */
 .lp-row.noimg{grid-template-columns:minmax(0,1fr)}
 .lp-row.noimg .lp-pic{display:none}
@@ -1916,7 +1942,9 @@ html,body{overflow-x:clip}
 .lp-cl .bub>div{background:var(--surface-2);border:1px solid var(--line);border-radius:12px 12px 12px 3px;padding:.5rem .7rem}
 .lp-cl .bub b{display:block;font-size:.6rem;font-weight:650;color:var(--faint);margin-bottom:.15rem}
 .lp-cl .bub span{font-size:.74rem;line-height:1.35}
-.lp-cl .bub.me{align-self:flex-end}
+/* align-self:flex-end seul écrase la bulle à sa largeur minimale (défaut
+   des items fléchis) et le texte débordait sur la lunette de la coque. */
+.lp-cl .bub.me{align-self:flex-end;width:max-content}
 .lp-cl .bub.me>div{background:var(--invert);color:var(--on-invert);border-color:transparent;border-radius:12px 12px 3px 12px}
 .lp-cl .bub.me b{color:color-mix(in srgb,var(--on-invert) 60%,transparent)}
 .lp-cl .doc{display:flex;align-items:center;gap:.6rem;background:var(--surface-2);border:1px dashed var(--line-hi);border-radius:10px;padding:.55rem .7rem;margin-top:auto}
@@ -1929,7 +1957,8 @@ html,body{overflow-x:clip}
 @media (max-width:860px){
   .lp-row,.lp-row.flip{grid-template-columns:minmax(0,1fr)}
   .lp-row.flip .lp-pic{order:0}
-  .lp-row{padding:1.6rem 0}
+  .lp-row{padding:1.6rem 0;perspective:none}
+  .lp-pic{transform:none}
 }
 
 /* ═══ Fond vivant : maille fine + halo qui suit le curseur ═════════ */
@@ -1958,17 +1987,25 @@ html,body{overflow-x:clip}
   margin:clamp(2.4rem,6vw,4.4rem) 0;padding:clamp(1.6rem,4vw,2.8rem);
   border-radius:24px;background:var(--surface-2);border:1px solid var(--line);
   display:grid;gap:clamp(1.2rem,3vw,2rem);
+  perspective:1200px;
 }
 .lp-band-txt{max-width:38rem}
 .lp-band-txt h3{font-size:clamp(1.5rem,2.9vw,2.1rem);font-weight:700;letter-spacing:-.025em;line-height:1.12;margin:.6rem 0 .6rem}
 .lp-band-txt h3 em{font-style:normal}
+/* Même coque de tablette que les rangées, mais inclinée façon diapo :
+   le haut penche vers l'arrière et se redresse au survol. */
 .lp-band-pic{
-  margin:0;border-radius:16px;overflow:hidden;border:1px solid var(--line);
-  background:var(--surface);box-shadow:0 26px 60px -28px rgba(12,22,32,.5);
-  transition:transform .4s cubic-bezier(.2,.7,.3,1),box-shadow .4s;
+  margin:0;border-radius:clamp(18px,2.2vw,26px);overflow:hidden;
+  background:linear-gradient(150deg,#263442,#0E1720 55%,#1B2836);
+  border:1px solid rgba(255,255,255,.16);
+  padding:clamp(.5rem,1vw,.75rem);
+  box-shadow:0 1px 0 rgba(255,255,255,.2) inset,0 26px 60px -28px rgba(12,22,32,.5);
+  transform:rotateX(5deg) scale(.99);transform-origin:top center;
+  transition:transform .45s cubic-bezier(.2,.7,.3,1),box-shadow .4s;
 }
-.lp-band-pic img{display:block;width:100%;height:auto}
-@media (hover:hover){.lp-band-pic:hover{transform:translateY(-5px);box-shadow:0 38px 80px -30px color-mix(in srgb,var(--ac) 40%,rgba(12,22,32,.55))}}
+.lp-band-pic img{display:block;width:100%;height:auto;border-radius:clamp(11px,1.4vw,16px)}
+@media (hover:hover){.lp-band-pic:hover{transform:rotateX(0deg) scale(1) translateY(-5px);box-shadow:0 1px 0 rgba(255,255,255,.2) inset,0 38px 80px -30px color-mix(in srgb,var(--ac) 40%,rgba(12,22,32,.55))}}
+@media (max-width:860px){.lp-band{perspective:none}.lp-band-pic{transform:none}}
 .lp-band.noimg .lp-band-pic{display:none}
 
 /* ═══ Bandes sombres : la rupture qui aère ════════════════════════ */
@@ -2567,7 +2604,7 @@ a,button{touch-action:manipulation}
                 <span class="lg"></span>
                 <span class="ln on"></span><span class="ln w7"></span><span class="ln w6"></span>
                 <span class="ln w8"></span><span class="ln w5"></span>
-                <span class="dotrow"><i style="background:#3FA457"></i><i style="background:#2E7CD6"></i><i style="background:#E8912B"></i><i style="background:#D9539B"></i></span>
+                <span class="dotrow"><i style="background:#1C3D5D"></i><i style="background:#3A6EA5"></i><i style="background:#7FA8CF"></i><i style="background:#DE9038"></i></span>
               </aside>
               <div>
                 <div class="lp-hello"><b>Salut, Alex !</b><span>jeu. 20 août · session A26</span><em>Semaine suivante</em></div>
@@ -2588,10 +2625,10 @@ a,button{touch-action:manipulation}
                   </div>
                   <div class="c">
                     <span class="t">Échéances</span>
-                    <div class="row"><i style="background:#E0483A"></i><div><b>Questionnaire médical</b><span class="cd" style="color:#C4392C">Dans 6 jours</span></div></div>
-                    <div class="row"><i style="background:#E8912B"></i><div><b>Actualité géographique 1</b><span class="cd" style="color:#A2620F">Dans 8 jours</span></div></div>
-                    <div class="row"><i style="background:#3FA457"></i><div><b>Examen 1 · Philo</b><span class="cd" style="color:#2E7D45">Dans 25 jours</span></div></div>
-                    <div class="row"><i style="background:#3A6EA5"></i><div><b>Rapport de laboratoire</b><span class="cd" style="color:#1C3D5D">Dans 32 jours</span></div></div>
+                    <div class="row"><i style="background:#DE9038"></i><div><b>Questionnaire médical</b><span class="cd" style="color:#A2620F">Dans 6 jours</span></div></div>
+                    <div class="row"><i style="background:#3A6EA5"></i><div><b>Actualité géographique 1</b><span class="cd" style="color:var(--dim)">Dans 8 jours</span></div></div>
+                    <div class="row"><i style="background:#7FA8CF"></i><div><b>Examen 1 · Philo</b><span class="cd" style="color:var(--dim)">Dans 25 jours</span></div></div>
+                    <div class="row"><i style="background:#7FA8CF"></i><div><b>Rapport de laboratoire</b><span class="cd" style="color:var(--dim)">Dans 32 jours</span></div></div>
                   </div>
                 </div>
               </div>
@@ -9733,6 +9770,59 @@ a,button{touch-action:manipulation}
         bg.classList.add("live");
       });
     }, { passive: true });
+  })();
+
+  /* Héro en perspective : la maquette arrive couchée (10°) et se redresse à
+     mesure qu'elle monte vers le centre de l'écran — l'effet « diapo » des
+     pages produit. Le pointeur ajoute ±3° de pivot et fait glisser les
+     pastilles flottantes à contre-sens : la profondeur, sans une lib de 3D.
+     Sur mobile et en mouvement réduit, le CSS fige tout ; ici on n'arme
+     alors même pas les écouteurs. */
+  (() => {
+    const shot = document.querySelector(".lp-shot");
+    if (!shot || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const etroit = matchMedia("(max-width: 860px)");
+
+    let attente = false;
+    const poser = () => {
+      attente = false;
+      if (etroit.matches) return;
+      const r = shot.getBoundingClientRect(), h = innerHeight || 1;
+      // 1 quand la maquette entre par le bas, 0 rendue à 38 % de l'écran.
+      const p = Math.min(1, Math.max(0, (r.top - h * .38) / (h * .55)));
+      shot.style.setProperty("--bascule", (p * 10).toFixed(2) + "deg");
+      shot.style.setProperty("--pose", (1 - p * .02).toFixed(4));
+    };
+    const demander = () => { if (!attente) { attente = true; requestAnimationFrame(poser); } };
+    addEventListener("scroll", demander, { passive: true });
+    addEventListener("resize", demander, { passive: true });
+    demander();
+
+    if (!matchMedia("(pointer:fine)").matches) return;
+    let attente2 = false, dx = 0, dy = 0;
+    shot.addEventListener("pointermove", (e) => {
+      const r = shot.getBoundingClientRect();
+      dx = ((e.clientX - r.left) / r.width) * 2 - 1;
+      dy = ((e.clientY - r.top) / r.height) * 2 - 1;
+      if (attente2) return;
+      attente2 = true;
+      requestAnimationFrame(() => {
+        attente2 = false;
+        if (etroit.matches) return;
+        shot.classList.add("vif");
+        shot.style.setProperty("--ty", (dx * 3).toFixed(2) + "deg");
+        shot.style.setProperty("--tx", (dy * -2.4).toFixed(2) + "deg");
+        shot.style.setProperty("--mx", dx.toFixed(3));
+        shot.style.setProperty("--my", dy.toFixed(3));
+      });
+    }, { passive: true });
+    shot.addEventListener("pointerleave", () => {
+      shot.classList.remove("vif");
+      shot.style.setProperty("--ty", "0deg");
+      shot.style.setProperty("--tx", "0deg");
+      shot.style.setProperty("--mx", "0");
+      shot.style.setProperty("--my", "0");
+    });
   })();
 })();
 </script>
