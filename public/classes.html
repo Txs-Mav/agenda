@@ -574,6 +574,7 @@ a,button{touch-action:manipulation}
   </div>
 </div>
 
+<script src="/config.js"></script>
 <script>
 (() => {
   "use strict";
@@ -655,7 +656,19 @@ a,button{touch-action:manipulation}
      enregistrement et pourrait reprendre le dessus. On y perdrait une
      préférence, jamais une donnée — c'est le prix de la barre commune,
      et c'est déjà ce qui arrive entre deux onglets d'agenda. */
-  const PREF = "agenda.v5";
+  /* L'agenda cloisonne désormais son sac PAR COMPTE : « agenda.v5.<uid> »,
+     et « agenda.v5 » tout court sans compte. On refait sa résolution — à la
+     main, la session se lit plus bas (SB_STORE/SB_COOKIE, mêmes noms) : le
+     sac du compte s'il existe, sinon le sac anonyme. */
+  const uidPref = (() => {
+    try { const s = JSON.parse(localStorage.getItem("agenda.sb")); if (s?.uid) return s.uid; } catch {}
+    try {
+      const v = document.cookie.split("; ").find(c => c.startsWith("agenda_sess="))?.slice(12);
+      return (v ? JSON.parse(decodeURIComponent(v)) : null)?.uid || "";
+    } catch { return ""; }
+  })();
+  const PREF = uidPref && localStorage.getItem(`agenda.v5.${uidPref}`) != null
+    ? `agenda.v5.${uidPref}` : "agenda.v5";
   const prefLire = () => { try { return JSON.parse(localStorage.getItem(PREF)) || {}; } catch { return {}; } };
   const prefEcrire = (cle, val) => {
     try { localStorage.setItem(PREF, JSON.stringify({ ...prefLire(), [cle]: val })); } catch {}
@@ -722,8 +735,8 @@ a,button{touch-action:manipulation}
   }
 
   /* ── Session : la même que l'agenda, jamais une deuxième. ──────── */
-  const SB_URL = "https://olkbhrbyubejetqygdcy.supabase.co";
-  const SB_KEY = "sb_publishable_3aYnT7wlRlEEzraSpmgbVA_WytRBC3X";
+  const SB_URL = AGENDA_CONFIG.supabaseUrl;
+  const SB_KEY = AGENDA_CONFIG.supabaseCleAnon;
   const SB_STORE = "agenda.sb";
   const SB_COOKIE = "agenda_sess";
 

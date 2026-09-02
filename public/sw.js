@@ -1,12 +1,16 @@
 /* Réseau d'abord pour la page et les données (un nouveau déploiement arrive
    sans purge), cache d'abord pour les icônes. L'app reste utilisable hors
    ligne — dernier horaire et dernières données compris. */
-const CACHE = "agenda-v9";
-const ASSETS = ["/", "/icon.svg", "/icon-180.png", "/icon-192.png", "/icon-512.png", "/manifest.webmanifest"];
+importScripts("/config.js");
 
-/* La clé VAPID publique — la même que dans agenda.html. Elle est publique par
-   conception ; si la paire change, les deux copies changent ensemble. */
-const PUSH_PUB = "BIHAtHD8DrfmZAN_IRBhSi-LXS_ce0SEM0RzgS30avrEDFPygWXwYeIlRdlF1X5fkFNvfYhMjx0tGHrj-4bYOns";
+/* /config.js est précaché et servi cache d'abord : si la config d'instance
+   change, ce bump de CACHE doit suivre, sinon l'ancienne copie reste servie. */
+const CACHE = "agenda-v10";
+const ASSETS = ["/", "/config.js", "/icon.svg", "/icon-180.png", "/icon-192.png", "/icon-512.png", "/manifest.webmanifest"];
+
+/* La clé VAPID publique vit dans /config.js — la même que pour la page. Elle
+   est publique par conception ; la privée ne quitte jamais le .env. */
+const PUSH_PUB = AGENDA_CONFIG.vapidClePublique;
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));

@@ -9,24 +9,26 @@
  * collecte peut appeler envoyerPush() quand elle rapporte du neuf — c'est le
  * point d'accroche prévu.
  *
- * La clé VAPID publique vit aussi en dur dans agenda.html et public/sw.js ;
- * si la paire change, ces deux copies doivent suivre, et chaque appareil
- * devra se réabonner (éteindre puis rallumer les rappels).
+ * La clé VAPID publique vit dans public/config.js, comme pour les pages et
+ * le service worker ; si la paire change, chaque appareil devra se réabonner
+ * (éteindre puis rallumer les rappels).
  */
-import "../config.js";   // effet de bord : charge le .env (clés VAPID, compte)
+import "../config.js";   // effet de bord : charge le .env (clé VAPID privée, compte)
 import webpush from "web-push";
 import { sessionAgenda } from "../sync/supabase.js";
 import { log } from "../log.js";
+import { INSTANCE } from "../instance.js";
 
-const URL_ = process.env.SUPABASE_URL || "https://olkbhrbyubejetqygdcy.supabase.co";
-const KEY = process.env.SUPABASE_ANON_KEY || "sb_publishable_3aYnT7wlRlEEzraSpmgbVA_WytRBC3X";
+const URL_ = process.env.SUPABASE_URL || INSTANCE.supabaseUrl;
+const KEY = process.env.SUPABASE_ANON_KEY || INSTANCE.supabaseCleAnon;
 
 type Sub = { id: string; endpoint: string; p256dh: string; auth: string };
 
 function vapidPret(): boolean {
-  const pub = process.env.VAPID_PUBLIC_KEY, priv = process.env.VAPID_PRIVATE_KEY;
+  const pub = INSTANCE.vapidClePublique || process.env.VAPID_PUBLIC_KEY;
+  const priv = process.env.VAPID_PRIVATE_KEY;
   if (!pub || !priv) {
-    log.error("Clés VAPID absentes du .env — npx web-push generate-vapid-keys, puis remplis VAPID_PUBLIC_KEY et VAPID_PRIVATE_KEY.");
+    log.error("Clé VAPID manquante — npx web-push generate-vapid-keys, puis la publique dans public/config.js et la privée dans .env (VAPID_PRIVATE_KEY).");
     return false;
   }
   webpush.setVapidDetails(process.env.VAPID_SUBJECT || "mailto:mavmenard@gmail.com", pub, priv);

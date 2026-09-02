@@ -1,5 +1,6 @@
 import { log } from "../log.js";
 import { registerSecret } from "../redact.js";
+import { INSTANCE } from "../instance.js";
 
 /**
  * Pont avec le compte d'agenda de L'UTILISATEUR (courriel + mot de passe
@@ -10,8 +11,8 @@ import { registerSecret } from "../redact.js";
  * RLS côté base : chacun ne peut écrire et lire que ses propres lignes.
  * Entièrement facultatif : sans les variables, on saute en silence.
  */
-const URL_ = process.env.SUPABASE_URL || "https://olkbhrbyubejetqygdcy.supabase.co";
-const KEY = process.env.SUPABASE_ANON_KEY || "sb_publishable_3aYnT7wlRlEEzraSpmgbVA_WytRBC3X";
+const URL_ = process.env.SUPABASE_URL || INSTANCE.supabaseUrl;
+const KEY = process.env.SUPABASE_ANON_KEY || INSTANCE.supabaseCleAnon;
 
 type Sess = { token: string; uid: string; email: string };
 /** undefined = pas encore tenté ; null = pas de compte configuré, ou refus. */

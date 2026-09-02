@@ -112,9 +112,16 @@ const manquants = [...new Set([...pop.matchAll(/el\("([a-z-]+)"\)/g)].map((m) =>
   .filter((i) => !ids.has(i));
 ok(`${ids.size} champs du popup, tous présents`, manquants.length === 0, manquants.join(", "));
 
+// L'URL du compte vit dans config.js — une copie de public/config.js, que
+// ext:zip rafraîchit. Une copie qui dérive enverrait la collecte ailleurs.
+const conf = lire("config.js");
+ok("config.js est la copie exacte de public/config.js",
+  conf === readFileSync(join(ICI, "..", "public", "config.js"), "utf8"),
+  "cp public/config.js extension/config.js");
+
 // Le manifeste doit permettre d'atteindre le compte, sinon la poussée échoue
 // en silence sur un mur CORS.
-const sbUrl = /const SB_URL = "([^"]+)"/.exec(bg)?.[1] ?? "";
+const sbUrl = /supabaseUrl: "([^"]+)"/.exec(conf)?.[1] ?? "";
 ok("le compte est joignable depuis le manifeste",
   manifest.host_permissions.some((h) => sbUrl && h.startsWith(sbUrl)),
   `${sbUrl} absent de host_permissions`);

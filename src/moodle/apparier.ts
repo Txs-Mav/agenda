@@ -22,9 +22,10 @@
 import { lireJeton, MOODLE_HOST } from "./api.js";
 import { sessionAgenda } from "../sync/supabase.js";
 import { log } from "../log.js";
+import { INSTANCE } from "../instance.js";
 
-const URL_ = process.env.SUPABASE_URL || "https://olkbhrbyubejetqygdcy.supabase.co";
-const KEY = process.env.SUPABASE_ANON_KEY || "sb_publishable_3aYnT7wlRlEEzraSpmgbVA_WytRBC3X";
+const URL_ = process.env.SUPABASE_URL || INSTANCE.supabaseUrl;
+const KEY = process.env.SUPABASE_ANON_KEY || INSTANCE.supabaseCleAnon;
 
 export async function apparier(): Promise<void> {
   const j = lireJeton();

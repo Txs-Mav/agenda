@@ -420,6 +420,7 @@ body{padding-bottom:4.5rem !important}
   body{padding-bottom:5rem !important}
 }
 </style>
+<script src="/config.js"></script>
 <script>
 /* ── DÉMO — ce fichier n'est pas l'application. C'est public/classes.html
    rejoué contre un faux serveur, pour parcourir tous les états de la
@@ -605,8 +606,8 @@ body{padding-bottom:4.5rem !important}
   }
 
   /* ── Session : la même que l'agenda, jamais une deuxième. ──────── */
-  const SB_URL = "https://olkbhrbyubejetqygdcy.supabase.co";
-  const SB_KEY = "sb_publishable_3aYnT7wlRlEEzraSpmgbVA_WytRBC3X";
+  const SB_URL = AGENDA_CONFIG.supabaseUrl;
+  const SB_KEY = AGENDA_CONFIG.supabaseCleAnon;
   const SB_STORE = "agenda.sb";
   const sbSession = () => { try { return JSON.parse(localStorage.getItem(SB_STORE)) || null; } catch { return null; } };
   const sbSave = s => localStorage.setItem(SB_STORE, JSON.stringify(s));

@@ -16,7 +16,7 @@
     "typecheck": "tsc --noEmit",
     "moodle-apparier": "tsx src/moodle/apparier.ts",
     "ext:verifier": "node extension/verifier.mjs && node extension/banc.mjs",
-    "ext:zip": "npm run ext:verifier && cd extension && rm -f ../agenda-collecteur.zip && zip -qr ../agenda-collecteur.zip . -x '*.DS_Store' 'verifier.mjs' 'banc.mjs' 'README.md' && echo 'agenda-collecteur.zip prêt pour le Chrome Web Store'"
+    "ext:zip": "cp public/config.js extension/config.js && npm run ext:verifier && cd extension && rm -f ../agenda-collecteur.zip && zip -qr ../agenda-collecteur.zip . -x '*.DS_Store' 'verifier.mjs' 'banc.mjs' 'README.md' && echo 'agenda-collecteur.zip prêt pour le Chrome Web Store'"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

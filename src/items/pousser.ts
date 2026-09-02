@@ -12,10 +12,11 @@
  */
 import { sessionAgenda } from "../sync/supabase.js";
 import { log } from "../log.js";
+import { INSTANCE } from "../instance.js";
 import type { Item } from "./modele.js";
 
-const URL_ = process.env.SUPABASE_URL || "https://olkbhrbyubejetqygdcy.supabase.co";
-const KEY = process.env.SUPABASE_ANON_KEY || "sb_publishable_3aYnT7wlRlEEzraSpmgbVA_WytRBC3X";
+const URL_ = process.env.SUPABASE_URL || INSTANCE.supabaseUrl;
+const KEY = process.env.SUPABASE_ANON_KEY || INSTANCE.supabaseCleAnon;
 
 /** Au-delà, PostgREST commence à peiner et une coupure perd tout le lot. */
 const LOT = 200;

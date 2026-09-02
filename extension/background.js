@@ -17,14 +17,16 @@
  * hachage que le scraper, donc aucun doublon entre les deux collecteurs.
  */
 "use strict";
-importScripts("parsers.js");
+importScripts("config.js", "parsers.js");
 
 const MAX_MIOS = 200;
 
 /* Le compte d'AGENDA — pas Omnivox. Mêmes clés publiques que le tableau de
-   bord, et mêmes règles RLS : chacun n'écrit que ses propres lignes. */
-const SB_URL = "https://olkbhrbyubejetqygdcy.supabase.co";
-const SB_KEY = "sb_publishable_3aYnT7wlRlEEzraSpmgbVA_WytRBC3X";
+   bord, et mêmes règles RLS : chacun n'écrit que ses propres lignes.
+   config.js est une copie de public/config.js (rafraîchie par ext:zip) ;
+   host_permissions du manifest.json répète l'URL, à changer avec elle. */
+const SB_URL = AGENDA_CONFIG.supabaseUrl;
+const SB_KEY = AGENDA_CONFIG.supabaseCleAnon;
 
 /* ---- Stockage ------------------------------------------------------------ */
 

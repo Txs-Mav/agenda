@@ -2243,6 +2243,17 @@ a,button{touch-action:manipulation}
             <button class="link" id="add-week2" hidden>Ajouter une semaine <svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button>
             <button class="link" id="h-reset" hidden></button>
             <button class="link" id="h-mode"></button></div>
+          <!-- Une grille vide ne dit pas d'elle-même qu'il manque quelque
+               chose : sans horaire importé, elle ressemble à une semaine de
+               congé. Ce bandeau lève l'ambiguïté et dit par où passer. -->
+          <section class="card fx" id="h-vide" hidden>
+            <div class="emptybox">
+              <svg class="i" viewBox="0 0 24 24" style="width:22px;height:22px"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17M8 2.5v4M16 2.5v4"/></svg>
+              <b>Ton horaire n'est pas encore là</b>
+              <span>Rien n'a encore été importé sur ce compte. Le guide d'installation montre comment le faire entrer — par Omnivox, par Moodle ou par une photo.</span>
+              <button class="link" id="h-vide-go" style="margin-top:.4rem">Ouvrir le guide d'installation</button>
+            </div>
+          </section>
           <div class="stack" id="weeks"></div>
         </div>
     </div>
@@ -2922,12 +2933,45 @@ a,button{touch-action:manipulation}
   </div>
 </div>
 
+<script src="/config.js"></script>
 <script>
 (() => {
   "use strict";
 
   const START_HOUR = 8, END_HOUR = 18;
-  const KEY = "agenda.v5";
+  /* ── À qui est ce sac ? ──────────────────────────────────────────
+     L'état vit sous UNE clé PAR COMPTE : « agenda.v5.<uid> », et
+     « agenda.v5 » tout court pour le travail sans compte — c'est aussi la
+     clé historique d'avant ce cloisonnement. Sans lui, deux comptes sur le
+     même appareil lisaient le même agenda, et le premier connecté poussait
+     les données de l'autre dans SON nuage. La session se relit ici à la
+     main : les helpers Supabase n'existent que bien plus bas, mais les noms
+     (« agenda.sb », « agenda_sess ») sont les mêmes que SB_STORE et
+     SB_COOKIE, déclarés près d'eux. */
+  const KEY_ANON = "agenda.v5";
+  /* Posée quand le sac commun d'avant le cloisonnement attend encore son
+     propriétaire : une inscription faite entre-temps ne doit pas l'emporter. */
+  const MARQUE_ANCIEN = "agenda.v5.ancien";
+  const uidStocke = () => {
+    try { const s = JSON.parse(localStorage.getItem("agenda.sb")); if (s?.uid) return s.uid; } catch {}
+    try {
+      const v = document.cookie.split("; ").find(c => c.startsWith("agenda_sess="))?.slice(12);
+      return (v ? JSON.parse(decodeURIComponent(v)) : null)?.uid || "";
+    } catch { return ""; }
+  };
+  const cleDe = uid => uid ? `${KEY_ANON}.${uid}` : KEY_ANON;
+  let KEY = cleDe(uidStocke());
+  /* Compte au boot, pas encore de sac à son nom, mais le sac commun est là :
+     on le relit SANS le lui donner — le nuage dira s'il est à lui (voir
+     resoudreProprio, plus bas). Tant que ce n'est pas tranché, RIEN ne
+     monte au nuage : les écritures sont retenues par ce drapeau. */
+  let proprioIncertain = false;
+  if (KEY !== KEY_ANON && localStorage.getItem(KEY) == null
+      && localStorage.getItem(KEY_ANON) != null) {
+    KEY = KEY_ANON;
+    proprioIncertain = true;
+    try { localStorage.setItem(MARQUE_ANCIEN, "1"); } catch {}
+  }
   const DOW = ["lun","mar","mer","jeu","ven","sam","dim"];
   const DL  = ["L","M","M","J","V","S","D"];
   const DOW_FULL = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
@@ -2935,28 +2979,16 @@ a,button{touch-action:manipulation}
   const HUES = [150,190,222,264,312,344,22,48];
   const SEMESTER_START = new Date(2026, 7, 24);
 
-  const DEFAULT_TT = [
-    {d:0,h:[12,14],time:"12:00 – 13:50",t:"Philo. rationnelle",k:"TH",code:"340-113-RI",room:"HA3325",prof:"Cinq-Mars, L"},
-    {d:0,h:[14,15],time:"14:00 – 14:50",t:"Philo. rationnelle",k:"LA",code:"340-113-RI",room:"HA3325",prof:"Cinq-Mars, L"},
-    {d:0,h:[16,18],time:"16:00 – 17:45",t:"Calcul différentiel",k:"TH",code:"201-124-RI",room:"HC1165",prof:"Gagnon, F"},
-    {d:1,h:[8,10], time:"08:00 – 09:50",t:"Écriture et litt.",k:"TH",code:"601-114-RI",room:"HA3370",prof:"Morissette, J"},
-    {d:1,h:[10,11],time:"10:00 – 10:50",t:"Cond. physique",k:"TH",code:"109-511-10",room:"HE1040",prof:"Lesage-Moussa"},
-    {d:1,h:[11,12],time:"11:00 – 11:50",t:"Cond. physique",k:"LA",code:"109-511-10",room:"HE1040",prof:"Lesage-Moussa"},
-    {d:1,h:[14,15],time:"14:00 – 14:50",t:"Bio. molécu. écosys.",k:"TH",code:"101-115-RI",room:"SA3075",prof:"Alexander, E"},
-    {d:1,h:[16,18],time:"16:00 – 17:45",t:"Sociologie",k:"TH",code:"387-114-RI",room:"SD2335",prof:"Letarte, J"},
-    {d:2,h:[8,10], time:"08:00 – 09:50",t:"Calcul différentiel",k:"LA",code:"201-124-RI",room:"HC2020",prof:"Gagnon, F"},
-    {d:2,h:[10,11],time:"10:00 – 10:50",t:"Calcul différentiel",k:"AP",code:"201-124-RI",room:"HC2020",prof:"Gagnon, F"},
-    {d:2,h:[15,18],time:"15:00 – 17:45",t:"Conférences",k:"",code:"",room:"",prof:""},
-    {d:3,h:[10,12],time:"10:00 – 11:50",t:"Bio. molécu. écosys.",k:"TH",code:"101-115-RI",room:"SA3105 / SA3140",prof:"Alexander, E · Colbert, M"},
-    {d:3,h:[13,15],time:"13:00 – 14:50",t:"Écriture et litt.",k:"LA",code:"601-114-RI",room:"HA3370",prof:"Morissette, J"},
-    {d:3,h:[16,18],time:"16:00 – 17:45",t:"Sociologie",k:"LA",code:"387-114-RI",room:"HA3230",prof:"Letarte, J"},
-    {d:4,h:[8,10], time:"08:00 – 09:50",t:"Bio. molécu. écosys.",k:"LA",code:"101-115-RI",room:"SA3035",prof:"Alexander, E · Colbert, M"},
-    {d:4,h:[12,14],time:"12:00 – 13:50",t:"Enj. géogr. aujourd'hui",k:"TH",code:"320-123-RI",room:"HA3380",prof:"Mathis, M"},
-    {d:4,h:[14,15],time:"14:00 – 14:50",t:"Enj. géogr. aujourd'hui",k:"LA",code:"320-123-RI",room:"HA3380",prof:"Mathis, M"},
-    {d:4,h:[15,17],time:"15:00 – 16:50",t:"Bio. molécu. écosys.",k:"AP",code:"101-115-RI",room:"",prof:"Alexander, E · Colbert, M"},
-  ];
-  /* L'horaire est une donnée, plus une constante : il peut venir d'une photo
-     lue par l'agent (npm run horaire), du nuage, ou du repli intégré. */
+  /* Vide par conception. Un horaire est la donnée la plus personnelle de
+     l'agenda : cours, locaux, noms de profs. Celui d'un compte ne peut pas
+     servir de repli à tous les autres — un nouveau venu verrait la semaine
+     de quelqu'un d'autre et la croirait sienne. Tant que rien n'est importé
+     (photo lue par l'agent, nuage, extension), la grille reste vide et le
+     dit. */
+  const DEFAULT_TT = [];
+  /* L'horaire est une donnée, jamais une constante : il vient d'une photo
+     lue par l'agent (npm run horaire), du nuage, ou de l'extension — et de
+     nulle part ailleurs. */
   let BASE_TT = DEFAULT_TT, TT = DEFAULT_TT, byDay = new Map(), COURSES = [], hues = new Map();
   function rebuildTT() {
     byDay = new Map();
@@ -3201,12 +3233,10 @@ a,button{touch-action:manipulation}
        semaine — local changé une fois, cours annulé, séance devenue examen.
        Elles se posent par-dessus les précédentes. Voir setDayEdit. */
     ttDays: {},
-    todos: [
-      { id:"g1", t:"Réviser le labo de Calcul différentiel", done:false, lvl:0 },
-      { id:"g2", t:"Relire les chapitres 1 à 4 de philo", done:false, lvl:1 },
-      { id:"g3", t:"Lire le chapitre de Sociologie", done:true, lvl:0 },
-      { id:"g4", t:"Repérer le local HA3370", done:false, lvl:0 },
-    ],
+    /* Vides comme les échéances : la liste appartient à celui qui l'écrit.
+       Des exemples tirés d'une vraie session donneraient à un nouveau venu
+       les cours d'un autre pour première impression. */
+    todos: [],
     /* Fiches de matière : infos saisies à la main et notes, par cours.
        Indexées par sigle quand il existe — un horaire relu sur photo peut
        renommer « Philo. rationnelle », le sigle, lui, ne bouge pas. */
@@ -4203,6 +4233,8 @@ a,button{touch-action:manipulation}
      qui parcourt l'horaire (export .ics, ajout de bloc) passe par ici. */
   const shownWeeks = () => state.wview === "pile" ? state.wks : [state.wcur];
 
+  el("h-vide-go")?.addEventListener("click", () => { location.href = "guide.html"; });
+
   /* dir : -1 vers le passé, +1 vers l'avenir, 0 (ou rien) sans glissement. */
   function renderWeeks(dir) {
     host.textContent = "";
@@ -4214,6 +4246,9 @@ a,button{touch-action:manipulation}
       host.append(card);
     }
     syncWeekBar();
+    /* Grille vide = horaire jamais importé, pas semaine de relâche : on le
+       dit, sinon un compte neuf croit l'app cassée. */
+    const vide = el("h-vide"); if (vide) vide.hidden = TT.length > 0;
     placeNow(); renderWidget(); save();
   }
 
@@ -5265,7 +5300,7 @@ a,button{touch-action:manipulation}
      dans agenda_push_subs — un par appareil — et l'émetteur (npm run push)
      sait alors rejoindre l'appareil même app fermée. Tout est best-effort :
      aucun échec ici ne doit toucher aux rappels locaux. */
-  const PUSH_PUB = "BIHAtHD8DrfmZAN_IRBhSi-LXS_ce0SEM0RzgS30avrEDFPygWXwYeIlRdlF1X5fkFNvfYhMjx0tGHrj-4bYOns";
+  const PUSH_PUB = AGENDA_CONFIG.vapidClePublique;
   let pushOk = false;
   const b64ToU8 = s => {
     const pad = "=".repeat((4 - s.length % 4) % 4);
@@ -5606,7 +5641,7 @@ a,button{touch-action:manipulation}
      dort : rien ne casse, rien ne part. */
   let cloudDirty = new Map(), cloudT = 0;
   function cloudMark(c, id) {
-    if (!sbSession()) return;
+    if (!sbSession() || proprioIncertain) return;
     cloudDirty.set(id, c);
     clearTimeout(cloudT); cloudT = setTimeout(cloudFlush, 1500);
   }
@@ -5705,7 +5740,9 @@ a,button{touch-action:manipulation}
   const tsDe = s => Date.parse(s || 0) || 0;
   let cloudPullEnCours = false, cloudDepuis = "";
   async function cloudPagesPull(complet = true) {
-    if (cloudPullEnCours || !sbSession()) return;
+    /* Sac en attente d'attribution : ne pas y verser les pages d'un compte
+       qui ne le possédera peut-être jamais. */
+    if (cloudPullEnCours || !sbSession() || proprioIncertain) return;
     cloudPullEnCours = true;
     try {
       await pgHydrated;   // comparer des pages hydratées, jamais des coquilles
@@ -7169,6 +7206,11 @@ a,button{touch-action:manipulation}
      toute la classe édite, pas un calque à moi. On complète, on n'écrase
      jamais : ce que la classe a déjà écrit reste au-dessus. */
   async function sbApi(pathQ, init = {}, retry = true) {
+    /* Sac pas encore attribué (voir proprioIncertain, tout en haut) : lire,
+       oui — écrire, jamais. C'est CE verrou qui empêche les données d'un
+       ancien compte de monter dans le nuage d'un nouveau. */
+    if (proprioIncertain && (init.method || "GET") !== "GET")
+      throw new Error("Compte pas encore réconcilié — réessaie dans un instant.");
     const at = await sbJeton();
     /* Pas de jeton, deux causes bien différentes : ou bien il n'y a plus de
        session — sbRenew a déjà ramené à la connexion — ou bien le réseau
@@ -7189,6 +7231,10 @@ a,button{touch-action:manipulation}
   /* Le stockage de fichiers, mêmes clefs et même politesse que sbApi — mais
      on rend la réponse brute : ici circulent des images, pas du JSON. */
   async function sbStore(pathQ, init = {}, retry = true) {
+    /* Même verrou que sbApi : tant que le sac n'a pas de propriétaire
+       certain, rien ne s'écrit — pas même une image. */
+    if (proprioIncertain && (init.method || "GET") !== "GET")
+      throw new Error("Compte pas encore réconcilié — réessaie dans un instant.");
     const at = await sbJeton();
     if (!at) throw new Error(sbSession() ? "Pas de réseau — réessaie dans un instant." : "pas de session");
     const r = await fetch(`${SB_URL}/storage/v1/${pathQ}`, { ...init,
@@ -8222,8 +8268,8 @@ a,button{touch-action:manipulation}
      Le compte d'agenda (courriel + mot de passe) n'a RIEN à voir avec les
      identifiants Omnivox : il ne sert qu'à retrouver ses données dérivées.
      RLS côté base : chaque compte ne voit que ses lignes. */
-  const SB_URL = "https://olkbhrbyubejetqygdcy.supabase.co";
-  const SB_KEY = "sb_publishable_3aYnT7wlRlEEzraSpmgbVA_WytRBC3X";
+  const SB_URL = AGENDA_CONFIG.supabaseUrl;
+  const SB_KEY = AGENDA_CONFIG.supabaseCleAnon;
   const SB_STORE = "agenda.sb";
   const SB_COOKIE = "agenda_sess";
 
@@ -8283,6 +8329,10 @@ a,button{touch-action:manipulation}
     [/unable to validate email/i, "Ce courriel n'a pas l'air valide."],
     [/user already registered|already been registered/i, "Ce courriel a déjà un compte — connecte-toi plutôt."],
     [/email not confirmed/i, "Confirme d'abord le code reçu par courriel."],
+    /* Le serveur de courriels a refusé l'envoi : Supabase annule alors toute
+       l'inscription. Rien n'existe à moitié — le dire évite d'aller attendre
+       un code, puis de croire son compte pris au moment de recommencer. */
+    [/error sending/i, "L'envoi du courriel a échoué côté serveur — ton compte n'a pas été créé. Réessaie plus tard."],
     [/password should be at least/i, "Mot de passe trop court : au moins 8 caractères."],
     [/only request this after (\d+)/i, "Trop de tentatives d'affilée. Attends une minute."],
     [/token has expired|otp.*expired|expired.*otp/i, "Code expiré — demande-en un nouveau."],
@@ -8302,7 +8352,10 @@ a,button{touch-action:manipulation}
     return m;
   };
 
-  const sbKeep = (d) => { sbSave({ at: d.access_token, rt: d.refresh_token, uid: d.user?.id, email: d.user?.email }); };
+  /* Le nom voyage avec la session : quand un compte vierge démarre son sac
+     (sacNeuf), il n'y a plus personne pour rappeler adopteNom après le
+     redémarrage — le sac naît donc avec ce nom-là. */
+  const sbKeep = (d) => { sbSave({ at: d.access_token, rt: d.refresh_token, uid: d.user?.id, email: d.user?.email, nom: nomDuCompte(d) }); };
 
   /* Un seul rafraîchissement à la fois. Supabase fait tourner le jeton de
      rafraîchissement à chaque échange : deux appels partis ensemble avec le
@@ -8371,6 +8424,7 @@ a,button{touch-action:manipulation}
      RLS que la lecture ; « merge-duplicates » remplace la ligne du même genre
      (clé primaire user_id + kind) au lieu d'en empiler une seconde. */
   async function sbPut(kind, payload, retry = true) {
+    if (proprioIncertain) return false;   // même verrou que sbApi
     const at = await sbJeton(), s0 = sbSession();
     if (!at || !s0?.uid) return false;
     const r = await fetch(`${SB_URL}/rest/v1/agenda_snapshots`, {
@@ -8465,7 +8519,7 @@ a,button{touch-action:manipulation}
   }
 
   function sbPushGone() {
-    if (!sbSession()) return;
+    if (!sbSession() || proprioIncertain) return;
     clearTimeout(goneTimer);
     goneTimer = setTimeout(() => { sbPut("suppressions", { v:1, gone: state.gone }).catch(() => {}); }, 800);
   }
@@ -8497,9 +8551,84 @@ a,button{touch-action:manipulation}
     autoApply();
     refreshAll();
   }
+  /* ── Un sac par compte : les déménagements ───────────────────────
+     L'état local vit sous une clé par uid (voir KEY, tout en haut). Voici
+     les seuls déménagements permis : à l'entrée en session, à l'inscription,
+     à la sortie, et au moment — une seule fois — où le sac commun d'avant le
+     cloisonnement trouve son propriétaire. Le nuage sert d'arbitre : un
+     compte qui y a déjà des instantanés est chez lui ici ; un compte vierge
+     démarre vierge, et le sac d'ici reste à qui l'a rempli. */
+  /* Changer de sac, c'est repartir du haut du fichier : la résolution de
+     KEY au boot refait tout le travail — aucun état à moitié basculé.
+     location.reload() n'arrête pas le code en cours : le drapeau, si. */
+  let sacRepart = false;
+  function sacRedemarre() { sacRepart = true; save(); location.reload(); }
+  /* L'adoption : le sac courant change d'adresse, pas de contenu. Seul le
+     sac ANONYME s'adopte — celui d'un autre compte, jamais. */
+  function sacAdopte(uid) {
+    proprioIncertain = false;
+    const cle = cleDe(uid);
+    if (cle === KEY || KEY !== KEY_ANON) return;
+    save();
+    try {
+      const brut = localStorage.getItem(KEY);
+      if (brut != null) localStorage.setItem(cle, brut);
+      localStorage.removeItem(KEY_ANON);
+      localStorage.removeItem(MARQUE_ANCIEN);
+    } catch {}
+    KEY = cle;
+  }
+  /* Un compte qui démarre à vide : son sac naît avec le nom du compte pour
+     seul bagage, et la page repart. Le sac anonyme, lui, ne bouge pas — il
+     attend son propriétaire ou le prochain travail sans compte. */
+  function sacNeuf(uid) {
+    proprioIncertain = false;
+    sacRepart = true;
+    save();
+    try { localStorage.setItem(cleDe(uid), JSON.stringify({ name: sbSession()?.nom || "" })); } catch {}
+    location.reload();
+  }
+  /* À la connexion. Rend true quand la page repart : l'appelant s'arrête là. */
+  function entreCompte(uid) {
+    uid = uid || sbSession()?.uid;
+    if (!uid) return false;
+    const cle = cleDe(uid);
+    if (cle === KEY) { proprioIncertain = false; return false; }
+    if (localStorage.getItem(cle) != null) { sacRedemarre(); return true; }
+    /* Une session morte a pu laisser le sac d'un AUTRE compte à l'écran :
+       on repart — le haut du fichier remettra le bon sac sous ce uid. */
+    if (KEY !== KEY_ANON) { sacRedemarre(); return true; }
+    proprioIncertain = true;   // le prochain passage du nuage tranchera
+    return false;
+  }
+  /* À l'inscription : le sac sous les yeux suit le compte qui vient de
+     naître — sauf s'il appartient à un compte d'avant le cloisonnement
+     (MARQUE_ANCIEN) : celui-là attend son vrai propriétaire. */
+  function sacInscription(uid) {
+    uid = uid || sbSession()?.uid;
+    if (!uid) return;
+    if (KEY !== KEY_ANON || localStorage.getItem(MARQUE_ANCIEN)) sacNeuf(uid);
+    else sacAdopte(uid);
+  }
+  /* L'arbitrage, à la première réponse claire du nuage. Une liste — même
+     vide — est un verdict ; null (pas de session, pas de réseau) n'en est
+     pas un, et le verrou d'écriture reste posé. */
+  function resoudreProprio(rows) {
+    if (!proprioIncertain) return;
+    const uid = sbSession()?.uid;
+    if (!uid || !Array.isArray(rows)) return;
+    if (rows.length) sacAdopte(uid);
+    else sacNeuf(uid);
+  }
+
   /* sbFetchSnapshot rend une liste [{kind, payload}] : l'export nourrit
      échéances et MIO, l'horaire remplit la grille. */
   function applyCloud(rows) {
+    /* Avant toute fusion : si le sac attendait un propriétaire, cette
+       réponse du nuage le donne — ou redémarre la page sur un sac neuf,
+       et alors plus rien ne se fusionne ici. */
+    resoudreProprio(rows);
+    if (sacRepart) return;
     /* Chaque moment de synchro tire aussi les pages — même quand les
        instantanés sont vides (compte tout neuf) : rows est alors null, mais
        les pages, elles, existent peut-être déjà sur l'autre appareil. */
@@ -8542,7 +8671,12 @@ a,button{touch-action:manipulation}
       box.append(mk("p","when","Tes échéances et MIO se synchronisent depuis l'agent local à chaque collecte."));
       const acts = mk("div","acts");
       const out = mk("button","btn danger","Se déconnecter");
-      out.addEventListener("click", () => { sbSignOut(); oublieIdentite(); renderAccount(); closePop(); showJoin("signin"); });
+      out.addEventListener("click", () => {
+        /* Le sac du compte reste à son nom ; la page repart sur le sac
+           anonyme — ce qu'on laisse à l'écran ne suit pas le prochain. */
+        closePop();
+        sbSignOut().finally(() => { oublieIdentite(); sacRedemarre(); });
+      });
       acts.append(out, mk("span","grow"));
       const close = mk("button","btn quiet","Fermer"); close.addEventListener("click", closePop);
       const sync = mk("button","btn solid","Rafraîchir");
@@ -8569,7 +8703,10 @@ a,button{touch-action:manipulation}
         try {
           const d = await sbAuth("token?grant_type=password", { email: courriel, password: pw.value });
           if (d.access_token) {
-            sbKeep(d); adopteNom(d); avatarSync(d); renderAccount(); closePop();
+            sbKeep(d);
+            /* Son sac existe déjà sur cet appareil : la page repart dessus. */
+            if (entreCompte(d.user?.id)) return;
+            adopteNom(d); avatarSync(d); renderAccount(); closePop();
             applyCloud(await sbFetchSnapshot());
           } else {
             /* Compte créé mais endormi : la fenêtre ne sait pas saisir un
@@ -9192,7 +9329,9 @@ a,button{touch-action:manipulation}
     try {
       const d = await sbAuth("verify", { type: "signup", email: joEmail, token: code });
       if (!d.access_token) throw new Error("Confirmation refusée — demande un nouveau code.");
-      sbKeep(d); adopteNom(d, joNom); avatarSync(d); renderAccount(); markVu(); enterBoard();
+      sbKeep(d); sacInscription(d.user?.id);
+      if (sacRepart) return;   // sac neuf : la page repart, rien d'autre à faire ici
+      adopteNom(d, joNom); avatarSync(d); renderAccount(); markVu(); enterBoard();
       applyCloud(await sbFetchSnapshot());
     } catch (e2) { joSay(frErr(e2), true); }
     finally { el("jo-go").disabled = false; }
@@ -9224,12 +9363,27 @@ a,button{touch-action:manipulation}
       const d = await sbAuth(path, up ? { email, password: pw, data: { nom } }
                                      : { email, password: pw });
       if (d.access_token) {
-        sbKeep(d); adopteNom(d, nom); avatarSync(d); renderAccount(); markVu(); enterBoard();
+        sbKeep(d);
+        if (up) { sacInscription(d.user?.id); if (sacRepart) return; }
+        else if (entreCompte(d.user?.id)) return;   // son sac est là : la page repart dessus
+        adopteNom(d, nom); avatarSync(d); renderAccount(); markVu(); enterBoard();
         applyCloud(await sbFetchSnapshot());
       } else {
-        /* Pas de session au retour : le compte est créé mais dort. On enchaîne
-           sur le code plutôt que de renvoyer vers une connexion qui refuserait
-           tant que le courriel n'est pas confirmé. */
+        /* Pas de session au retour, et deux causes possibles que le serveur
+           refuse de distinguer — répondre « ce courriel est pris » dirait à
+           n'importe qui qui a un compte ici. Le seul signal est la liste des
+           identités, vide quand le courriel appartient déjà à quelqu'un.
+           Sans elle, on enverrait attendre un code que personne n'a envoyé. */
+        const ident = d.identities || d.user?.identities;
+        if (up && Array.isArray(ident) && !ident.length) {
+          joEmail = email;
+          showJoin("signin");
+          joSay("Ce courriel a déjà un compte — connecte-toi.", true);
+          return;
+        }
+        /* Le compte est créé mais dort. On enchaîne sur le code plutôt que de
+           renvoyer vers une connexion qui refuserait tant que le courriel
+           n'est pas confirmé. */
         joEmail = email; joNom = nom;
         showJoin("confirm");
       }
@@ -9360,7 +9514,11 @@ a,button{touch-action:manipulation}
       if (!d?.access_token) throw new Error("Connexion refusée — reprends depuis le début.");
       /* Google et Microsoft donnent le nom : adopteNom le prend dans les
          métadonnées, et ne garde celui d'ici qu'à défaut. */
-      sbKeep(d); adopteNom(d, (state.name || "").trim()); avatarSync(d);
+      sbKeep(d);
+      /* OAuth connecte sans dire si le compte vient de naître : entreCompte
+         tranche comme pour une connexion — sac existant, ou arbitrage. */
+      if (entreCompte(d.user?.id)) return;
+      adopteNom(d, (state.name || "").trim()); avatarSync(d);
       renderAccount(); markVu(); enterBoard();
       applyCloud(await sbFetchSnapshot());
     } catch (e2) { joSay(frErr(e2), true); }
@@ -9413,7 +9571,7 @@ a,button{touch-action:manipulation}
   /* Se déconnecter sans passer par la fenêtre du compte : l'appareil oublie
      la session — cookie compris — et revient à la porte d'entrée. */
   el("p-signout").addEventListener("click", () => {
-    sbSignOut(); oublieIdentite(); renderAccount(); showJoin("signin");
+    sbSignOut().finally(() => { oublieIdentite(); sacRedemarre(); });
   });
 
   async function sbRefreshToken() {
