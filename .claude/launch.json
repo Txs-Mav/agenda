@@ -212,6 +212,29 @@
         "4310"
       ],
       "port": 4310
+    },
+    {
+      "name": "agenda-config-4319",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "4319",
+        "public"
+      ],
+      "port": 4319
+    },
+    {
+      "name": "agenda-statique",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4646",
+        "-d",
+        "public"
+      ],
+      "port": 4646
     }
   ]
 }
