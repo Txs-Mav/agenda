@@ -115,7 +115,7 @@ export default function Vitrine() {
 
         <section className="lp-row flip" data-rev>
           <figure className="lp-pic">
-            <img loading="lazy" src="/img/app-mios.jpg" width="1060" height="749"
+            <img loading="lazy" src="/img/app-mios.jpg" width="1203" height="661"
                  alt="Les MIO résumés en une phrase, avec leurs actions proposées" />
           </figure>
           <div className="txt">
@@ -134,7 +134,7 @@ export default function Vitrine() {
             <p className="dim">Heures réelles, locaux, professeurs. Vérifié : 18 blocs sur 18.</p>
           </div>
           <figure className="lp-band-pic">
-            <img loading="lazy" src="/img/app-horaire-mini.jpg" width="1500" height="1053"
+            <img loading="lazy" src="/img/app-horaire-mini.jpg" width="1203" height="720"
                  alt="La grille d'horaire d'une semaine, chaque cours dans la couleur de sa matière" />
           </figure>
         </section>
